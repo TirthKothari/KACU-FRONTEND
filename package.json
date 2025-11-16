@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "eslint --cache --fix",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "check-format": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "prettier": "prettier \"**/*.+{json,js,jsx,ts,tsx,css,html}\"",
     "preview": "vite preview",
     "prepare": "husky"
