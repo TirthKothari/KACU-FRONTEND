@@ -6,12 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "eslint .",
+    "lint": "eslint --cache --fix",
+    "prettier": "prettier \"**/*.+{json,js,jsx,ts,tsx,css,html}\"",
     "preview": "vite preview",
     "prepare": "husky"
-  },
-  "lint-staged": {
-    "*.{css,html,js,jsx}": "eslint --cache --fix"
   },
   "dependencies": {
     "react": "^19.2.0",
