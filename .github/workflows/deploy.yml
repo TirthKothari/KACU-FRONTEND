@@ -45,6 +45,9 @@ jobs:
 
       - name: Install Vercel CLI
         run: npm install -g vercel
+      
+      - name: Remove .git folder (Fix Vercel Permission Error)
+        run: rm -rf .git
 
       - name: Pull Vercel Project Settings
         # This command links the local directory to your Vercel project
