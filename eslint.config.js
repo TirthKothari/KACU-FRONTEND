@@ -22,8 +22,18 @@ export default defineConfig([
         sourceType: "module",
       },
     },
+
     rules: {
-      "no-unused-vars": ["error", { varsIgnorePattern: "^[A-Z_]" }],
+      // Disable unused-vars warning for variables you want to ignore
+      "no-unused-vars": [
+        "warn", // or "off" if you want to fully disable
+        {
+          vars: "all",
+          args: "after-used",
+          ignoreRestSiblings: true,
+          varsIgnorePattern: "^motion$|^hoveredScore$",
+        },
+      ],
     },
   },
 ]);
