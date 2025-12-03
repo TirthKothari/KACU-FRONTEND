@@ -1,10 +1,11 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-// --- THEME CONSTANTS ---
-// Primary: #00ABE4 (Bright Blue)
-// Dark Contrast: #0F172A (Slate 900)
-// Light BG: #E9F1FA (Light Blue)
+// PALETTE REFERENCE:
+// Highlight/Accent: #F0E491 (Pale Cream/Yellow)
+// Cards/Container:  #BBC863 (Olive/Muted Lime)
+// Interaction:      #658C58 (Sage Green)
+// Primary/Text:     #31694E (Deep Forest Green)
 
 export const Button = ({
   children,
@@ -16,14 +17,28 @@ export const Button = ({
   disabled = false,
 }) => {
   const baseStyle =
-    "px-8 py-4 rounded-full font-semibold transition-all duration-300 flex items-center justify-center gap-2 text-sm tracking-wide active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed";
+    "px-8 py-4 rounded-full font-bold transition-all duration-300 flex items-center justify-center gap-2 text-sm tracking-wide active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed border";
 
   const variants = {
+    // Primary: Sage Green background, dark text on hover (or darker green)
     primary:
-      "bg-[#00ABE4] text-white hover:bg-[#0095c8] shadow-lg shadow-[#00ABE4]/30 hover:shadow-[#00ABE4]/40",
-    outline: "border-2 border-[#00ABE4] text-[#00ABE4] hover:bg-[#E9F1FA]",
-    white: "bg-white text-[#0F172A] hover:bg-slate-100 shadow-lg",
-    ghost: "text-slate-600 hover:text-[#00ABE4] bg-transparent",
+      "bg-[#658C58] text-white border-transparent hover:bg-[#31694E] shadow-lg shadow-[#658C58]/30 hover:shadow-[#31694E]/30",
+
+    // Outline: Sage Green border and text, highlight tint on hover
+    outline:
+      "bg-transparent border-[#658C58] text-[#658C58] hover:bg-[#F0E491] hover:text-[#31694E] hover:border-[#F0E491]",
+
+    // White: Clean white look with Deep Green text
+    white:
+      "bg-white text-[#31694E] border-transparent hover:bg-[#F0E491] hover:text-[#31694E] shadow-md hover:shadow-lg",
+
+    // Ghost: Minimal, text changes from Deep Green to Sage
+    ghost:
+      "bg-transparent border-transparent text-[#31694E] hover:bg-[#F0E491]/20 hover:text-[#658C58]",
+
+    // Accent: Uses the Pale Yellow for special emphasis
+    accent:
+      "bg-[#F0E491] text-[#31694E] border-[#F0E491] hover:bg-white hover:border-[#F0E491] shadow-md shadow-[#F0E491]/40",
   };
 
   return (
@@ -34,7 +49,7 @@ export const Button = ({
       className={`${baseStyle} ${variants[variant]} ${className}`}
     >
       {children}
-      {Icon && <Icon size={18} />}
+      {Icon && <Icon size={18} strokeWidth={2.5} />}
     </button>
   );
 };
@@ -42,7 +57,17 @@ export const Button = ({
 export const Card = ({ children, className = "", onClick }) => (
   <div
     onClick={onClick}
-    className={`bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 ${className}`}
+    className={`
+      bg-white 
+      p-8 
+      rounded-[2rem] 
+      border border-[#BBC863]/20 
+      shadow-[0_10px_30px_-10px_rgba(49,105,78,0.05)] 
+      hover:shadow-[0_20px_40px_-10px_rgba(101,140,88,0.15)] 
+      hover:border-[#658C58]/40 
+      transition-all duration-500 
+      ${className}
+    `}
   >
     {children}
   </div>
