@@ -20,6 +20,12 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
+// PALETTE REFERENCE:
+// Highlight/Accent: #F0E491 (Pale Cream/Yellow)
+// Cards/Container:  #BBC863 (Olive/Muted Lime)
+// Interaction:      #658C58 (Sage Green)
+// Primary/Text:     #31694E (Deep Forest Green)
+
 const MENU_ITEMS = [
   {
     title: "Our Services",
@@ -32,7 +38,7 @@ const MENU_ITEMS = [
       },
       { name: "Working Capital", icon: TrendingUp, desc: "Daily ops funding" },
       { name: "Line of Credit", icon: CreditCard, desc: "Flexible access" },
-      { name: "Equipment Financing", icon: Zap, desc: " machinery & tools" },
+      { name: "Equipment Financing", icon: Zap, desc: "Machinery & tools" },
       {
         name: "Merchant Cash Advance",
         icon: Store,
@@ -73,11 +79,11 @@ const NavItem = ({ item }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <button className="flex items-center gap-1 text-slate-600 hover:text-[#00ABE4] font-medium transition-colors py-4">
+      <button className="flex items-center gap-1 text-[#31694E] hover:text-[#658C58] font-semibold transition-colors py-4">
         {item.title}
         <ChevronDown
           size={14}
-          className={`transition-transform duration-300 ${isHovered ? "rotate-180" : ""}`}
+          className={`transition-transform duration-300 text-[#BBC863] ${isHovered ? "rotate-180" : ""}`}
         />
       </button>
 
@@ -88,7 +94,7 @@ const NavItem = ({ item }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             transition={{ duration: 0.2 }}
-            className={`absolute top-full left-1/2 -translate-x-1/2 bg-white rounded-2xl shadow-xl border border-slate-100 p-4 z-50
+            className={`absolute top-full left-1/2 -translate-x-1/2 bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(49,105,78,0.15)] border border-[#BBC863]/20 p-4 z-50
               ${item.columns === 2 ? "w-[500px]" : "w-[240px]"}
             `}
           >
@@ -100,17 +106,17 @@ const NavItem = ({ item }) => {
                 <a
                   key={idx}
                   href="#"
-                  className="flex items-start gap-3 p-3 rounded-xl hover:bg-[#E9F1FA] transition-colors group/item"
+                  className="flex items-start gap-3 p-3 rounded-xl hover:bg-[#F0E491]/20 transition-colors group/item"
                 >
-                  <div className="mt-1 text-slate-400 group-hover/item:text-[#00ABE4] transition-colors">
-                    <subItem.icon size={18} />
+                  <div className="mt-1 text-[#BBC863] group-hover/item:text-[#658C58] transition-colors">
+                    <subItem.icon size={18} strokeWidth={2} />
                   </div>
                   <div>
-                    <div className="text-sm font-bold text-slate-800 group-hover/item:text-[#00ABE4]">
+                    <div className="text-sm font-bold text-[#31694E] group-hover/item:text-[#658C58] transition-colors">
                       {subItem.name}
                     </div>
                     {subItem.desc && (
-                      <div className="text-xs text-slate-400 mt-0.5 leading-tight">
+                      <div className="text-xs text-[#BBC863] mt-0.5 leading-tight font-medium opacity-80">
                         {subItem.desc}
                       </div>
                     )}
@@ -129,15 +135,15 @@ const MobileNavItem = ({ item }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="border-b border-slate-50 last:border-none">
+    <div className="border-b border-[#BBC863]/20 last:border-none">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full py-4 text-lg font-medium text-slate-700"
+        className="flex items-center justify-between w-full py-4 text-lg font-bold text-[#31694E]"
       >
         {item.title}
         <ChevronDown
           size={16}
-          className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`text-[#BBC863] transition-transform ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
       <AnimatePresence>
@@ -153,10 +159,10 @@ const MobileNavItem = ({ item }) => {
                 <a
                   key={idx}
                   href="#"
-                  className="flex items-center gap-3 text-slate-500 hover:text-[#00ABE4]"
+                  className="flex items-center gap-3 text-[#658C58] hover:text-[#31694E] transition-colors"
                 >
                   <subItem.icon size={16} />
-                  <span className="text-sm">{subItem.name}</span>
+                  <span className="text-sm font-medium">{subItem.name}</span>
                 </a>
               ))}
             </div>
@@ -185,62 +191,72 @@ export const Navbar = () => {
 
   return (
     <nav
-      className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? "bg-white/95 backdrop-blur-md shadow-sm py-2" : "bg-transparent py-5"}`}
+      className={`fixed w-full z-50 transition-all duration-300 border-b ${isScrolled ? "bg-white/90 backdrop-blur-md shadow-sm border-[#BBC863]/20 py-2" : "bg-transparent border-transparent py-5"}`}
     >
       <div className="container mx-auto px-6 flex justify-between items-center">
+        {/* Logo Section */}
         <div
-          className="flex items-center gap-2 cursor-pointer"
+          className="flex items-center gap-2 cursor-pointer group"
           onClick={() => navigate("/")}
         >
-          <div className="w-10 h-10 bg-[#00ABE4] rounded-xl flex items-center justify-center shadow-lg shadow-[#00ABE4]/20">
-            <span className="text-white font-bold text-xl">K</span>
+          <div className="w-10 h-10 bg-[#31694E] rounded-xl flex items-center justify-center shadow-lg shadow-[#31694E]/20 transition-transform group-hover:scale-105 duration-300">
+            <span className="text-[#F0E491] font-bold text-xl">K</span>
           </div>
-          <span className="text-2xl font-bold text-slate-900 tracking-tight">
+          <span className="text-2xl font-extrabold text-[#31694E] tracking-tight group-hover:text-[#658C58] transition-colors">
             Kacu
           </span>
         </div>
 
+        {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center gap-8">
           {MENU_ITEMS.map((item, idx) => (
             <NavItem key={idx} item={item} />
           ))}
         </div>
 
+        {/* CTA Button */}
         <div className="hidden lg:block">
           <button
             onClick={handleStart}
-            className="px-6 py-3 bg-[#00ABE4] text-white rounded-full font-bold text-sm shadow-lg shadow-[#00ABE4]/30 hover:bg-[#0095c8] transition-all flex items-center gap-2"
+            className="px-6 py-3 bg-[#658C58] text-white rounded-full font-bold text-sm shadow-lg shadow-[#658C58]/30 hover:bg-[#31694E] transition-all flex items-center gap-2 group border border-transparent hover:border-[#F0E491]/30"
           >
-            Get Started <ArrowRight size={16} />
+            Get Started
+            <ArrowRight
+              size={16}
+              className="text-[#F0E491] group-hover:translate-x-1 transition-transform"
+            />
           </button>
         </div>
 
+        {/* Mobile Toggle */}
         <button
-          className="lg:hidden text-slate-900 p-2"
+          className="lg:hidden text-[#31694E] p-2 hover:bg-[#F0E491]/20 rounded-lg transition-colors"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
           {mobileMenuOpen ? <X /> : <Menu />}
         </button>
       </div>
 
+      {/* Mobile Menu Overlay */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="absolute top-full left-0 w-full bg-white shadow-xl border-t border-slate-100 lg:hidden h-[90vh] overflow-y-auto"
+            className="absolute top-full left-0 w-full bg-white shadow-xl border-t border-[#BBC863]/20 lg:hidden h-[90vh] overflow-y-auto"
           >
             <div className="p-6 flex flex-col">
               {MENU_ITEMS.map((item, idx) => (
                 <MobileNavItem key={idx} item={item} />
               ))}
-              <div className="mt-8 pt-6 border-t border-slate-100">
+              <div className="mt-8 pt-6 border-t border-[#BBC863]/20">
                 <button
                   onClick={handleStart}
-                  className="w-full py-4 bg-[#00ABE4] text-white rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-[#658C58] text-white rounded-2xl font-bold text-lg shadow-lg flex items-center justify-center gap-2 hover:bg-[#31694E] transition-colors"
                 >
-                  Get Started <ArrowRight size={20} />
+                  Get Started{" "}
+                  <ArrowRight size={20} className="text-[#F0E491]" />
                 </button>
               </div>
             </div>
