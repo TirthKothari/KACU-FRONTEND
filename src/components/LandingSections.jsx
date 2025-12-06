@@ -551,17 +551,26 @@ export const FundingOptions = () => {
   ];
 
   return (
-    <section className="py-24 bg-white relative">
-      {/* Background Pattern */}
-      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(#BBC863_1px,transparent_1px)] [background-size:20px_20px] opacity-20 -z-10" />
+    <section className="py-24 relative overflow-hidden">
+      {/* 
+        Background Color Application: 
+        Using a soft gradient of the Accent (#F0E491) and Container (#BBC863) colors 
+        to create a warm, nature-inspired base.
+      */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#F0E491]/20 via-white to-[#BBC863]/20 -z-20" />
+
+      {/* Background Pattern: Using the Primary Green (#31694E) at very low opacity */}
+      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(#31694E_1px,transparent_1px)] [background-size:24px_24px] opacity-[0.07] -z-10" />
 
       <div className="container mx-auto px-6">
         <div className="text-center mb-20">
+          {/* Primary Color (#31694E) for Headers */}
           <h2 className="text-4xl lg:text-5xl font-extrabold text-[#31694E] mb-6 tracking-tight">
             A Range Of Funding Options <br />
+            {/* Interactive Color (#658C58) for Sub-headline emphasis */}
             <span className="text-[#658C58]">For Your Business</span>
           </h2>
-          <p className="text-[#658C58] text-lg max-w-2xl mx-auto font-medium">
+          <p className="text-[#31694E]/80 text-lg max-w-2xl mx-auto font-medium leading-relaxed">
             Select the funding option that fits your goals and get approved in
             record time.
           </p>
@@ -578,40 +587,55 @@ export const FundingOptions = () => {
             >
               <div
                 className="
-                  h-full 
-                  flex flex-col items-start 
-                  p-8 rounded-[2rem] 
-                  /* Default State: Soft Green Gradient Background */
-                  bg-gradient-to-br from-[#658C58]/10 to-[#31694E]/5
-                  border border-[#BBC863]/20 
+                  group relative h-full flex flex-col items-start p-8 rounded-[2rem]
                   
-                  /* Hover State: Transitions to White with stronger shadow */
-                  hover:bg-white 
-                  hover:from-white hover:to-white 
-                  shadow-sm 
-                  hover:shadow-[0_20px_40px_-10px_rgba(101,140,88,0.2)] 
-                  hover:border-[#658C58] 
-                  hover:-translate-y-2 
+                  /* Card Base: White for cleanliness */
+                  bg-white
                   
-                  transition-all duration-300 group cursor-pointer
+                  /* Card Container Color (#BBC863): Used for border and subtle glow */
+                  border border-[#BBC863]/30
+                  
+                  /* Shadows & Transitions */
+                  shadow-[0_10px_30px_-10px_rgba(49,105,78,0.05)]
+                  hover:shadow-[0_20px_40px_-15px_rgba(101,140,88,0.2)]
+                  hover:border-[#BBC863]
+                  hover:-translate-y-2
+                  transition-all duration-300 cursor-pointer
                 "
               >
-                {/* Icon Container */}
-                <div className="w-16 h-16 rounded-2xl bg-[#F0E491]/40 text-[#31694E] flex items-center justify-center mb-8 shadow-sm border border-[#F0E491] group-hover:scale-110 group-hover:bg-[#F0E491] transition-all duration-300">
-                  <opt.icon size={32} strokeWidth={1.5} />
+                {/* Icon Container: Highlight Color (#F0E491) Background */}
+                <div className="w-16 h-16 rounded-2xl bg-[#F0E491] text-[#31694E] flex items-center justify-center mb-8 shadow-sm group-hover:scale-110 transition-transform duration-300">
+                  <opt.icon size={30} strokeWidth={1.5} />
                 </div>
 
+                {/* Card Title: Primary Color (#31694E) */}
                 <h3 className="text-2xl font-bold text-[#31694E] mb-4 group-hover:text-[#658C58] transition-colors">
                   {opt.title}
                 </h3>
 
+                {/* Description: Dark Green with opacity */}
                 <p className="text-[#31694E]/70 leading-relaxed mb-8 flex-grow font-medium">
                   {opt.desc}
                 </p>
 
                 <div className="w-full mt-auto">
-                  <button className="px-6 py-3 rounded-full border-2 border-[#BBC863]/30 bg-white/50 text-[#31694E] font-bold text-sm w-auto group-hover:bg-[#658C58] group-hover:border-[#658C58] group-hover:text-white transition-all duration-300 flex items-center gap-2">
-                    READ MORE <ArrowRight size={16} />
+                  {/* Button: Interactive Color (#658C58) */}
+                  <button
+                    className="
+                    w-full py-4 rounded-xl font-bold text-sm tracking-wide
+                    flex items-center justify-between px-6
+                    
+                    /* Default State: Light background, Green Text */
+                    bg-[#F0E491]/20 text-[#31694E] border border-[#F0E491]
+                    
+                    /* Hover State: Solid Green Background (#658C58), White Text */
+                    group-hover:bg-[#658C58] group-hover:text-white group-hover:border-[#658C58]
+                    
+                    transition-all duration-300
+                  "
+                  >
+                    <span>READ MORE</span>
+                    <ArrowRight size={18} />
                   </button>
                 </div>
               </div>
