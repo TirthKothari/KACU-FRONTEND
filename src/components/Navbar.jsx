@@ -16,15 +16,24 @@ import {
   UserPlus,
   LogIn,
   ChevronDown,
+  Sparkles,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  useScroll,
+  useMotionValueEvent,
+} from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
-// PALETTE REFERENCE:
-// Highlight/Accent: #F0E491 (Pale Cream/Yellow)
-// Cards/Container:  #BBC863 (Olive/Muted Lime)
-// Interaction:      #658C58 (Sage Green)
-// Primary/Text:     #31694E (Deep Forest Green)
+// --- Color Palette Constants ---
+const COLORS = {
+  primary: "#31694E", // Deep Forest Green
+  secondary: "#658C58", // Sage Green
+  accent: "#F0E491", // Pale Cream/Yellow
+  muted: "#BBC863", // Olive/Muted Lime
+  glass: "rgba(255, 255, 255, 0.85)",
+};
 
 const MENU_ITEMS = [
   {
@@ -70,16 +79,23 @@ const MENU_ITEMS = [
   },
 ];
 
+// --- Component: Desktop Navigation Item with Mega Menu ---
 const NavItem = ({ item }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
     <div
-      className="relative group"
+      className="relative group h-full flex items-center"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <button className="flex items-center gap-1 text-[#31694E] hover:text-[#658C58] font-semibold transition-colors py-4">
+      <button
+        className={`flex items-center gap-1.5 px-3 py-2 rounded-full transition-all duration-300 ${
+          isHovered
+            ? "bg-[#658C58]/10 text-[#31694E]"
+            : "text-[#31694E]/80 hover:text-[#31694E]"
+        } font-semibold text-sm tracking-wide`}
+      >
         {item.title}
         <ChevronDown
           size={14}
@@ -90,39 +106,46 @@ const NavItem = ({ item }) => {
       <AnimatePresence>
         {isHovered && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 0.2 }}
-            className={`absolute top-full left-1/2 -translate-x-1/2 bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(49,105,78,0.15)] border border-[#BBC863]/20 p-4 z-50
-              ${item.columns === 2 ? "w-[500px]" : "w-[240px]"}
-            `}
+            initial={{ opacity: 0, y: 15, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 15, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            className="absolute top-full left-0 pt-4 z-50"
+            style={{ width: item.columns === 2 ? "550px" : "260px" }}
           >
-            <div className="absolute -top-4 left-0 w-full h-4 bg-transparent" />
-            <div
-              className={`grid ${item.columns === 2 ? "grid-cols-2 gap-4" : "grid-cols-1 gap-2"}`}
-            >
-              {item.items.map((subItem, idx) => (
-                <a
-                  key={idx}
-                  href="#"
-                  className="flex items-start gap-3 p-3 rounded-xl hover:bg-[#F0E491]/20 transition-colors group/item"
-                >
-                  <div className="mt-1 text-[#BBC863] group-hover/item:text-[#658C58] transition-colors">
-                    <subItem.icon size={18} strokeWidth={2} />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-[#31694E] group-hover/item:text-[#658C58] transition-colors">
-                      {subItem.name}
+            {/* Mega Menu Card */}
+            <div className="relative bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-[0_20px_50px_-10px_rgba(49,105,78,0.2)] border border-[#BBC863]/20 overflow-hidden p-2">
+              {/* Decorative Mesh Gradient inside Menu */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#F0E491]/20 rounded-full blur-3xl -z-10" />
+
+              <div
+                className={`grid ${item.columns === 2 ? "grid-cols-2 gap-2" : "grid-cols-1 gap-1"}`}
+              >
+                {item.items.map((subItem, idx) => (
+                  <a
+                    key={idx}
+                    href="#"
+                    className="flex items-start gap-4 p-3 rounded-2xl hover:bg-[#F0E491]/10 transition-colors group/item relative overflow-hidden"
+                  >
+                    {/* Hover Reveal Effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#F0E491]/0 via-[#F0E491]/10 to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity duration-500" />
+
+                    <div className="mt-1 w-10 h-10 rounded-xl bg-[#658C58]/10 flex items-center justify-center text-[#658C58] group-hover/item:bg-[#31694E] group-hover/item:text-[#F0E491] transition-all duration-300 shadow-sm">
+                      <subItem.icon size={18} strokeWidth={2} />
                     </div>
-                    {subItem.desc && (
-                      <div className="text-xs text-[#BBC863] mt-0.5 leading-tight font-medium opacity-80">
-                        {subItem.desc}
+                    <div>
+                      <div className="text-sm font-bold text-[#31694E] group-hover/item:text-[#31694E]">
+                        {subItem.name}
                       </div>
-                    )}
-                  </div>
-                </a>
-              ))}
+                      {subItem.desc && (
+                        <div className="text-[11px] text-[#658C58] mt-0.5 font-medium opacity-80 group-hover/item:opacity-100 transition-opacity">
+                          {subItem.desc}
+                        </div>
+                      )}
+                    </div>
+                  </a>
+                ))}
+              </div>
             </div>
           </motion.div>
         )}
@@ -131,20 +154,20 @@ const NavItem = ({ item }) => {
   );
 };
 
+// --- Component: Mobile Navigation Item ---
 const MobileNavItem = ({ item }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="border-b border-[#BBC863]/20 last:border-none">
+    <div className="border-b border-[#BBC863]/10 last:border-none">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-between w-full py-4 text-lg font-bold text-[#31694E]"
       >
         {item.title}
-        <ChevronDown
-          size={16}
-          className={`text-[#BBC863] transition-transform ${isOpen ? "rotate-180" : ""}`}
-        />
+        <motion.div animate={{ rotate: isOpen ? 180 : 0 }}>
+          <ChevronDown size={18} className="text-[#BBC863]" />
+        </motion.div>
       </button>
       <AnimatePresence>
         {isOpen && (
@@ -154,15 +177,19 @@ const MobileNavItem = ({ item }) => {
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="pb-4 pl-4 space-y-3">
+            <div className="pb-4 pl-4 space-y-2">
               {item.items.map((subItem, idx) => (
                 <a
                   key={idx}
                   href="#"
-                  className="flex items-center gap-3 text-[#658C58] hover:text-[#31694E] transition-colors"
+                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#F0E491]/10 transition-colors"
                 >
-                  <subItem.icon size={16} />
-                  <span className="text-sm font-medium">{subItem.name}</span>
+                  <div className="text-[#658C58]">
+                    <subItem.icon size={18} />
+                  </div>
+                  <span className="text-sm font-medium text-[#31694E]/80">
+                    {subItem.name}
+                  </span>
                 </a>
               ))}
             </div>
@@ -173,16 +200,17 @@ const MobileNavItem = ({ item }) => {
   );
 };
 
+// --- Main Navbar Component ---
 export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { scrollY } = useScroll();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  // Handle Scroll Effect for Floating Island
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    setIsScrolled(latest > 20);
+  });
 
   const handleStart = () => {
     setMobileMenuOpen(false);
@@ -190,79 +218,132 @@ export const Navbar = () => {
   };
 
   return (
-    <nav
-      className={`fixed w-full z-50 transition-all duration-300 border-b ${isScrolled ? "bg-white/90 backdrop-blur-md shadow-sm border-[#BBC863]/20 py-2" : "bg-transparent border-transparent py-5"}`}
-    >
-      <div className="container mx-auto px-6 flex justify-between items-center">
-        {/* Logo Section */}
+    <>
+      <motion.nav
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ type: "spring", stiffness: 100, damping: 20 }}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 md:px-6 
+          ${isScrolled ? "pt-4" : "pt-6"}
+        `}
+      >
         <div
-          className="flex items-center gap-2 cursor-pointer group"
-          onClick={() => navigate("/")}
+          className={`container mx-auto max-w-7xl transition-all duration-300 relative rounded-full border 
+          ${
+            isScrolled
+              ? "bg-white/80 backdrop-blur-xl shadow-[0_8px_32px_rgba(49,105,78,0.08)] border-white/50 py-3 px-6"
+              : "bg-transparent border-transparent py-4 px-0"
+          }`}
         >
-          <div className="w-10 h-10 bg-[#31694E] rounded-xl flex items-center justify-center shadow-lg shadow-[#31694E]/20 transition-transform group-hover:scale-105 duration-300">
-            <span className="text-[#F0E491] font-bold text-xl">K</span>
+          <div className="flex justify-between items-center">
+            {/* --- Logo Area --- */}
+            <div
+              className="flex items-center gap-3 cursor-pointer group"
+              onClick={() => navigate("/")}
+            >
+              <div className="relative w-10 h-10">
+                <div className="absolute inset-0 bg-[#31694E] rounded-xl rotate-0 group-hover:rotate-6 transition-transform duration-300 ease-out" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-[#F0E491] font-bold text-xl relative z-10">
+                    K
+                  </span>
+                </div>
+                {/* Glow behind logo */}
+                <div className="absolute inset-0 bg-[#31694E] blur-lg opacity-40 rounded-xl" />
+              </div>
+              <span
+                className={`text-2xl font-extrabold tracking-tight transition-colors duration-300 ${isScrolled ? "text-[#31694E]" : "text-[#31694E]"}`}
+              >
+                Kacu
+              </span>
+            </div>
+
+            {/* --- Desktop Menu --- */}
+            <div className="hidden lg:flex items-center gap-2 bg-white/40 backdrop-blur-sm px-4 py-1.5 rounded-full border border-white/20 shadow-sm">
+              {MENU_ITEMS.map((item, idx) => (
+                <NavItem key={idx} item={item} />
+              ))}
+            </div>
+
+            {/* --- Desktop Actions --- */}
+            <div className="hidden lg:flex items-center gap-4">
+              <a
+                href="#"
+                className="text-sm font-bold text-[#31694E] hover:text-[#658C58] transition-colors"
+              >
+                Log In
+              </a>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleStart}
+                className="relative px-6 py-2.5 bg-[#31694E] text-white rounded-full font-bold text-sm shadow-lg shadow-[#31694E]/20 overflow-hidden group"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-[#658C58] to-[#31694E] group-hover:bg-gradient-to-r group-hover:from-[#F0E491] group-hover:to-[#BBC863] transition-all duration-300" />
+                <span className="relative z-10 flex items-center gap-2 group-hover:text-[#31694E] transition-colors duration-300">
+                  Get Started
+                  <ArrowRight
+                    size={16}
+                    className="group-hover:translate-x-1 transition-transform"
+                  />
+                </span>
+                {/* Shine Effect */}
+                <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent z-20" />
+              </motion.button>
+            </div>
+
+            {/* --- Mobile Toggle --- */}
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              className="lg:hidden p-2 rounded-full bg-[#31694E]/5 text-[#31694E]"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </motion.button>
           </div>
-          <span className="text-2xl font-extrabold text-[#31694E] tracking-tight group-hover:text-[#658C58] transition-colors">
-            Kacu
-          </span>
         </div>
+      </motion.nav>
 
-        {/* Desktop Navigation */}
-        <div className="hidden lg:flex items-center gap-8">
-          {MENU_ITEMS.map((item, idx) => (
-            <NavItem key={idx} item={item} />
-          ))}
-        </div>
-
-        {/* CTA Button */}
-        <div className="hidden lg:block">
-          <button
-            onClick={handleStart}
-            className="px-6 py-3 bg-[#658C58] text-white rounded-full font-bold text-sm shadow-lg shadow-[#658C58]/30 hover:bg-[#31694E] transition-all flex items-center gap-2 group border border-transparent hover:border-[#F0E491]/30"
-          >
-            Get Started
-            <ArrowRight
-              size={16}
-              className="text-[#F0E491] group-hover:translate-x-1 transition-transform"
-            />
-          </button>
-        </div>
-
-        {/* Mobile Toggle */}
-        <button
-          className="lg:hidden text-[#31694E] p-2 hover:bg-[#F0E491]/20 rounded-lg transition-colors"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          {mobileMenuOpen ? <X /> : <Menu />}
-        </button>
-      </div>
-
-      {/* Mobile Menu Overlay */}
+      {/* --- Mobile Menu Overlay --- */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute top-full left-0 w-full bg-white shadow-xl border-t border-[#BBC863]/20 lg:hidden h-[90vh] overflow-y-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 bg-white/60 backdrop-blur-xl lg:hidden pt-28"
           >
-            <div className="p-6 flex flex-col">
-              {MENU_ITEMS.map((item, idx) => (
-                <MobileNavItem key={idx} item={item} />
-              ))}
-              <div className="mt-8 pt-6 border-t border-[#BBC863]/20">
-                <button
-                  onClick={handleStart}
-                  className="w-full py-4 bg-[#658C58] text-white rounded-2xl font-bold text-lg shadow-lg flex items-center justify-center gap-2 hover:bg-[#31694E] transition-colors"
-                >
-                  Get Started{" "}
-                  <ArrowRight size={20} className="text-[#F0E491]" />
-                </button>
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 20, opacity: 0 }}
+              className="container mx-auto px-6 h-full overflow-y-auto pb-10"
+            >
+              <div className="bg-white rounded-[2rem] shadow-2xl shadow-[#31694E]/10 border border-[#BBC863]/20 p-6">
+                {MENU_ITEMS.map((item, idx) => (
+                  <MobileNavItem key={idx} item={item} />
+                ))}
+
+                <div className="mt-8 pt-6 border-t border-[#BBC863]/20 space-y-4">
+                  <a
+                    href="#"
+                    className="flex items-center justify-center w-full py-3 font-bold text-[#31694E]"
+                  >
+                    Already a member? Log In
+                  </a>
+                  <button
+                    onClick={handleStart}
+                    className="w-full py-4 bg-[#31694E] text-[#F0E491] rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2 hover:bg-[#2A5943] transition-colors"
+                  >
+                    Get Started Now
+                    <Sparkles size={20} />
+                  </button>
+                </div>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-    </nav>
+    </>
   );
 };
