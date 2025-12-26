@@ -1,5 +1,6 @@
 import React from "react";
 import { Navbar } from "../components/Navbar";
+import { BusinessForm } from "../components/BusinessForm.jsx";
 import { Footer } from "../components/Footer";
 import {
   Hero,
@@ -18,6 +19,7 @@ const LandingPage = () => {
         <Hero />
         <TrustStrip />
         <FundingOptions />
+        <BusinessForm />
         <CreditScoreSelector />
         <DarkFeatureSection />
         <CustomerStories />
