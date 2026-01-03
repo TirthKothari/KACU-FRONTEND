@@ -31,7 +31,6 @@ import {
   CheckCircle2,
   User,
 } from "lucide-react";
-
 // --- Utility: Grid Background Pattern ---
 const GridPattern = () => (
   <svg
@@ -51,7 +50,6 @@ const GridPattern = () => (
     </defs>
   </svg>
 );
-
 const GrainOverlay = () => (
   <div className="absolute inset-0 opacity-[0.05] pointer-events-none mix-blend-overlay">
     <svg className="w-full h-full">
@@ -67,7 +65,6 @@ const GrainOverlay = () => (
     </svg>
   </div>
 );
-
 // --- Component: Spotlight Card ---
 // This component tracks mouse movement to create a cursor-following gradient
 const FundingCard = ({ item, index }) => {
@@ -190,268 +187,6 @@ const Button = ({
   );
 };
 
-export const CustomerStories = () => {
-  const reviews = [
-    {
-      name: "Sarah Jenkins",
-      business: "Boutique Owner",
-      title: "Funding in less than 24h!",
-      text: "I was skeptical at first, but Kacu delivered exactly as promised. I applied in the morning and had the working capital in my account by the afternoon.",
-      rating: 5,
-      date: "2 days ago",
-    },
-    {
-      name: "Michael Ross",
-      business: "Construction Firm",
-      title: "Professional and transparent",
-      text: "Unlike other lenders who hit you with hidden fees, Kacu was upfront about everything. The rep, Beth, walked me through the entire term loan process.",
-      rating: 5,
-      date: "1 week ago",
-    },
-    {
-      name: "David Chen",
-      business: "Tech Startup",
-      title: "Great for rapid scaling",
-      text: "We needed bridge financing while waiting for our Series A. The line of credit Kacu set up for us was flexible and grew as our revenue grew. A true partner.",
-      rating: 5,
-      date: "3 weeks ago",
-    },
-    {
-      name: "Elena Rodriguez",
-      business: "Restaurant Group",
-      title: "Lifesaver for equipment",
-      text: "Our main oven broke down right before the holiday rush. The equipment financing approval was instant, and we didn't have to drain our cash reserves.",
-      rating: 4,
-      date: "1 month ago",
-    },
-    {
-      name: "James Wilson",
-      business: "Logistics Co.",
-      title: "Simple process, great rates",
-      text: "The dashboard is super easy to use. I can check my balance and draw funds whenever I need fuel coverage. It's streamlined our cash flow management completely.",
-      rating: 5,
-      date: "2 days ago",
-    },
-    {
-      name: "Anita Patel",
-      business: "Dental Practice",
-      title: "Excellent customer support",
-      text: "I had a few questions about the repayment structure. The support team was knowledgeable and didn't treat me like just a number. Feels good to be supported.",
-      rating: 5,
-      date: "5 days ago",
-    },
-  ];
-
-  return (
-    <section className="relative py-32 overflow-hidden bg-[#FAFAF8]">
-      {/* --- 1. Living Background Mesh --- */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Abstract Grid */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(49,105,78,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(49,105,78,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
-
-        {/* Floating Gradient Orbs */}
-        <motion.div
-          animate={{ x: [0, 50, 0], y: [0, -50, 0], scale: [1, 1.1, 1] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-0 left-1/4 w-[800px] h-[800px] bg-[#F0E491]/30 rounded-full blur-[120px] mix-blend-multiply"
-        />
-        <motion.div
-          animate={{ x: [0, -50, 0], y: [0, 50, 0], scale: [1, 1.2, 1] }}
-          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-[#658C58]/20 rounded-full blur-[100px] mix-blend-multiply"
-        />
-      </div>
-
-      <div className="container mx-auto px-6 relative z-10">
-        {/* --- 2. Section Header --- */}
-        <div className="text-center max-w-4xl mx-auto mb-20">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white border border-[#BBC863]/30 shadow-sm mb-8"
-          >
-            <div className="relative">
-              <Star size={14} className="text-[#BBC863] fill-[#BBC863]" />
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                className="absolute inset-0 border border-[#BBC863] rounded-full opacity-50 scale-150"
-              />
-            </div>
-            <span className="text-[#31694E] font-bold text-xs uppercase tracking-[0.2em]">
-              Trusted by 5,000+ Businesses
-            </span>
-          </motion.div>
-
-          <motion.h2
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="text-5xl md:text-6xl font-extrabold text-[#31694E] mb-6 tracking-tight leading-[1.1]"
-          >
-            Real Stories.{" "}
-            <span className="relative inline-block whitespace-nowrap">
-              <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-[#658C58] to-[#31694E]">
-                Natural Success.
-              </span>
-              <motion.div
-                initial={{ scaleX: 0 }}
-                whileInView={{ scaleX: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.5, duration: 0.8, ease: "circOut" }}
-                className="absolute bottom-2 left-0 w-full h-3 bg-[#F0E491]/50 -z-10 origin-left -skew-x-12"
-              />
-            </span>
-          </motion.h2>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="text-[#658C58] text-lg max-w-2xl mx-auto font-medium leading-relaxed"
-          >
-            Join thousands of business owners who trust Kacu to fund their
-            dreams. Transparency, speed, and organic growth are at our core.
-          </motion.p>
-        </div>
-
-        {/* --- 3. Enhanced Reviews Grid --- */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-          {reviews.map((review, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ delay: idx * 0.1, duration: 0.6 }}
-              className="h-full"
-            >
-              <motion.div
-                whileHover={{ y: -8 }}
-                className="group relative h-full flex flex-col p-8 rounded-[2rem] bg-white/60 backdrop-blur-xl border border-white/60 shadow-[0_10px_30px_-10px_rgba(49,105,78,0.05)] hover:shadow-[0_25px_50px_-10px_rgba(49,105,78,0.1)] transition-all duration-500 overflow-hidden"
-              >
-                {/* Subtle Gradient Overlay on Hover */}
-                <div className="absolute inset-0 bg-gradient-to-br from-[#F0E491]/10 via-transparent to-[#658C58]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-                {/* Quote Icon Decoration */}
-                <div className="absolute top-6 right-6 text-[#BBC863]/20 group-hover:text-[#BBC863]/40 transition-colors">
-                  <Quote size={40} />
-                </div>
-
-                <div className="relative z-10 flex flex-col h-full">
-                  {/* Rating Header */}
-                  <div className="flex justify-between items-center mb-6">
-                    <div className="flex gap-1">
-                      {[...Array(5)].map((_, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0, scale: 0 }}
-                          whileInView={{ opacity: 1, scale: 1 }}
-                          viewport={{ once: true }}
-                          transition={{ delay: idx * 0.1 + i * 0.05 }}
-                        >
-                          <Star
-                            size={16}
-                            className={
-                              i < review.rating
-                                ? "text-[#BBC863] fill-[#BBC863]"
-                                : "text-slate-200 fill-slate-200"
-                            }
-                          />
-                        </motion.div>
-                      ))}
-                    </div>
-
-                    {/* Verified Badge */}
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#31694E]/5 border border-[#31694E]/10">
-                      <CheckCircle size={10} className="text-[#31694E]" />
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#31694E]">
-                        Verified
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Content */}
-                  <h3 className="text-xl font-bold text-[#1E3F30] mb-3 line-clamp-1 group-hover:text-[#31694E] transition-colors">
-                    "{review.title}"
-                  </h3>
-
-                  <p className="text-[#5A7C6B] text-sm leading-relaxed mb-8 flex-grow">
-                    {review.text}
-                  </p>
-
-                  {/* Author Footer */}
-                  <div className="mt-auto pt-6 border-t border-[#31694E]/10 flex items-center gap-4">
-                    <div className="relative w-12 h-12 rounded-2xl overflow-hidden shadow-inner">
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#658C58] to-[#31694E]" />
-                      <div className="absolute inset-0 flex items-center justify-center text-[#F0E491] font-bold text-lg">
-                        {review.name.charAt(0)}
-                      </div>
-                    </div>
-
-                    <div>
-                      <p className="text-sm font-bold text-[#31694E]">
-                        {review.name}
-                      </p>
-                      <p className="text-xs text-[#BBC863] font-bold uppercase tracking-wide">
-                        {review.business}
-                      </p>
-                    </div>
-
-                    <div className="ml-auto text-[10px] font-medium text-slate-400">
-                      {review.date}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* --- 4. Trust Banner --- */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.4 }}
-          className="mt-24 flex justify-center"
-        >
-          <motion.div
-            whileHover={{ scale: 1.02, y: -2 }}
-            className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 px-8 py-5 rounded-full bg-white shadow-[0_20px_40px_-10px_rgba(0,0,0,0.05)] border border-[#BBC863]/20"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-[#31694E] font-bold text-xl">
-                Excellent
-              </span>
-              <div className="flex gap-1">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div
-                    key={i}
-                    className="w-6 h-6 bg-[#31694E] rounded flex items-center justify-center"
-                  >
-                    <Star size={12} fill="white" className="text-white" />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="hidden sm:block w-px h-8 bg-slate-200" />
-
-            <p className="text-sm text-slate-500 font-medium">
-              Rated <strong className="text-[#31694E]">4.9/5</strong> based on{" "}
-              <strong className="text-[#31694E]">1,250+</strong> reviews
-            </p>
-          </motion.div>
-        </motion.div>
-      </div>
-    </section>
-  );
-};
-
 // --- Component: Glass Card (Reusable) ---
 const GlassCard = ({ children, className = "", delay = 0 }) => (
   <motion.div
@@ -473,11 +208,11 @@ export const Hero = () => {
   const rotateImage = useTransform(scrollY, [0, 1000], [0, 5]);
 
   return (
-    <section className="relative min-h-screen flex items-center pt-28 pb-20 lg:pt-32 overflow-hidden bg-[#FAFAF8] selection:bg-[#BBC863] selection:text-white">
+    // Reduced padding (pt-20 pb-10) and removed min-h-screen for a more compact look
+    <section className="relative flex items-center pt-20 pb-10 lg:pt-24 overflow-hidden bg-[#FAFAF8] selection:bg-[#BBC863] selection:text-white">
       {/* --- Ambient Background --- */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <GridPattern />
-        {/* Animated Gradient Meshes */}
         <motion.div
           style={{ y: yBackground }}
           className="absolute -top-[20%] -right-[10%] w-[800px] h-[800px] bg-[#F0E491] rounded-full mix-blend-multiply filter blur-[120px] opacity-40 animate-pulse"
@@ -496,12 +231,12 @@ export const Hero = () => {
             style={{ y: yText }}
             className="lg:col-span-6 flex flex-col justify-center"
           >
-            {/* Badge */}
+            {/* Badge - Reduced mb-8 to mb-4 */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6 }}
-              className="w-fit mb-8"
+              className="w-fit mb-4"
             >
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#BBC863]/30 shadow-sm">
                 <span className="relative flex h-3 w-3">
@@ -514,12 +249,12 @@ export const Hero = () => {
               </div>
             </motion.div>
 
-            {/* Heading */}
+            {/* Heading - Reduced mb-6 to mb-4 */}
             <motion.h1
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="text-5xl lg:text-7xl font-extrabold text-[#31694E] leading-[1.1] mb-6 tracking-tight"
+              className="text-5xl lg:text-7xl font-extrabold text-[#31694E] leading-[1.1] mb-4 tracking-tight"
             >
               The First Step Toward{" "}
               <span className="relative inline-block whitespace-nowrap">
@@ -535,23 +270,23 @@ export const Hero = () => {
               </span>
             </motion.h1>
 
-            {/* Subtext */}
+            {/* Subtext - Reduced mb-10 to mb-6 */}
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              className="text-lg text-[#658C58] font-medium leading-relaxed max-w-lg mb-10"
+              className="text-lg text-[#658C58] font-medium leading-relaxed max-w-lg mb-6"
             >
               Kacu provides the resources and eco-friendly funding solutions you
               need to cultivate your business's financial future today.
             </motion.p>
 
-            {/* Actions */}
+            {/* Actions - Reduced mb-16 to mb-8 */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.6 }}
-              className="flex flex-col sm:flex-row gap-5 mb-16"
+              className="flex flex-col sm:flex-row gap-5 mb-8"
             >
               <Button variant="primary">
                 Get Started <ArrowRight size={18} />
@@ -596,8 +331,8 @@ export const Hero = () => {
           </motion.div>
 
           {/* --- Right Column: Visuals --- */}
-          <div className="lg:col-span-6 relative h-[700px] w-full perspective-1000">
-            {/* Main Image Container */}
+          {/* Reduced height from h-[700px] to h-[550px] */}
+          <div className="lg:col-span-6 relative h-[550px] w-full perspective-1000">
             <motion.div
               style={{ rotateY: rotateImage }}
               initial={{ opacity: 0, scale: 0.95, x: 50 }}
@@ -605,7 +340,6 @@ export const Hero = () => {
               transition={{ duration: 1, ease: "easeOut" }}
               className="relative w-full h-full z-10"
             >
-              {/* Abstract decorative circle behind image */}
               <div className="absolute top-10 right-10 w-[90%] h-[90%] border border-[#BBC863]/30 rounded-[3rem] -z-10 translate-x-4 translate-y-4" />
 
               <img
@@ -614,14 +348,12 @@ export const Hero = () => {
                 className="w-full h-full object-cover rounded-[3rem] shadow-[0_40px_80px_-20px_rgba(49,105,78,0.3)]"
                 style={{ objectPosition: "top" }}
               />
-
-              {/* Shine Overlay on Image */}
               <div className="absolute inset-0 rounded-[3rem] bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
             </motion.div>
 
-            {/* --- Floating Widget 1: Available Funds --- */}
+            {/* Floating Widget 1 */}
             <motion.div
-              className="absolute top-20 -left-8 z-30"
+              className="absolute top-10 -left-8 z-30"
               animate={{ y: [0, -15, 0] }}
               transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
             >
@@ -639,7 +371,6 @@ export const Hero = () => {
                     <ShieldCheck size={20} />
                   </div>
                 </div>
-                {/* Progress Bar */}
                 <div className="mt-2 w-full h-1.5 bg-[#F0E491]/30 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
@@ -651,9 +382,9 @@ export const Hero = () => {
               </GlassCard>
             </motion.div>
 
-            {/* --- Floating Widget 2: Agent Profile --- */}
+            {/* Floating Widget 2 */}
             <motion.div
-              className="absolute top-[45%] -left-4 z-40"
+              className="absolute top-[40%] -left-4 z-40"
               animate={{ x: [0, 10, 0] }}
               transition={{
                 repeat: Infinity,
@@ -683,9 +414,9 @@ export const Hero = () => {
               </GlassCard>
             </motion.div>
 
-            {/* --- Floating Widget 3: Live Chart --- */}
+            {/* Floating Widget 3 */}
             <motion.div
-              className="absolute bottom-12 -right-6 z-40"
+              className="absolute bottom-8 -right-6 z-40"
               animate={{ y: [0, 20, 0] }}
               transition={{
                 repeat: Infinity,
@@ -708,8 +439,6 @@ export const Hero = () => {
                     <TrendingUp size={20} />
                   </div>
                 </div>
-
-                {/* SVG Line Chart */}
                 <div className="relative h-24 w-full">
                   <svg
                     viewBox="0 0 200 100"
@@ -752,7 +481,6 @@ export const Hero = () => {
                       strokeWidth="3"
                       strokeLinecap="round"
                     />
-                    {/* Animated Dot at end of line */}
                     <motion.circle
                       cx="200"
                       cy="20"
@@ -774,6 +502,220 @@ export const Hero = () => {
     </section>
   );
 };
+
+// export const FundingOptions = () => {
+//   const options = [
+//     {
+//       title: "Term Business Loan",
+//       desc: "We don't just look at credit scores; we see your business potential. Funding in just 4 hours, with no hidden fees.",
+//       icon: BarChart3,
+//     },
+//     {
+//       title: "Working Capital Loans",
+//       desc: "Simple, fee-free and not dependent on credit history. Ideal for businesses with a steady monthly revenue of $15,000+.",
+//       icon: Briefcase,
+//     },
+//     {
+//       title: "Business Line Of Credit",
+//       desc: "Flexible funds when your business needs it. Our line of credit offers easy access to money, helping you handle sudden costs.",
+//       icon: CreditCard,
+//     },
+//     {
+//       title: "Equipment Financing",
+//       desc: "Afford essential tools with our equipment financing. Spread the cost over time, making it easier to grow.",
+//       icon: Zap,
+//     },
+//     {
+//       title: "Merchant Cash Advance",
+//       desc: "Need funds fast? Our merchant cash advance is ideal for quick cash boosts, with simple, speedy processing.",
+//       icon: Store,
+//     },
+//     {
+//       title: "Debt Consolidation",
+//       desc: "Simplify your debts. Merge multiple payments into one, easing your financial management.",
+//       icon: Layers,
+//     },
+//   ];
+
+//   return (
+//     <section className="relative py-32 overflow-hidden bg-[#FAFAF8]">
+//       {/* --- 1. Background Layer (Fixed & Animated) --- */}
+//       <div className="absolute inset-0 pointer-events-none overflow-hidden">
+//         {/* Technical Grid Overlay */}
+//         <div className="absolute inset-0 bg-[linear-gradient(rgba(49,105,78,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(49,105,78,0.03)_1px,transparent_1px)] bg-[size:50px_50px]" />
+
+//         {/* TOP RIGHT: Yellow/Gold Orb */}
+//         <motion.div
+//           animate={{ scale: [1, 1.1, 1], opacity: [0.4, 0.6, 0.4] }}
+//           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+//           className="absolute -top-[10%] -right-[5%] w-[700px] h-[700px] bg-gradient-to-br from-[#F0E491] to-[#BBC863] rounded-full blur-[140px] opacity-40 mix-blend-multiply"
+//         />
+
+//         {/* BOTTOM LEFT: Muted Gold/Green Orb */}
+//         <motion.div
+//           animate={{ scale: [1, 1.2, 1], x: [0, 50, 0] }}
+//           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+//           className="absolute -bottom-[10%] -left-[10%] w-[800px] h-[800px] bg-gradient-to-tr from-[#BBC863] to-[#658C58]/30 rounded-full blur-[150px] opacity-30 mix-blend-multiply"
+//         />
+//       </div>
+
+//       <div className="container mx-auto px-6 relative z-10">
+//         {/* --- 2. Header Section --- */}
+//         <div className="max-w-4xl mx-auto text-center mb-20">
+//           <motion.div
+//             initial={{ opacity: 0, y: 20 }}
+//             whileInView={{ opacity: 1, y: 0 }}
+//             viewport={{ once: true }}
+//             className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/80 backdrop-blur-md border border-[#BBC863]/40 shadow-sm mb-8 hover:shadow-md transition-shadow cursor-default"
+//           >
+//             <Sparkles
+//               size={14}
+//               className="text-[#BBC863] fill-[#BBC863] animate-pulse"
+//             />
+//             <span className="text-[#31694E] font-bold text-xs uppercase tracking-[0.2em]">
+//               Tailored Funding Solutions
+//             </span>
+//           </motion.div>
+
+//           <motion.h2
+//             initial={{ opacity: 0, y: 30 }}
+//             whileInView={{ opacity: 1, y: 0 }}
+//             viewport={{ once: true }}
+//             transition={{ delay: 0.1 }}
+//             className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-[#31694E] tracking-tight leading-[1.1] mb-6"
+//           >
+//             Funding Options <br />
+//             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#BBC863] via-[#658C58] to-[#31694E]">
+//               Engineered for Growth
+//             </span>
+//           </motion.h2>
+
+//           <motion.p
+//             initial={{ opacity: 0 }}
+//             whileInView={{ opacity: 1 }}
+//             viewport={{ once: true }}
+//             transition={{ delay: 0.3 }}
+//             className="text-lg md:text-xl text-[#5A7C6B] font-medium leading-relaxed max-w-2xl mx-auto"
+//           >
+//             Select the funding option that fits your goals. Our AI-driven
+//             assessment approves you in record time, so you can focus on
+//             building.
+//           </motion.p>
+//         </div>
+
+//         {/* --- 3. Cards Grid --- */}
+//         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+//           {options.map((opt, idx) => (
+//             <FundingCard key={idx} item={opt} index={idx} />
+//           ))}
+//         </div>
+
+//         {/* --- 4. Bottom CTA --- */}
+//         <motion.div
+//           initial={{ opacity: 0, y: 40 }}
+//           whileInView={{ opacity: 1, y: 0 }}
+//           viewport={{ once: true }}
+//           transition={{ delay: 0.6 }}
+//           className="mt-20 flex justify-center"
+//         >
+//           <button className="group relative px-10 py-5 bg-[#31694E] text-white rounded-full font-bold shadow-[0_20px_40px_-10px_rgba(49,105,78,0.4)] overflow-hidden transition-all hover:scale-105 hover:shadow-[0_25px_50px_-10px_rgba(49,105,78,0.5)] active:scale-95">
+//             <span className="relative z-10 flex items-center gap-3">
+//               View All Solutions
+//               <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+//             </span>
+//             {/* Shimmer Effect */}
+//             <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+//           </button>
+//         </motion.div>
+//       </div>
+//     </section>
+//   );
+// };
+
+// export const TrustStrip = () => {
+//   const [countsStarted, setCountsStarted] = useState(false);
+
+//   const stats = [
+//     { label: "Funding Provided", val: "$500M+", target: 500 },
+//     { label: "Business Supported", val: "10k+", target: 10 },
+//     { label: "Partner Banks", val: "50+", target: 50 },
+//     { label: "Customer Rating", val: "4.9/5", target: 4.9 },
+//   ];
+
+//   return (
+//     <section className="bg-gradient-to-r from-[#31694E] via-[#2A5943] to-[#31694E] py-20 text-white relative overflow-hidden">
+//       {/* Animated Grid Pattern */}
+//       <div className="absolute inset-0 opacity-10">
+//         <div className="absolute inset-0 bg-[radial-gradient(#F0E491_1px,transparent_1px)] [background-size:30px_30px] animate-pulse" />
+//       </div>
+
+//       {/* Floating Light Orbs */}
+//       <motion.div
+//         animate={{ x: [0, 100, 0], y: [0, -50, 0] }}
+//         transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+//         className="absolute top-0 left-0 w-64 h-64 bg-[#F0E491] rounded-full blur-[100px] opacity-20"
+//       />
+//       <motion.div
+//         animate={{ x: [0, -100, 0], y: [0, 50, 0] }}
+//         transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+//         className="absolute bottom-0 right-0 w-80 h-80 bg-[#BBC863] rounded-full blur-[120px] opacity-20"
+//       />
+
+//       <div className="container mx-auto px-6 relative z-10">
+//         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+//           {stats.map((s, i) => (
+//             <motion.div
+//               key={i}
+//               initial={{ opacity: 0, y: 30 }}
+//               whileInView={{ opacity: 1, y: 0 }}
+//               viewport={{ once: true }}
+//               onViewportEnter={() => setCountsStarted(true)}
+//               transition={{ delay: i * 0.1, duration: 0.6 }}
+//               className="text-center lg:text-left group"
+//             >
+//               <motion.div
+//                 whileHover={{ scale: 1.05 }}
+//                 className="relative inline-block"
+//               >
+//                 {/* Glow Effect on Hover */}
+//                 <motion.div className="absolute inset-0 bg-[#F0E491] rounded-2xl blur-2xl opacity-0 group-hover:opacity-30 transition-opacity duration-500" />
+
+//                 <motion.p
+//                   initial={{ scale: 0.5, opacity: 0 }}
+//                   whileInView={{ scale: 1, opacity: 1 }}
+//                   viewport={{ once: true }}
+//                   transition={{ delay: i * 0.1 + 0.2 }}
+//                   className="relative text-4xl lg:text-5xl font-bold mb-2 text-[#F0E491] drop-shadow-[0_0_20px_rgba(240,228,145,0.3)]"
+//                 >
+//                   {s.val}
+//                 </motion.p>
+//               </motion.div>
+
+//               <motion.p
+//                 initial={{ opacity: 0 }}
+//                 whileInView={{ opacity: 1 }}
+//                 viewport={{ once: true }}
+//                 transition={{ delay: i * 0.1 + 0.4 }}
+//                 className="text-[#BBC863] text-sm uppercase tracking-[0.2em] font-bold"
+//               >
+//                 {s.label}
+//               </motion.p>
+
+//               {/* Decorative Line */}
+//               <motion.div
+//                 initial={{ scaleX: 0 }}
+//                 whileInView={{ scaleX: 1 }}
+//                 viewport={{ once: true }}
+//                 transition={{ delay: i * 0.1 + 0.6, duration: 0.6 }}
+//                 className="h-1 w-16 bg-gradient-to-r from-[#F0E491] to-transparent rounded-full mt-3 mx-auto lg:mx-0 origin-left"
+//               />
+//             </motion.div>
+//           ))}
+//         </div>
+//       </div>
+//     </section>
+//   );
+// };
 
 export const FundingOptions = () => {
   const options = [
@@ -810,7 +752,8 @@ export const FundingOptions = () => {
   ];
 
   return (
-    <section className="relative py-32 overflow-hidden bg-[#FAFAF8]">
+    // Reduced padding from py-32 to py-16
+    <section className="relative py-16 overflow-hidden bg-[#FAFAF8]">
       {/* --- 1. Background Layer (Fixed & Animated) --- */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {/* Technical Grid Overlay */}
@@ -832,13 +775,14 @@ export const FundingOptions = () => {
       </div>
 
       <div className="container mx-auto px-6 relative z-10">
-        {/* --- 2. Header Section --- */}
-        <div className="max-w-4xl mx-auto text-center mb-20">
+        {/* --- 2. Header Section --- Reduced mb-20 to mb-12 */}
+        <div className="max-w-4xl mx-auto text-center mb-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/80 backdrop-blur-md border border-[#BBC863]/40 shadow-sm mb-8 hover:shadow-md transition-shadow cursor-default"
+            // Reduced mb-8 to mb-4
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/80 backdrop-blur-md border border-[#BBC863]/40 shadow-sm mb-4 hover:shadow-md transition-shadow cursor-default"
           >
             <Sparkles
               size={14}
@@ -854,7 +798,8 @@ export const FundingOptions = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-[#31694E] tracking-tight leading-[1.1] mb-6"
+            // Reduced mb-6 to mb-4
+            className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-[#31694E] tracking-tight leading-[1.1] mb-4"
           >
             Funding Options <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#BBC863] via-[#658C58] to-[#31694E]">
@@ -882,13 +827,13 @@ export const FundingOptions = () => {
           ))}
         </div>
 
-        {/* --- 4. Bottom CTA --- */}
+        {/* --- 4. Bottom CTA --- Reduced mt-20 to mt-12 */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.6 }}
-          className="mt-20 flex justify-center"
+          className="mt-12 flex justify-center"
         >
           <button className="group relative px-10 py-5 bg-[#31694E] text-white rounded-full font-bold shadow-[0_20px_40px_-10px_rgba(49,105,78,0.4)] overflow-hidden transition-all hover:scale-105 hover:shadow-[0_25px_50px_-10px_rgba(49,105,78,0.5)] active:scale-95">
             <span className="relative z-10 flex items-center gap-3">
@@ -904,7 +849,6 @@ export const FundingOptions = () => {
   );
 };
 
-// Enhanced Trust Strip with Counter Animation
 export const TrustStrip = () => {
   const [countsStarted, setCountsStarted] = useState(false);
 
@@ -916,7 +860,8 @@ export const TrustStrip = () => {
   ];
 
   return (
-    <section className="bg-gradient-to-r from-[#31694E] via-[#2A5943] to-[#31694E] py-20 text-white relative overflow-hidden">
+    // Reduced padding from py-20 to py-10
+    <section className="bg-gradient-to-r from-[#31694E] via-[#2A5943] to-[#31694E] py-10 text-white relative overflow-hidden">
       {/* Animated Grid Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0 bg-[radial-gradient(#F0E491_1px,transparent_1px)] [background-size:30px_30px] animate-pulse" />
@@ -1261,56 +1206,62 @@ export const CreditScoreSelector = () => {
   };
 
   return (
-    <section className="relative z-20 -mt-10 pb-28 px-4 md:px-6">
+    // Added a soft yellow gradient to the section background and a base grid
+    <section className="relative z-20 -mt-10 pb-12 px-4 md:px-6 bg-gradient-to-b from-transparent via-[#F0E491]/10 to-transparent">
+      {/* SECTION LEVEL GRID */}
+      <div
+        className="absolute inset-0 opacity-[0.03] pointer-events-none"
+        style={{
+          backgroundImage: `linear-gradient(#31694E 1px, transparent 1px), linear-gradient(90deg, #31694E 1px, transparent 1px)`,
+          backgroundSize: "60px 60px",
+        }}
+      />
+
       <div className="container mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8 }}
-          // --- Main Container: Dark Green Base ---
-          className="relative overflow-hidden rounded-[3rem] bg-[#1E3F30] p-8 md:p-16 lg:p-20 text-center shadow-[0_50px_100px_-20px_rgba(49,105,78,0.5)] border border-[#658C58]/30"
+          className="relative overflow-hidden rounded-[3rem] bg-[#1E3F30] p-6 md:p-12 text-center shadow-[0_50px_100px_-20px_rgba(49,105,78,0.5)] border border-[#658C58]/30"
         >
-          {/* --- ENHANCED BACKGROUND --- */}
+          {/* --- ENHANCED INTERNAL BACKGROUND --- */}
           <div className="absolute inset-0 pointer-events-none">
-            {/* 1. Technical Grid (More Visible) */}
+            {/* High-visibility internal technical grid */}
             <div
               className="absolute inset-0 opacity-20"
               style={{
-                backgroundImage: `linear-gradient(rgba(240, 228, 145, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(240, 228, 145, 0.1) 1px, transparent 1px)`,
-                backgroundSize: "40px 40px",
+                backgroundImage: `linear-gradient(rgba(240, 228, 145, 0.15) 1.5px, transparent 1.5px), linear-gradient(90deg, rgba(240, 228, 145, 0.15) 1.5px, transparent 1.5px)`,
+                backgroundSize: "30px 30px",
               }}
             />
 
-            {/* 2. Yellow/Gold Gradient Mesh (Top Right) */}
+            {/* Yellow Ambient Glow (Top Right) */}
             <motion.div
               animate={{
                 scale: [1, 1.2, 1],
-                opacity: [0.3, 0.5, 0.3],
-                rotate: [0, 45, 0],
+                opacity: [0.4, 0.6, 0.4],
               }}
-              transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -top-[20%] -right-[10%] w-[800px] h-[800px] bg-gradient-to-br from-[#F0E491] via-[#BBC863] to-transparent rounded-full blur-[120px] mix-blend-overlay"
+              transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute -top-[10%] -right-[5%] w-[600px] h-[600px] bg-[#F0E491] rounded-full blur-[140px] mix-blend-overlay"
             />
 
-            {/* 3. Deep Green/Yellow Gradient Mesh (Bottom Left) */}
+            {/* Yellow Ambient Glow (Bottom Left) */}
             <motion.div
               animate={{
                 scale: [1, 1.3, 1],
                 opacity: [0.2, 0.4, 0.2],
-                rotate: [0, -30, 0],
               }}
               transition={{
-                duration: 20,
+                duration: 15,
                 repeat: Infinity,
                 ease: "easeInOut",
-                delay: 2,
+                delay: 1,
               }}
-              className="absolute -bottom-[20%] -left-[10%] w-[700px] h-[700px] bg-gradient-to-tr from-[#31694E] to-[#F0E491]/30 rounded-full blur-[150px] mix-blend-screen"
+              className="absolute -bottom-[20%] -left-[5%] w-[500px] h-[500px] bg-[#F0E491]/40 rounded-full blur-[120px] mix-blend-screen"
             />
 
-            {/* 4. Overall Vignette to keep text readable */}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#1E3F30]/20 to-[#1E3F30]/80" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#1E3F30]/90" />
           </div>
 
           <div className="relative z-10 max-w-6xl mx-auto">
@@ -1321,10 +1272,9 @@ export const CreditScoreSelector = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
             >
-              {/* Badge */}
               <motion.div
                 whileHover={{ scale: 1.05 }}
-                className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-[#658C58]/20 backdrop-blur-md border border-[#F0E491]/20 mb-8 shadow-lg shadow-[#1E3F30]/50"
+                className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-[#658C58]/30 backdrop-blur-md border border-[#F0E491]/30 mb-4 shadow-lg"
               >
                 <div className="relative flex items-center justify-center">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F0E491] opacity-75"></span>
@@ -1335,8 +1285,7 @@ export const CreditScoreSelector = () => {
                 </span>
               </motion.div>
 
-              {/* Title */}
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 leading-[1.1]">
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-3 leading-[1.1]">
                 Let's find your{" "}
                 <span className="relative inline-block whitespace-nowrap">
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F0E491] to-[#BBC863]">
@@ -1352,14 +1301,14 @@ export const CreditScoreSelector = () => {
                 </span>
               </h2>
 
-              <p className="text-[#BBC863]/90 text-lg md:text-xl mb-16 max-w-2xl mx-auto font-medium leading-relaxed">
+              <p className="text-[#BBC863]/90 text-lg md:text-xl mb-8 max-w-2xl mx-auto font-medium leading-relaxed">
                 Select your credit score range to immediately see the funding
                 power available to your business.
               </p>
             </motion.div>
 
             {/* --- Interactive Score Buttons --- */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-14">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
               {Object.keys(fundingMap).map((score, index) => {
                 const item = fundingMap[score];
                 const isSelected = selectedScore === score;
@@ -1369,70 +1318,44 @@ export const CreditScoreSelector = () => {
                   <motion.button
                     key={score}
                     onClick={() => setSelectedScore(score)}
-                    onMouseEnter={() => setHoveredScore(score)}
-                    onMouseLeave={() => setHoveredScore(null)}
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.1 }}
                     whileHover={{ y: -5 }}
                     whileTap={{ scale: 0.98 }}
-                    className={`relative py-6 px-4 rounded-3xl flex flex-col items-center justify-center gap-3 transition-all duration-300 group ${
+                    className={`relative py-4 px-4 rounded-3xl flex flex-col items-center justify-center gap-3 transition-all duration-300 group ${
                       isSelected
                         ? "bg-gradient-to-b from-[#F0E491] to-[#BBC863] text-[#31694E] shadow-[0_20px_40px_-10px_rgba(240,228,145,0.5)] scale-105 z-10"
                         : "bg-white/5 backdrop-blur-md text-white/70 border border-white/10 hover:bg-white/10 hover:border-white/30 hover:text-white"
                     }`}
                   >
-                    {/* Active Indicator Dot */}
                     {isSelected && (
                       <motion.div
                         layoutId="activeDot"
                         className="absolute -top-2 -right-2 bg-white text-[#31694E] rounded-full p-1 shadow-lg"
                       >
-                        <CheckCircle
-                          size={16}
-                          fill="currentColor"
-                          className="text-[#31694E]"
-                        />
+                        <CheckCircle size={16} fill="currentColor" />
                       </motion.div>
                     )}
 
-                    {/* Icon */}
                     <ScoreIcon
                       size={28}
-                      className={`transition-colors duration-300 ${
-                        isSelected
-                          ? "text-[#31694E]"
-                          : "text-[#BBC863] group-hover:text-[#F0E491]"
-                      }`}
-                      strokeWidth={isSelected ? 2 : 1.5}
+                      className={`transition-colors duration-300 ${isSelected ? "text-[#31694E]" : "text-[#BBC863] group-hover:text-[#F0E491]"}`}
                     />
 
-                    {/* Text */}
                     <div className="flex flex-col gap-1">
                       <span
                         className={`text-lg font-bold tracking-wide ${isSelected ? "text-[#31694E]" : "text-white"}`}
                       >
                         {score}
                       </span>
-                      {/* Only show label on desktop to save space on mobile */}
                       <span
                         className={`hidden md:block text-[10px] uppercase font-bold tracking-wider ${isSelected ? "text-[#31694E]/70" : "text-white/40"}`}
                       >
                         {item.description}
                       </span>
                     </div>
-
-                    {/* Shine Effect for Active State */}
-                    {isSelected && (
-                      <motion.div
-                        className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-tr from-white/40 to-transparent opacity-50" />
-                      </motion.div>
-                    )}
                   </motion.button>
                 );
               })}
@@ -1441,15 +1364,13 @@ export const CreditScoreSelector = () => {
             {/* --- Dynamic Results Dashboard --- */}
             <motion.div
               layout
-              className="relative overflow-hidden bg-[#FAFAF8]/10 backdrop-blur-xl rounded-[2.5rem] p-8 md:p-12 border border-[#FAFAF8]/10 shadow-[inset_0_0_40px_rgba(255,255,255,0.05)]"
+              className="relative overflow-hidden bg-[#FAFAF8]/10 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-8 border border-[#FAFAF8]/10 shadow-[inset_0_0_40px_rgba(255,255,255,0.05)]"
             >
-              {/* Inner Glow */}
-              <div className="absolute -top-1/2 -right-1/2 w-full h-full bg-gradient-to-b from-[#F0E491]/10 to-transparent rounded-full blur-[100px] pointer-events-none" />
+              <div className="absolute -top-1/2 -right-1/2 w-full h-full bg-[#F0E491]/10 rounded-full blur-[100px] pointer-events-none" />
 
-              <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-10">
-                {/* Result Info */}
+              <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
                 <div className="w-full lg:w-1/2 text-left space-y-2">
-                  <div className="flex items-center gap-3 mb-2">
+                  <div className="flex items-center gap-3 mb-1">
                     <span className="text-[#BBC863] text-xs font-bold uppercase tracking-widest">
                       Estimated Funding Power
                     </span>
@@ -1464,7 +1385,7 @@ export const CreditScoreSelector = () => {
                       exit={{ opacity: 0, y: -20 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <h3 className="text-4xl md:text-6xl font-bold text-white tracking-tight mb-2 drop-shadow-lg">
+                      <h3 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-1 drop-shadow-lg">
                         {fundingMap[selectedScore].range}
                       </h3>
 
@@ -1483,8 +1404,7 @@ export const CreditScoreSelector = () => {
                     </motion.div>
                   </AnimatePresence>
 
-                  {/* Dynamic Progress Bar */}
-                  <div className="w-full h-2 bg-black/20 rounded-full mt-6 overflow-hidden backdrop-blur-sm">
+                  <div className="w-full h-2 bg-black/20 rounded-full mt-4 overflow-hidden backdrop-blur-sm">
                     <motion.div
                       className="h-full rounded-full relative"
                       style={{
@@ -1500,21 +1420,19 @@ export const CreditScoreSelector = () => {
                         damping: 15,
                       }}
                     >
-                      {/* Shimmer on bar */}
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite]" />
                     </motion.div>
                   </div>
                 </div>
 
-                {/* Call to Action Area */}
-                <div className="w-full lg:w-auto flex flex-col items-center lg:items-end gap-4">
+                <div className="w-full lg:w-auto flex flex-col items-center lg:items-end gap-3">
                   <motion.button
                     whileHover={{
                       scale: 1.05,
                       boxShadow: "0 0 30px rgba(240,228,145,0.4)",
                     }}
                     whileTap={{ scale: 0.95 }}
-                    className="group relative w-full lg:w-auto px-10 py-5 bg-[#F0E491] text-[#31694E] rounded-[1.5rem] font-bold text-lg shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] overflow-hidden transition-all"
+                    className="group relative w-full lg:w-auto px-10 py-4 bg-[#F0E491] text-[#31694E] rounded-[1.5rem] font-bold text-lg shadow-lg overflow-hidden transition-all"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-[#F0E491] via-[#BBC863] to-[#F0E491] group-hover:bg-[length:200%_100%] transition-all duration-500" />
                     <span className="relative z-10 flex items-center justify-center gap-3">
@@ -1539,3 +1457,319 @@ export const CreditScoreSelector = () => {
     </section>
   );
 };
+
+// export const CreditScoreSelector = () => {
+//   const [selectedScore, setSelectedScore] = useState("Excellent");
+//   const [hoveredScore, setHoveredScore] = useState(null);
+
+//   const fundingMap = {
+//     Excellent: {
+//       range: "$50,000 - $5M+",
+//       label: "Prime Rates Available",
+//       color: "#F0E491",
+//       icon: Sparkles,
+//       description: "Best rates & terms",
+//       progress: 100,
+//     },
+//     Great: {
+//       range: "$25,000 - $2M+",
+//       label: "Fast Approval",
+//       color: "#BBC863",
+//       icon: TrendingUp,
+//       description: "Quick processing",
+//       progress: 85,
+//     },
+//     Good: {
+//       range: "$10,000 - $1M",
+//       label: "Flexible Terms",
+//       color: "#658C58",
+//       icon: Activity,
+//       description: "Multiple options",
+//       progress: 70,
+//     },
+//     Fair: {
+//       range: "$5,000 - $500k",
+//       label: "Building Credit",
+//       color: "#31694E",
+//       icon: Shield,
+//       description: "Growth focused",
+//       progress: 50,
+//     },
+//     Poor: {
+//       range: "Custom Plans",
+//       label: "Revenue Based",
+//       color: "#A3A3A3",
+//       icon: Layers,
+//       description: "Alternative solutions",
+//       progress: 30,
+//     },
+//   };
+
+//   return (
+//     // Reduced pb-28 to pb-12
+//     <section className="relative z-20 -mt-10 pb-12 px-4 md:px-6">
+//       <div className="container mx-auto">
+//         <motion.div
+//           initial={{ opacity: 0, y: 50 }}
+//           whileInView={{ opacity: 1, y: 0 }}
+//           viewport={{ once: true, margin: "-100px" }}
+//           transition={{ duration: 0.8 }}
+//           // Reduced padding from p-8 md:p-16 lg:p-20 to p-6 md:p-12
+//           className="relative overflow-hidden rounded-[3rem] bg-[#1E3F30] p-6 md:p-12 text-center shadow-[0_50px_100px_-20px_rgba(49,105,78,0.5)] border border-[#658C58]/30"
+//         >
+//           {/* --- ENHANCED BACKGROUND --- */}
+//           <div className="absolute inset-0 pointer-events-none">
+//             <div
+//               className="absolute inset-0 opacity-20"
+//               style={{
+//                 backgroundImage: `linear-gradient(rgba(240, 228, 145, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(240, 228, 145, 0.1) 1px, transparent 1px)`,
+//                 backgroundSize: "40px 40px",
+//               }}
+//             />
+//             <motion.div
+//               animate={{
+//                 scale: [1, 1.2, 1],
+//                 opacity: [0.3, 0.5, 0.3],
+//                 rotate: [0, 45, 0],
+//               }}
+//               transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+//               className="absolute -top-[20%] -right-[10%] w-[800px] h-[800px] bg-gradient-to-br from-[#F0E491] via-[#BBC863] to-transparent rounded-full blur-[120px] mix-blend-overlay"
+//             />
+//             <motion.div
+//               animate={{
+//                 scale: [1, 1.3, 1],
+//                 opacity: [0.2, 0.4, 0.2],
+//                 rotate: [0, -30, 0],
+//               }}
+//               transition={{
+//                 duration: 20,
+//                 repeat: Infinity,
+//                 ease: "easeInOut",
+//                 delay: 2,
+//               }}
+//               className="absolute -bottom-[20%] -left-[10%] w-[700px] h-[700px] bg-gradient-to-tr from-[#31694E] to-[#F0E491]/30 rounded-full blur-[150px] mix-blend-screen"
+//             />
+//             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#1E3F30]/20 to-[#1E3F30]/80" />
+//           </div>
+
+//           <div className="relative z-10 max-w-6xl mx-auto">
+//             {/* --- Header Section --- */}
+//             <motion.div
+//               initial={{ opacity: 0, y: 30 }}
+//               whileInView={{ opacity: 1, y: 0 }}
+//               viewport={{ once: true }}
+//               transition={{ duration: 0.8 }}
+//             >
+//               {/* Badge - Reduced mb-8 to mb-4 */}
+//               <motion.div
+//                 whileHover={{ scale: 1.05 }}
+//                 className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-[#658C58]/20 backdrop-blur-md border border-[#F0E491]/20 mb-4 shadow-lg shadow-[#1E3F30]/50"
+//               >
+//                 <div className="relative flex items-center justify-center">
+//                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F0E491] opacity-75"></span>
+//                   <Sparkles className="relative text-[#F0E491]" size={16} />
+//                 </div>
+//                 <span className="text-[#F0E491] font-bold text-xs uppercase tracking-[0.15em]">
+//                   Instant Pre-Qualification
+//                 </span>
+//               </motion.div>
+
+//               {/* Title - Reduced mb-6 to mb-3 */}
+//               <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-3 leading-[1.1]">
+//                 Let's find your{" "}
+//                 <span className="relative inline-block whitespace-nowrap">
+//                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F0E491] to-[#BBC863]">
+//                     perfect match
+//                   </span>
+//                   <motion.div
+//                     initial={{ scaleX: 0 }}
+//                     whileInView={{ scaleX: 1 }}
+//                     viewport={{ once: true }}
+//                     transition={{ delay: 0.5, duration: 0.8, ease: "circOut" }}
+//                     className="absolute bottom-1 left-0 w-full h-3 bg-[#658C58]/40 -z-10 skew-x-12 origin-left"
+//                   />
+//                 </span>
+//               </h2>
+
+//               {/* Subtext - Reduced mb-16 to mb-8 */}
+//               <p className="text-[#BBC863]/90 text-lg md:text-xl mb-8 max-w-2xl mx-auto font-medium leading-relaxed">
+//                 Select your credit score range to immediately see the funding
+//                 power available to your business.
+//               </p>
+//             </motion.div>
+
+//             {/* --- Interactive Score Buttons --- Reduced mb-14 to mb-8 */}
+//             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+//               {Object.keys(fundingMap).map((score, index) => {
+//                 const item = fundingMap[score];
+//                 const isSelected = selectedScore === score;
+//                 const ScoreIcon = item.icon || Shield;
+
+//                 return (
+//                   <motion.button
+//                     key={score}
+//                     onClick={() => setSelectedScore(score)}
+//                     onMouseEnter={() => setHoveredScore(score)}
+//                     onMouseLeave={() => setHoveredScore(null)}
+//                     initial={{ opacity: 0, y: 30 }}
+//                     whileInView={{ opacity: 1, y: 0 }}
+//                     viewport={{ once: true }}
+//                     transition={{ delay: index * 0.1 }}
+//                     whileHover={{ y: -5 }}
+//                     whileTap={{ scale: 0.98 }}
+//                     // Reduced py-6 to py-4
+//                     className={`relative py-4 px-4 rounded-3xl flex flex-col items-center justify-center gap-3 transition-all duration-300 group ${
+//                       isSelected
+//                         ? "bg-gradient-to-b from-[#F0E491] to-[#BBC863] text-[#31694E] shadow-[0_20px_40px_-10px_rgba(240,228,145,0.5)] scale-105 z-10"
+//                         : "bg-white/5 backdrop-blur-md text-white/70 border border-white/10 hover:bg-white/10 hover:border-white/30 hover:text-white"
+//                     }`}
+//                   >
+//                     {isSelected && (
+//                       <motion.div
+//                         layoutId="activeDot"
+//                         className="absolute -top-2 -right-2 bg-white text-[#31694E] rounded-full p-1 shadow-lg"
+//                       >
+//                         <CheckCircle
+//                           size={16}
+//                           fill="currentColor"
+//                           className="text-[#31694E]"
+//                         />
+//                       </motion.div>
+//                     )}
+
+//                     <ScoreIcon
+//                       size={28}
+//                       className={`transition-colors duration-300 ${
+//                         isSelected
+//                           ? "text-[#31694E]"
+//                           : "text-[#BBC863] group-hover:text-[#F0E491]"
+//                       }`}
+//                       strokeWidth={isSelected ? 2 : 1.5}
+//                     />
+
+//                     <div className="flex flex-col gap-1">
+//                       <span
+//                         className={`text-lg font-bold tracking-wide ${isSelected ? "text-[#31694E]" : "text-white"}`}
+//                       >
+//                         {score}
+//                       </span>
+//                       <span
+//                         className={`hidden md:block text-[10px] uppercase font-bold tracking-wider ${isSelected ? "text-[#31694E]/70" : "text-white/40"}`}
+//                       >
+//                         {item.description}
+//                       </span>
+//                     </div>
+
+//                     {isSelected && (
+//                       <motion.div
+//                         className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none"
+//                         initial={{ opacity: 0 }}
+//                         animate={{ opacity: 1 }}
+//                       >
+//                         <div className="absolute inset-0 bg-gradient-to-tr from-white/40 to-transparent opacity-50" />
+//                       </motion.div>
+//                     )}
+//                   </motion.button>
+//                 );
+//               })}
+//             </div>
+
+//             {/* --- Dynamic Results Dashboard --- Reduced p-8 md:p-12 to p-6 md:p-8 */}
+//             <motion.div
+//               layout
+//               className="relative overflow-hidden bg-[#FAFAF8]/10 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-8 border border-[#FAFAF8]/10 shadow-[inset_0_0_40px_rgba(255,255,255,0.05)]"
+//             >
+//               <div className="absolute -top-1/2 -right-1/2 w-full h-full bg-gradient-to-b from-[#F0E491]/10 to-transparent rounded-full blur-[100px] pointer-events-none" />
+
+//               <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
+//                 <div className="w-full lg:w-1/2 text-left space-y-2">
+//                   <div className="flex items-center gap-3 mb-1">
+//                     <span className="text-[#BBC863] text-xs font-bold uppercase tracking-widest">
+//                       Estimated Funding Power
+//                     </span>
+//                     <div className="h-px flex-grow bg-gradient-to-r from-[#BBC863]/30 to-transparent" />
+//                   </div>
+
+//                   <AnimatePresence mode="wait">
+//                     <motion.div
+//                       key={selectedScore}
+//                       initial={{ opacity: 0, y: 20 }}
+//                       animate={{ opacity: 1, y: 0 }}
+//                       exit={{ opacity: 0, y: -20 }}
+//                       transition={{ duration: 0.3 }}
+//                     >
+//                       <h3 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-1 drop-shadow-lg">
+//                         {fundingMap[selectedScore].range}
+//                       </h3>
+
+//                       <div className="flex items-center gap-3">
+//                         <span
+//                           className="inline-block w-3 h-3 rounded-full shadow-[0_0_10px_currentColor]"
+//                           style={{
+//                             color: fundingMap[selectedScore].color,
+//                             backgroundColor: fundingMap[selectedScore].color,
+//                           }}
+//                         />
+//                         <p className="text-lg text-[#F0E491] font-medium">
+//                           {fundingMap[selectedScore].label}
+//                         </p>
+//                       </div>
+//                     </motion.div>
+//                   </AnimatePresence>
+
+//                   {/* Dynamic Progress Bar - Reduced mt-6 to mt-4 */}
+//                   <div className="w-full h-2 bg-black/20 rounded-full mt-4 overflow-hidden backdrop-blur-sm">
+//                     <motion.div
+//                       className="h-full rounded-full relative"
+//                       style={{
+//                         backgroundColor: fundingMap[selectedScore].color,
+//                       }}
+//                       initial={{ width: 0 }}
+//                       animate={{
+//                         width: `${fundingMap[selectedScore].progress}%`,
+//                       }}
+//                       transition={{
+//                         type: "spring",
+//                         stiffness: 50,
+//                         damping: 15,
+//                       }}
+//                     >
+//                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite]" />
+//                     </motion.div>
+//                   </div>
+//                 </div>
+
+//                 {/* Call to Action Area */}
+//                 <div className="w-full lg:w-auto flex flex-col items-center lg:items-end gap-3">
+//                   <motion.button
+//                     whileHover={{
+//                       scale: 1.05,
+//                       boxShadow: "0 0 30px rgba(240,228,145,0.4)",
+//                     }}
+//                     whileTap={{ scale: 0.95 }}
+//                     // Adjusted py-5 to py-4
+//                     className="group relative w-full lg:w-auto px-10 py-4 bg-[#F0E491] text-[#31694E] rounded-[1.5rem] font-bold text-lg shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] overflow-hidden transition-all"
+//                   >
+//                     <div className="absolute inset-0 bg-gradient-to-r from-[#F0E491] via-[#BBC863] to-[#F0E491] group-hover:bg-[length:200%_100%] transition-all duration-500" />
+//                     <span className="relative z-10 flex items-center justify-center gap-3">
+//                       Check Eligibility
+//                       <ArrowRight
+//                         className="group-hover:translate-x-1 transition-transform"
+//                         strokeWidth={2.5}
+//                       />
+//                     </span>
+//                   </motion.button>
+
+//                   <p className="flex items-center gap-2 text-[#BBC863]/80 text-xs font-medium">
+//                     <Shield size={14} />
+//                     Secure & confidential • No credit impact
+//                   </p>
+//                 </div>
+//               </div>
+//             </motion.div>
+//           </div>
+//         </motion.div>
+//       </div>
+//     </section>
+//   );
+// };
