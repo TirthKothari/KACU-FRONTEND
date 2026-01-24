@@ -935,6 +935,268 @@ export const TrustStrip = () => {
   );
 };
 
+export const CustomerStories = () => {
+  const reviews = [
+    {
+      name: "Sarah Jenkins",
+      business: "Boutique Owner",
+      title: "Funding in less than 24h!",
+      text: "I was skeptical at first, but Kacu delivered exactly as promised. I applied in the morning and had the working capital in my account by the afternoon.",
+      rating: 5,
+      date: "2 days ago",
+    },
+    {
+      name: "Michael Ross",
+      business: "Construction Firm",
+      title: "Professional and transparent",
+      text: "Unlike other lenders who hit you with hidden fees, Kacu was upfront about everything. The rep, Beth, walked me through the entire term loan process.",
+      rating: 5,
+      date: "1 week ago",
+    },
+    {
+      name: "David Chen",
+      business: "Tech Startup",
+      title: "Great for rapid scaling",
+      text: "We needed bridge financing while waiting for our Series A. The line of credit Kacu set up for us was flexible and grew as our revenue grew. A true partner.",
+      rating: 5,
+      date: "3 weeks ago",
+    },
+    {
+      name: "Elena Rodriguez",
+      business: "Restaurant Group",
+      title: "Lifesaver for equipment",
+      text: "Our main oven broke down right before the holiday rush. The equipment financing approval was instant, and we didn't have to drain our cash reserves.",
+      rating: 4,
+      date: "1 month ago",
+    },
+    {
+      name: "James Wilson",
+      business: "Logistics Co.",
+      title: "Simple process, great rates",
+      text: "The dashboard is super easy to use. I can check my balance and draw funds whenever I need fuel coverage. It's streamlined our cash flow management completely.",
+      rating: 5,
+      date: "2 days ago",
+    },
+    {
+      name: "Anita Patel",
+      business: "Dental Practice",
+      title: "Excellent customer support",
+      text: "I had a few questions about the repayment structure. The support team was knowledgeable and didn't treat me like just a number. Feels good to be supported.",
+      rating: 5,
+      date: "5 days ago",
+    },
+  ];
+
+  return (
+    <section className="relative py-32 overflow-hidden bg-[#FAFAF8]">
+      {/* --- 1. Living Background Mesh --- */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Abstract Grid */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(49,105,78,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(49,105,78,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
+
+        {/* Floating Gradient Orbs */}
+        <motion.div
+          animate={{ x: [0, 50, 0], y: [0, -50, 0], scale: [1, 1.1, 1] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-0 left-1/4 w-[800px] h-[800px] bg-[#F0E491]/30 rounded-full blur-[120px] mix-blend-multiply"
+        />
+        <motion.div
+          animate={{ x: [0, -50, 0], y: [0, 50, 0], scale: [1, 1.2, 1] }}
+          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-[#658C58]/20 rounded-full blur-[100px] mix-blend-multiply"
+        />
+      </div>
+
+      <div className="container mx-auto px-6 relative z-10">
+        {/* --- 2. Section Header --- */}
+        <div className="text-center max-w-4xl mx-auto mb-20">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white border border-[#BBC863]/30 shadow-sm mb-8"
+          >
+            <div className="relative">
+              <Star size={14} className="text-[#BBC863] fill-[#BBC863]" />
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-0 border border-[#BBC863] rounded-full opacity-50 scale-150"
+              />
+            </div>
+            <span className="text-[#31694E] font-bold text-xs uppercase tracking-[0.2em]">
+              Trusted by 5,000+ Businesses
+            </span>
+          </motion.div>
+
+          <motion.h2
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-5xl md:text-6xl font-extrabold text-[#31694E] mb-6 tracking-tight leading-[1.1]"
+          >
+            Real Stories.{" "}
+            <span className="relative inline-block whitespace-nowrap">
+              <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-[#658C58] to-[#31694E]">
+                Natural Success.
+              </span>
+              <motion.div
+                initial={{ scaleX: 0 }}
+                whileInView={{ scaleX: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.5, duration: 0.8, ease: "circOut" }}
+                className="absolute bottom-2 left-0 w-full h-3 bg-[#F0E491]/50 -z-10 origin-left -skew-x-12"
+              />
+            </span>
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="text-[#658C58] text-lg max-w-2xl mx-auto font-medium leading-relaxed"
+          >
+            Join thousands of business owners who trust Kacu to fund their
+            dreams. Transparency, speed, and organic growth are at our core.
+          </motion.p>
+        </div>
+
+        {/* --- 3. Enhanced Reviews Grid --- */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+          {reviews.map((review, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ delay: idx * 0.1, duration: 0.6 }}
+              className="h-full"
+            >
+              <motion.div
+                whileHover={{ y: -8 }}
+                className="group relative h-full flex flex-col p-8 rounded-[2rem] bg-white/60 backdrop-blur-xl border border-white/60 shadow-[0_10px_30px_-10px_rgba(49,105,78,0.05)] hover:shadow-[0_25px_50px_-10px_rgba(49,105,78,0.1)] transition-all duration-500 overflow-hidden"
+              >
+                {/* Subtle Gradient Overlay on Hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#F0E491]/10 via-transparent to-[#658C58]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                {/* Quote Icon Decoration */}
+                <div className="absolute top-6 right-6 text-[#BBC863]/20 group-hover:text-[#BBC863]/40 transition-colors">
+                  <Quote size={40} />
+                </div>
+
+                <div className="relative z-10 flex flex-col h-full">
+                  {/* Rating Header */}
+                  <div className="flex justify-between items-center mb-6">
+                    <div className="flex gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, scale: 0 }}
+                          whileInView={{ opacity: 1, scale: 1 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: idx * 0.1 + i * 0.05 }}
+                        >
+                          <Star
+                            size={16}
+                            className={
+                              i < review.rating
+                                ? "text-[#BBC863] fill-[#BBC863]"
+                                : "text-slate-200 fill-slate-200"
+                            }
+                          />
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    {/* Verified Badge */}
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#31694E]/5 border border-[#31694E]/10">
+                      <CheckCircle size={10} className="text-[#31694E]" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#31694E]">
+                        Verified
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <h3 className="text-xl font-bold text-[#1E3F30] mb-3 line-clamp-1 group-hover:text-[#31694E] transition-colors">
+                    "{review.title}"
+                  </h3>
+
+                  <p className="text-[#5A7C6B] text-sm leading-relaxed mb-8 flex-grow">
+                    {review.text}
+                  </p>
+
+                  {/* Author Footer */}
+                  <div className="mt-auto pt-6 border-t border-[#31694E]/10 flex items-center gap-4">
+                    <div className="relative w-12 h-12 rounded-2xl overflow-hidden shadow-inner">
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#658C58] to-[#31694E]" />
+                      <div className="absolute inset-0 flex items-center justify-center text-[#F0E491] font-bold text-lg">
+                        {review.name.charAt(0)}
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-bold text-[#31694E]">
+                        {review.name}
+                      </p>
+                      <p className="text-xs text-[#BBC863] font-bold uppercase tracking-wide">
+                        {review.business}
+                      </p>
+                    </div>
+
+                    <div className="ml-auto text-[10px] font-medium text-slate-400">
+                      {review.date}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* --- 4. Trust Banner --- */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.4 }}
+          className="mt-24 flex justify-center"
+        >
+          <motion.div
+            whileHover={{ scale: 1.02, y: -2 }}
+            className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 px-8 py-5 rounded-full bg-white shadow-[0_20px_40px_-10px_rgba(0,0,0,0.05)] border border-[#BBC863]/20"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-[#31694E] font-bold text-xl">
+                Excellent
+              </span>
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div
+                    key={i}
+                    className="w-6 h-6 bg-[#31694E] rounded flex items-center justify-center"
+                  >
+                    <Star size={12} fill="white" className="text-white" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="hidden sm:block w-px h-8 bg-slate-200" />
+
+            <p className="text-sm text-slate-500 font-medium">
+              Rated <strong className="text-[#31694E]">4.9/5</strong> based on{" "}
+              <strong className="text-[#31694E]">1,250+</strong> reviews
+            </p>
+          </motion.div>
+        </motion.div>
+      </div>
+    </section>
+  );
+};
+
 export const DarkFeatureSection = () => {
   const { scrollYProgress } = useScroll();
   const yParallax = useTransform(scrollYProgress, [0, 1], [0, -100]);
