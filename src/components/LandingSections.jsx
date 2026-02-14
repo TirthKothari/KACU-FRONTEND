@@ -50,21 +50,11 @@ const GridPattern = () => (
     </defs>
   </svg>
 );
+
 const GrainOverlay = () => (
-  <div className="absolute inset-0 opacity-[0.05] pointer-events-none mix-blend-overlay">
-    <svg className="w-full h-full">
-      <filter id="noiseFilter">
-        <feTurbulence
-          type="fractalNoise"
-          baseFrequency="0.8"
-          numOctaves="3"
-          stitchTiles="stitch"
-        />
-      </filter>
-      <rect width="100%" height="100%" filter="url(#noiseFilter)" />
-    </svg>
-  </div>
+  <div className="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
 );
+
 // --- Component: Spotlight Card ---
 // This component tracks mouse movement to create a cursor-following gradient
 const FundingCard = ({ item, index }) => {
@@ -945,51 +935,31 @@ export const CustomerStories = () => {
 };
 
 export const DarkFeatureSection = () => {
-  const { scrollYProgress } = useScroll();
-  const yParallax = useTransform(scrollYProgress, [0, 1], [0, -100]);
-  const rotateOrb = useTransform(scrollYProgress, [0, 1], [0, 45]);
-
   return (
     <section className="relative py-32 overflow-hidden bg-[#1E3F30]">
-      {/* --- Dynamic Background --- */}
+      {/* --- Static Background --- */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#31694E] via-[#2A5943] to-[#1E3F30]">
         <GrainOverlay />
 
-        {/* Animated Background Orbs */}
-        <motion.div
-          style={{ rotate: rotateOrb }}
-          className="absolute -top-[10%] -right-[10%] w-[800px] h-[800px] bg-[#658C58] rounded-full blur-[120px] opacity-20 mix-blend-screen"
-        />
-        <motion.div
-          style={{ y: yParallax }}
-          className="absolute -bottom-[20%] -left-[10%] w-[600px] h-[600px] bg-[#BBC863] rounded-full blur-[100px] opacity-10 mix-blend-screen"
-        />
+        {/* Static Background Orbs */}
+        <div className="absolute -top-[10%] -right-[10%] w-[800px] h-[800px] bg-[#658C58] rounded-full blur-[120px] opacity-20 mix-blend-screen" />
+        <div className="absolute -bottom-[20%] -left-[10%] w-[600px] h-[600px] bg-[#BBC863] rounded-full blur-[100px] opacity-10 mix-blend-screen" />
 
         {/* Techno Grid Overlay */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(240,228,145,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(240,228,145,0.03)_1px,transparent_1px)] bg-[size:60px_60px] opacity-30 mask-image-gradient" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(240,228,145,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(240,228,145,0.03)_1px,transparent_1px)] bg-[size:60px_60px] opacity-30" />
       </div>
 
       <div className="container mx-auto px-6 relative z-10">
         <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
           {/* --- Left Column: Content --- */}
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          >
-            {/* Glowing Badge */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#BBC863]/10 border border-[#BBC863]/20 backdrop-blur-md mb-8"
-            >
-              <div className="w-1.5 h-1.5 rounded-full bg-[#F0E491] animate-pulse shadow-[0_0_10px_#F0E491]" />
+          <div>
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#BBC863]/10 border border-[#BBC863]/20 backdrop-blur-md mb-8">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#F0E491] shadow-[0_0_10px_#F0E491]" />
               <span className="text-[#F0E491] font-bold tracking-[0.2em] text-[10px] uppercase">
                 Why Choose Kacu
               </span>
-            </motion.div>
+            </div>
 
             {/* Main Heading */}
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-[1.1]">
@@ -998,14 +968,8 @@ export const DarkFeatureSection = () => {
                 <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-[#F0E491] to-[#BBC863]">
                   Financial Growth.
                 </span>
-                {/* Underline Animation */}
-                <motion.div
-                  initial={{ scaleX: 0 }}
-                  whileInView={{ scaleX: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.5, duration: 0.8, ease: "circOut" }}
-                  className="absolute bottom-1 left-0 w-full h-3 bg-[#658C58]/40 -z-10 origin-left skew-x-12"
-                />
+                {/* Static Underline */}
+                <div className="absolute bottom-1 left-0 w-full h-3 bg-[#658C58]/40 -z-10 origin-left skew-x-12" />
               </span>
             </h2>
 
@@ -1029,25 +993,17 @@ export const DarkFeatureSection = () => {
                   desc: "Revenue-based options that adapt to your business flow. We only succeed when you do.",
                 },
               ].map((feature, i) => (
-                <motion.div
+                <div
                   key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.2 + i * 0.1 }}
-                  whileHover={{
-                    x: 10,
-                    backgroundColor: "rgba(101, 140, 88, 0.15)",
-                  }}
-                  className="group relative flex gap-5 p-5 rounded-2xl bg-white/5 border border-white/5 transition-all duration-300 overflow-hidden cursor-default"
+                  className="group relative flex gap-5 p-5 rounded-2xl bg-white/5 border border-white/5 overflow-hidden cursor-default hover:bg-white/10 transition-colors duration-300"
                 >
-                  {/* Hover Gradient Border */}
+                  {/* Hover Gradient Border (CSS only) */}
                   <div className="absolute inset-0 rounded-2xl border border-[#BBC863]/0 group-hover:border-[#BBC863]/30 transition-colors duration-300" />
 
                   {/* Icon Box */}
-                  <div className="relative w-12 h-12 rounded-xl bg-[#31694E] border border-[#658C58]/30 flex items-center justify-center text-[#F0E491] shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <div className="relative w-12 h-12 rounded-xl bg-[#31694E] border border-[#658C58]/30 flex items-center justify-center text-[#F0E491] shrink-0 shadow-lg">
                     <feature.icon size={22} strokeWidth={2} />
-                    {/* Icon Glow */}
+                    {/* Static Icon Glow on Hover */}
                     <div className="absolute inset-0 bg-[#F0E491] opacity-0 group-hover:opacity-20 blur-md transition-opacity duration-300 rounded-xl" />
                   </div>
 
@@ -1059,39 +1015,25 @@ export const DarkFeatureSection = () => {
                       {feature.desc}
                     </p>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
 
             {/* CTA Button */}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="group relative px-10 py-4 bg-[#F0E491] rounded-full overflow-hidden shadow-[0_0_40px_-10px_rgba(240,228,145,0.3)]"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-[#F0E491] to-[#BBC863] transition-all" />
+            <button className="group relative px-10 py-4 bg-[#F0E491] rounded-full overflow-hidden shadow-[0_0_40px_-10px_rgba(240,228,145,0.3)] hover:scale-105 transition-transform duration-300">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#F0E491] to-[#BBC863]" />
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay transition-opacity" />
 
               <span className="relative z-10 flex items-center gap-3 text-[#31694E] font-bold tracking-wide">
                 Get Funded Now
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </span>
-            </motion.button>
-          </motion.div>
+            </button>
+          </div>
 
-          {/* --- Right Column: Immersive Visuals --- */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1 }}
-            className="relative perspective-1000 pl-4 lg:pl-0"
-          >
-            <motion.div
-              animate={{ y: [0, -15, 0] }}
-              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-              className="relative z-20"
-            >
+          {/* --- Right Column: Static Visuals --- */}
+          <div className="relative perspective-1000 pl-4 lg:pl-0">
+            <div className="relative z-20">
               {/* Abstract Backdrop Shape */}
               <div className="absolute top-0 right-0 w-full h-full bg-[#658C58]/20 rounded-[2.5rem] rotate-6 scale-95 blur-sm -z-10" />
 
@@ -1101,24 +1043,15 @@ export const DarkFeatureSection = () => {
                 <img
                   src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1000&auto=format&fit=crop"
                   alt="Team Strategy"
-                  className="w-full h-auto object-cover opacity-90 group-hover:scale-105 transition-transform duration-700"
+                  className="w-full h-auto object-cover opacity-90"
                 />
 
                 {/* Overlay Gradient */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#1E3F30] via-transparent to-transparent opacity-80" />
-
-                {/* Scanning Line Effect */}
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#F0E491]/50 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-[scan_2s_ease-in-out_infinite]" />
               </div>
 
-              {/* Floating "Happy Clients" Card */}
-              <motion.div
-                initial={{ opacity: 0, y: 20, x: -20 }}
-                whileInView={{ opacity: 1, y: 0, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.5 }}
-                className="absolute -bottom-10 -left-6 md:-left-12 bg-[#FAFAF8]/10 backdrop-blur-xl border border-white/10 p-6 rounded-3xl shadow-[0_20px_40px_rgba(0,0,0,0.4)]"
-              >
+              {/* Static "Happy Clients" Card */}
+              <div className="absolute -bottom-10 -left-6 md:-left-12 bg-[#FAFAF8]/10 backdrop-blur-xl border border-white/10 p-6 rounded-3xl shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
                 {/* Inner Glow */}
                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-3xl pointer-events-none" />
 
@@ -1131,7 +1064,9 @@ export const DarkFeatureSection = () => {
                         className="relative w-12 h-12 rounded-full border-[3px] border-[#2A5943] bg-[#BBC863] overflow-hidden shadow-lg"
                       >
                         <img
-                          src={`https://randomuser.me/api/portraits/men/${i * 12 + 10}.jpg`}
+                          src={`https://randomuser.me/api/portraits/men/${
+                            i * 12 + 10
+                          }.jpg`}
                           alt="Client"
                           className="w-full h-full object-cover grayscale mix-blend-luminosity hover:grayscale-0 transition-all duration-300"
                         />
@@ -1154,13 +1089,13 @@ export const DarkFeatureSection = () => {
                     </p>
                   </div>
                 </div>
-              </motion.div>
+              </div>
 
               {/* Decorative Tech Elements */}
               <div className="absolute -top-6 -right-6 w-24 h-24 border-t-2 border-r-2 border-[#BBC863]/30 rounded-tr-[2rem] pointer-events-none" />
               <div className="absolute bottom-10 -right-10 w-20 h-20 border-b-2 border-r-2 border-[#658C58]/30 rounded-br-[2rem] pointer-events-none" />
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
