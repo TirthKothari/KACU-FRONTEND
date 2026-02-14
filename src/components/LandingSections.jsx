@@ -850,8 +850,6 @@ export const FundingOptions = () => {
 };
 
 export const TrustStrip = () => {
-  const [countsStarted, setCountsStarted] = useState(false);
-
   const stats = [
     { label: "Funding Provided", val: "$500M+", target: 500 },
     { label: "Business Supported", val: "10k+", target: 10 },
@@ -862,72 +860,35 @@ export const TrustStrip = () => {
   return (
     // Reduced padding from py-20 to py-10
     <section className="bg-gradient-to-r from-[#31694E] via-[#2A5943] to-[#31694E] py-10 text-white relative overflow-hidden">
-      {/* Animated Grid Pattern */}
+      {/* Grid Pattern (Static) */}
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0 bg-[radial-gradient(#F0E491_1px,transparent_1px)] [background-size:30px_30px] animate-pulse" />
+        <div className="absolute inset-0 bg-[radial-gradient(#F0E491_1px,transparent_1px)] [background-size:30px_30px]" />
       </div>
 
-      {/* Floating Light Orbs */}
-      <motion.div
-        animate={{ x: [0, 100, 0], y: [0, -50, 0] }}
-        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-0 left-0 w-64 h-64 bg-[#F0E491] rounded-full blur-[100px] opacity-20"
-      />
-      <motion.div
-        animate={{ x: [0, -100, 0], y: [0, 50, 0] }}
-        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute bottom-0 right-0 w-80 h-80 bg-[#BBC863] rounded-full blur-[120px] opacity-20"
-      />
+      {/* Floating Light Orbs (Static positions) */}
+      <div className="absolute top-0 left-0 w-64 h-64 bg-[#F0E491] rounded-full blur-[100px] opacity-20" />
+      <div className="absolute bottom-0 right-0 w-80 h-80 bg-[#BBC863] rounded-full blur-[120px] opacity-20" />
 
       <div className="container mx-auto px-6 relative z-10">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           {stats.map((s, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              onViewportEnter={() => setCountsStarted(true)}
-              transition={{ delay: i * 0.1, duration: 0.6 }}
-              className="text-center lg:text-left group"
-            >
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="relative inline-block"
-              >
-                {/* Glow Effect on Hover */}
-                <motion.div className="absolute inset-0 bg-[#F0E491] rounded-2xl blur-2xl opacity-0 group-hover:opacity-30 transition-opacity duration-500" />
+            <div key={i} className="text-center lg:text-left group">
+              <div className="relative inline-block">
+                {/* Glow Effect on Hover (CSS Transition only) */}
+                <div className="absolute inset-0 bg-[#F0E491] rounded-2xl blur-2xl opacity-0 group-hover:opacity-30 transition-opacity duration-500" />
 
-                <motion.p
-                  initial={{ scale: 0.5, opacity: 0 }}
-                  whileInView={{ scale: 1, opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 + 0.2 }}
-                  className="relative text-4xl lg:text-5xl font-bold mb-2 text-[#F0E491] drop-shadow-[0_0_20px_rgba(240,228,145,0.3)]"
-                >
+                <p className="relative text-4xl lg:text-5xl font-bold mb-2 text-[#F0E491] drop-shadow-[0_0_20px_rgba(240,228,145,0.3)]">
                   {s.val}
-                </motion.p>
-              </motion.div>
+                </p>
+              </div>
 
-              <motion.p
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 + 0.4 }}
-                className="text-[#BBC863] text-sm uppercase tracking-[0.2em] font-bold"
-              >
+              <p className="text-[#BBC863] text-sm uppercase tracking-[0.2em] font-bold">
                 {s.label}
-              </motion.p>
+              </p>
 
               {/* Decorative Line */}
-              <motion.div
-                initial={{ scaleX: 0 }}
-                whileInView={{ scaleX: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 + 0.6, duration: 0.6 }}
-                className="h-1 w-16 bg-gradient-to-r from-[#F0E491] to-transparent rounded-full mt-3 mx-auto lg:mx-0 origin-left"
-              />
-            </motion.div>
+              <div className="h-1 w-16 bg-gradient-to-r from-[#F0E491] to-transparent rounded-full mt-3 mx-auto lg:mx-0" />
+            </div>
           ))}
         </div>
       </div>
