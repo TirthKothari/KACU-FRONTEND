@@ -9,27 +9,29 @@ import {
   useMotionTemplate,
   useMotionValue,
 } from "framer-motion";
+
 import {
-  ArrowRight,
-  PlayCircle,
   Activity,
-  ShieldCheck,
-  TrendingUp,
-  Star,
-  CheckCircle,
-  Shield,
-  Sparkles,
-  Layers,
-  Quote,
-  Zap,
-  LayoutGrid,
+  ArrowRight,
   BarChart3,
   Briefcase,
-  CreditCard,
-  Store,
-  ChevronRight,
+  Check,
+  CheckCircle,
   CheckCircle2,
+  ChevronRight,
+  CreditCard,
+  Layers,
+  LayoutGrid,
+  PlayCircle,
+  Quote,
+  Shield,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  Store,
+  TrendingUp,
   User,
+  Zap,
 } from "lucide-react";
 
 const GrainOverlay = () => (
@@ -306,91 +308,6 @@ export const Hero = () => {
     </section>
   );
 };
-
-// const FundingCard = ({ item, index }) => {
-//   const divRef = useRef(null);
-//   const position = { x: useMotionValue(0), y: useMotionValue(0) };
-
-//   const handleMouseMove = (e) => {
-//     if (!divRef.current) return;
-//     const rect = divRef.current.getBoundingClientRect();
-//     position.x.set(e.clientX - rect.left);
-//     position.y.set(e.clientY - rect.top);
-//   };
-
-//   return (
-//     <motion.div
-//       ref={divRef}
-//       initial={{ opacity: 0, y: 50 }}
-//       whileInView={{ opacity: 1, y: 0 }}
-//       viewport={{ once: true, margin: "-50px" }}
-//       transition={{ delay: index * 0.1, duration: 0.5, ease: "easeOut" }}
-//       onMouseMove={handleMouseMove}
-//       // CHANGED: Background is now a 'Stone' gradient instead of white.
-//       // Border is darker (#31694E/20) for better visibility.
-//       className="group relative h-full rounded-[2rem] border border-[#31694E]/20 bg-gradient-to-br from-[#F5F5F2] to-[#E6E6E1] shadow-lg shadow-[#31694E]/5 overflow-hidden transition-colors duration-500 hover:border-[#BBC863]/50"
-//     >
-//       {/* 1. Spotlight Gradient Effect (Kept consistent) */}
-//       <motion.div
-//         className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-//         style={{
-//           background: useMotionTemplate`
-//             radial-gradient(
-//               600px circle at ${position.x}px ${position.y}px,
-//               rgba(255, 255, 255, 0.8),
-//               transparent 40%
-//             )
-//           `,
-//         }}
-//       />
-
-//       {/* 2. Content Container */}
-//       <div className="relative h-full p-6 flex flex-col z-10">
-//         {/* Icon Header */}
-//         <div className="flex justify-between items-start mb-6">
-//           {/* CHANGED: Icon box is now Dark Green by default for contrast */}
-//           <div className="relative w-16 h-16 rounded-2xl bg-[#31694E] border border-[#31694E] flex items-center justify-center text-[#F0E491] shadow-inner transition-all duration-500 group-hover:scale-110 group-hover:bg-[#BBC863] group-hover:text-[#31694E] group-hover:border-[#BBC863] group-hover:shadow-[0_10px_20px_rgba(187,200,99,0.4)]">
-//             <item.icon size={30} strokeWidth={1.5} />
-//             {/* Inner Glow on Hover */}
-//             <div className="absolute inset-0 rounded-2xl bg-white blur-md opacity-0 group-hover:opacity-40 transition-opacity" />
-//           </div>
-
-//           {/* Subtle Index Number */}
-//           <span className="text-4xl font-bold text-[#31694E]/10 group-hover:text-[#31694E]/20 transition-colors">
-//             0{index + 1}
-//           </span>
-//         </div>
-
-//         {/* Text Content */}
-//         {/* CHANGED: Text colors are deeper/darker */}
-//         <h3 className="text-2xl font-bold text-[#1E3F30] mb-3 group-hover:translate-x-1 transition-transform duration-300">
-//           {item.title}
-//         </h3>
-//         <p className="text-[#4A6B5D] leading-relaxed text-sm font-medium flex-grow mb-8 group-hover:text-[#31694E] transition-colors">
-//           {item.desc}
-//         </p>
-
-//         {/* Action Area */}
-//         <div className="pt-6 border-t border-[#31694E]/10 flex items-center justify-between group-hover:border-[#31694E]/20 transition-colors">
-//           <span className="text-xs font-bold text-[#658C58] uppercase tracking-widest group-hover:text-[#31694E] transition-colors">
-//             Learn More
-//           </span>
-//           <motion.div
-//             className="w-8 h-8 rounded-full bg-[#31694E]/10 flex items-center justify-center text-[#31694E] border border-[#31694E]/10"
-//             whileHover={{
-//               x: 5,
-//               backgroundColor: "#31694E",
-//               color: "#F0E491",
-//               borderColor: "#31694E",
-//             }}
-//           >
-//             <ArrowRight size={14} />
-//           </motion.div>
-//         </div>
-//       </div>
-//     </motion.div>
-//   );
-// };
 
 export const FundingCard = ({ item, index }) => {
   return (
@@ -952,7 +869,6 @@ export const DarkFeatureSection = () => {
 
 export const CreditScoreSelector = () => {
   const [selectedScore, setSelectedScore] = useState("Excellent");
-  const [hoveredScore, setHoveredScore] = useState(null);
 
   const fundingMap = {
     Excellent: {
@@ -960,7 +876,6 @@ export const CreditScoreSelector = () => {
       label: "Prime Rates Available",
       color: "#F0E491",
       icon: Sparkles,
-      description: "Best rates & terms",
       progress: 100,
     },
     Great: {
@@ -968,7 +883,6 @@ export const CreditScoreSelector = () => {
       label: "Fast Approval",
       color: "#BBC863",
       icon: TrendingUp,
-      description: "Quick processing",
       progress: 85,
     },
     Good: {
@@ -976,7 +890,6 @@ export const CreditScoreSelector = () => {
       label: "Flexible Terms",
       color: "#658C58",
       icon: Activity,
-      description: "Multiple options",
       progress: 70,
     },
     Fair: {
@@ -984,7 +897,6 @@ export const CreditScoreSelector = () => {
       label: "Building Credit",
       color: "#31694E",
       icon: Shield,
-      description: "Growth focused",
       progress: 50,
     },
     Poor: {
@@ -992,259 +904,152 @@ export const CreditScoreSelector = () => {
       label: "Revenue Based",
       color: "#A3A3A3",
       icon: Layers,
-      description: "Alternative solutions",
       progress: 30,
     },
   };
 
+  const selectedData = fundingMap[selectedScore];
+
   return (
-    // Added a soft yellow gradient to the section background and a base grid
-    <section className="relative z-20 -mt-10 pb-12 px-4 md:px-6 bg-gradient-to-b from-transparent via-[#F0E491]/10 to-transparent">
-      {/* SECTION LEVEL GRID */}
-      <div
-        className="absolute inset-0 opacity-[0.03] pointer-events-none"
-        style={{
-          backgroundImage: `linear-gradient(#31694E 1px, transparent 1px), linear-gradient(90deg, #31694E 1px, transparent 1px)`,
-          backgroundSize: "60px 60px",
-        }}
-      />
+    <section className="relative py-20 bg-[#1E3F30] overflow-hidden">
+      {/* --- Background Elements --- */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* Technical Grid */}
+        <div className="absolute inset-0 opacity-10 bg-[linear-gradient(rgba(240,228,145,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(240,228,145,0.1)_1px,transparent_1px)] bg-[size:40px_40px]" />
 
-      <div className="container mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.8 }}
-          className="relative overflow-hidden rounded-[3rem] bg-[#1E3F30] p-6 md:p-12 text-center shadow-[0_50px_100px_-20px_rgba(49,105,78,0.5)] border border-[#658C58]/30"
-        >
-          {/* --- ENHANCED INTERNAL BACKGROUND --- */}
-          <div className="absolute inset-0 pointer-events-none">
-            {/* High-visibility internal technical grid */}
-            <div
-              className="absolute inset-0 opacity-20"
-              style={{
-                backgroundImage: `linear-gradient(rgba(240, 228, 145, 0.15) 1.5px, transparent 1.5px), linear-gradient(90deg, rgba(240, 228, 145, 0.15) 1.5px, transparent 1.5px)`,
-                backgroundSize: "30px 30px",
-              }}
-            />
+        {/* Glow Effects */}
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#658C58] rounded-full blur-[120px] opacity-20" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#BBC863] rounded-full blur-[100px] opacity-10" />
+      </div>
 
-            {/* Yellow Ambient Glow (Top Right) */}
-            <motion.div
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.4, 0.6, 0.4],
-              }}
-              transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -top-[10%] -right-[5%] w-[600px] h-[600px] bg-[#F0E491] rounded-full blur-[140px] mix-blend-overlay"
-            />
-
-            {/* Yellow Ambient Glow (Bottom Left) */}
-            <motion.div
-              animate={{
-                scale: [1, 1.3, 1],
-                opacity: [0.2, 0.4, 0.2],
-              }}
-              transition={{
-                duration: 15,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 1,
-              }}
-              className="absolute -bottom-[20%] -left-[5%] w-[500px] h-[500px] bg-[#F0E491]/40 rounded-full blur-[120px] mix-blend-screen"
-            />
-
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#1E3F30]/90" />
-          </div>
-
-          <div className="relative z-10 max-w-6xl mx-auto">
-            {/* --- Header Section --- */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-            >
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-[#658C58]/30 backdrop-blur-md border border-[#F0E491]/30 mb-4 shadow-lg"
-              >
-                <div className="relative flex items-center justify-center">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F0E491] opacity-75"></span>
-                  <Sparkles className="relative text-[#F0E491]" size={16} />
-                </div>
-                <span className="text-[#F0E491] font-bold text-xs uppercase tracking-[0.15em]">
-                  Instant Pre-Qualification
-                </span>
-              </motion.div>
-
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-3 leading-[1.1]">
-                Let's find your{" "}
-                <span className="relative inline-block whitespace-nowrap">
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F0E491] to-[#BBC863]">
-                    perfect match
-                  </span>
-                  <motion.div
-                    initial={{ scaleX: 0 }}
-                    whileInView={{ scaleX: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.5, duration: 0.8, ease: "circOut" }}
-                    className="absolute bottom-1 left-0 w-full h-3 bg-[#658C58]/40 -z-10 skew-x-12 origin-left"
-                  />
-                </span>
-              </h2>
-
-              <p className="text-[#BBC863]/90 text-lg md:text-xl mb-8 max-w-2xl mx-auto font-medium leading-relaxed">
-                Select your credit score range to immediately see the funding
-                power available to your business.
-              </p>
-            </motion.div>
-
-            {/* --- Interactive Score Buttons --- */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-              {Object.keys(fundingMap).map((score, index) => {
-                const item = fundingMap[score];
-                const isSelected = selectedScore === score;
-                const ScoreIcon = item.icon || Shield;
-
-                return (
-                  <motion.button
-                    key={score}
-                    onClick={() => setSelectedScore(score)}
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1 }}
-                    whileHover={{ y: -5 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`relative py-4 px-4 rounded-3xl flex flex-col items-center justify-center gap-3 transition-all duration-300 group ${
-                      isSelected
-                        ? "bg-gradient-to-b from-[#F0E491] to-[#BBC863] text-[#31694E] shadow-[0_20px_40px_-10px_rgba(240,228,145,0.5)] scale-105 z-10"
-                        : "bg-white/5 backdrop-blur-md text-white/70 border border-white/10 hover:bg-white/10 hover:border-white/30 hover:text-white"
-                    }`}
-                  >
-                    {isSelected && (
-                      <motion.div
-                        layoutId="activeDot"
-                        className="absolute -top-2 -right-2 bg-white text-[#31694E] rounded-full p-1 shadow-lg"
-                      >
-                        <CheckCircle size={16} fill="currentColor" />
-                      </motion.div>
-                    )}
-
-                    <ScoreIcon
-                      size={28}
-                      className={`transition-colors duration-300 ${isSelected ? "text-[#31694E]" : "text-[#BBC863] group-hover:text-[#F0E491]"}`}
-                    />
-
-                    <div className="flex flex-col gap-1">
-                      <span
-                        className={`text-lg font-bold tracking-wide ${isSelected ? "text-[#31694E]" : "text-white"}`}
-                      >
-                        {score}
-                      </span>
-                      <span
-                        className={`hidden md:block text-[10px] uppercase font-bold tracking-wider ${isSelected ? "text-[#31694E]/70" : "text-white/40"}`}
-                      >
-                        {item.description}
-                      </span>
-                    </div>
-                  </motion.button>
-                );
-              })}
+      <div className="container mx-auto px-6 relative z-10">
+        <div className="grid lg:grid-cols-2 gap-16 items-center">
+          {/* --- Left Column: Information --- */}
+          <div className="text-white">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#BBC863]/10 border border-[#BBC863]/20 backdrop-blur-md mb-6">
+              <div className="w-2 h-2 rounded-full bg-[#F0E491] shadow-[0_0_10px_#F0E491]" />
+              <span className="text-[#F0E491] font-bold tracking-[0.2em] text-[10px] uppercase">
+                Instant Qualification
+              </span>
             </div>
 
-            {/* --- Dynamic Results Dashboard --- */}
-            <motion.div
-              layout
-              className="relative overflow-hidden bg-[#FAFAF8]/10 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-8 border border-[#FAFAF8]/10 shadow-[inset_0_0_40px_rgba(255,255,255,0.05)]"
-            >
-              <div className="absolute -top-1/2 -right-1/2 w-full h-full bg-[#F0E491]/10 rounded-full blur-[100px] pointer-events-none" />
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+              Unlock your <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F0E491] to-[#BBC863]">
+                Financial Potential.
+              </span>
+            </h2>
 
-              <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
-                <div className="w-full lg:w-1/2 text-left space-y-2">
-                  <div className="flex items-center gap-3 mb-1">
-                    <span className="text-[#BBC863] text-xs font-bold uppercase tracking-widest">
-                      Estimated Funding Power
-                    </span>
-                    <div className="h-px flex-grow bg-gradient-to-r from-[#BBC863]/30 to-transparent" />
+            <p className="text-lg text-slate-300 mb-8 leading-relaxed max-w-lg">
+              Don't let a number define your business's future. Whether you have
+              excellent credit or are just building it, Kacu has a funding
+              solution tailored to your revenue and goals.
+            </p>
+
+            {/* Checklist */}
+            <ul className="space-y-4 mb-10">
+              {[
+                "No hard credit pull to check eligibility",
+                "Funding available in as little as 4 hours",
+                "Rates starting as low as 6.99%",
+                "Dedicated advisor for every account",
+              ].map((item, i) => (
+                <li key={i} className="flex items-center gap-3">
+                  <div className="w-6 h-6 rounded-full bg-[#31694E] flex items-center justify-center text-[#F0E491] shrink-0 border border-[#658C58]">
+                    <Check size={14} strokeWidth={3} />
                   </div>
+                  <span className="text-slate-200 font-medium">{item}</span>
+                </li>
+              ))}
+            </ul>
 
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={selectedScore}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.3 }}
+            <div className="flex items-center gap-4 text-sm text-[#BBC863]/80 font-medium">
+              <Shield size={16} />
+              <span>Bank-level security & 256-bit encryption</span>
+            </div>
+          </div>
+
+          {/* --- Right Column: The Calculator --- */}
+          <div className="relative">
+            {/* Card Glow Background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#F0E491]/20 to-[#658C58]/20 rounded-[2.5rem] blur-xl" />
+
+            <div className="relative bg-[#FAFAF8]/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 shadow-2xl">
+              {/* Header */}
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-bold text-white mb-2">
+                  Select Your Credit Score
+                </h3>
+                <p className="text-white/60 text-sm">
+                  See your estimated funding power instantly
+                </p>
+              </div>
+
+              {/* Score Buttons Grid */}
+              <div className="grid grid-cols-5 gap-2 mb-8">
+                {Object.keys(fundingMap).map((score) => {
+                  const isSelected = selectedScore === score;
+                  return (
+                    <button
+                      key={score}
+                      onClick={() => setSelectedScore(score)}
+                      className={`relative flex flex-col items-center gap-2 p-2 py-4 rounded-xl transition-all duration-300 ${
+                        isSelected
+                          ? "bg-gradient-to-b from-[#F0E491] to-[#BBC863] text-[#1E3F30] shadow-lg scale-105 z-10"
+                          : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white"
+                      }`}
                     >
-                      <h3 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-1 drop-shadow-lg">
-                        {fundingMap[selectedScore].range}
-                      </h3>
-
-                      <div className="flex items-center gap-3">
-                        <span
-                          className="inline-block w-3 h-3 rounded-full shadow-[0_0_10px_currentColor]"
-                          style={{
-                            color: fundingMap[selectedScore].color,
-                            backgroundColor: fundingMap[selectedScore].color,
-                          }}
-                        />
-                        <p className="text-lg text-[#F0E491] font-medium">
-                          {fundingMap[selectedScore].label}
-                        </p>
-                      </div>
-                    </motion.div>
-                  </AnimatePresence>
-
-                  <div className="w-full h-2 bg-black/20 rounded-full mt-4 overflow-hidden backdrop-blur-sm">
-                    <motion.div
-                      className="h-full rounded-full relative"
-                      style={{
-                        backgroundColor: fundingMap[selectedScore].color,
-                      }}
-                      initial={{ width: 0 }}
-                      animate={{
-                        width: `${fundingMap[selectedScore].progress}%`,
-                      }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 50,
-                        damping: 15,
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite]" />
-                    </motion.div>
-                  </div>
-                </div>
-
-                <div className="w-full lg:w-auto flex flex-col items-center lg:items-end gap-3">
-                  <motion.button
-                    whileHover={{
-                      scale: 1.05,
-                      boxShadow: "0 0 30px rgba(240,228,145,0.4)",
-                    }}
-                    whileTap={{ scale: 0.95 }}
-                    className="group relative w-full lg:w-auto px-10 py-4 bg-[#F0E491] text-[#31694E] rounded-[1.5rem] font-bold text-lg shadow-lg overflow-hidden transition-all"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#F0E491] via-[#BBC863] to-[#F0E491] group-hover:bg-[length:200%_100%] transition-all duration-500" />
-                    <span className="relative z-10 flex items-center justify-center gap-3">
-                      Check Eligibility
-                      <ArrowRight
-                        className="group-hover:translate-x-1 transition-transform"
-                        strokeWidth={2.5}
+                      <span className="text-[10px] uppercase font-bold tracking-wider">
+                        {score}
+                      </span>
+                      {/* Status Dot */}
+                      <div
+                        className={`w-2 h-2 rounded-full ${isSelected ? "bg-[#1E3F30]" : "bg-white/20"}`}
                       />
-                    </span>
-                  </motion.button>
+                    </button>
+                  );
+                })}
+              </div>
 
-                  <p className="flex items-center gap-2 text-[#BBC863]/80 text-xs font-medium">
-                    <Shield size={14} />
-                    Secure & confidential • No credit impact
-                  </p>
+              {/* Result Display Area */}
+              <div className="bg-[#1E3F30]/50 rounded-3xl p-6 border border-white/5 text-center mb-8 relative overflow-hidden">
+                {/* Background Progress Bar (Visual) */}
+                <div
+                  className="absolute bottom-0 left-0 h-1 bg-[#F0E491] transition-all duration-500 ease-out"
+                  style={{ width: `${selectedData.progress}%` }}
+                />
+
+                <p className="text-[#BBC863] text-xs font-bold uppercase tracking-widest mb-2">
+                  Estimated Funding Range
+                </p>
+                <div className="text-3xl md:text-4xl font-bold text-white mb-2 transition-all duration-300">
+                  {selectedData.range}
+                </div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white/90 text-sm font-medium">
+                  <selectedData.icon size={14} className="text-[#F0E491]" />
+                  {selectedData.label}
                 </div>
               </div>
-            </motion.div>
+
+              {/* CTA Button */}
+              <button className="w-full group relative py-4 bg-[#F0E491] text-[#31694E] rounded-xl font-bold text-lg shadow-lg overflow-hidden hover:scale-[1.02] transition-transform duration-300">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#F0E491] to-[#BBC863] opacity-100 group-hover:opacity-90 transition-opacity" />
+                <span className="relative z-10 flex items-center justify-center gap-2">
+                  Check Eligibility
+                  <ArrowRight
+                    size={18}
+                    className="group-hover:translate-x-1 transition-transform"
+                  />
+                </span>
+              </button>
+
+              <p className="text-center text-white/40 text-xs mt-4">
+                *Preliminary estimate based on credit tier.
+              </p>
+            </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
