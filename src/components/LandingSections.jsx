@@ -307,88 +307,130 @@ export const Hero = () => {
   );
 };
 
-const FundingCard = ({ item, index }) => {
-  const divRef = useRef(null);
-  const position = { x: useMotionValue(0), y: useMotionValue(0) };
+// const FundingCard = ({ item, index }) => {
+//   const divRef = useRef(null);
+//   const position = { x: useMotionValue(0), y: useMotionValue(0) };
 
-  const handleMouseMove = (e) => {
-    if (!divRef.current) return;
-    const rect = divRef.current.getBoundingClientRect();
-    position.x.set(e.clientX - rect.left);
-    position.y.set(e.clientY - rect.top);
-  };
+//   const handleMouseMove = (e) => {
+//     if (!divRef.current) return;
+//     const rect = divRef.current.getBoundingClientRect();
+//     position.x.set(e.clientX - rect.left);
+//     position.y.set(e.clientY - rect.top);
+//   };
 
+//   return (
+//     <motion.div
+//       ref={divRef}
+//       initial={{ opacity: 0, y: 50 }}
+//       whileInView={{ opacity: 1, y: 0 }}
+//       viewport={{ once: true, margin: "-50px" }}
+//       transition={{ delay: index * 0.1, duration: 0.5, ease: "easeOut" }}
+//       onMouseMove={handleMouseMove}
+//       // CHANGED: Background is now a 'Stone' gradient instead of white.
+//       // Border is darker (#31694E/20) for better visibility.
+//       className="group relative h-full rounded-[2rem] border border-[#31694E]/20 bg-gradient-to-br from-[#F5F5F2] to-[#E6E6E1] shadow-lg shadow-[#31694E]/5 overflow-hidden transition-colors duration-500 hover:border-[#BBC863]/50"
+//     >
+//       {/* 1. Spotlight Gradient Effect (Kept consistent) */}
+//       <motion.div
+//         className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+//         style={{
+//           background: useMotionTemplate`
+//             radial-gradient(
+//               600px circle at ${position.x}px ${position.y}px,
+//               rgba(255, 255, 255, 0.8),
+//               transparent 40%
+//             )
+//           `,
+//         }}
+//       />
+
+//       {/* 2. Content Container */}
+//       <div className="relative h-full p-6 flex flex-col z-10">
+//         {/* Icon Header */}
+//         <div className="flex justify-between items-start mb-6">
+//           {/* CHANGED: Icon box is now Dark Green by default for contrast */}
+//           <div className="relative w-16 h-16 rounded-2xl bg-[#31694E] border border-[#31694E] flex items-center justify-center text-[#F0E491] shadow-inner transition-all duration-500 group-hover:scale-110 group-hover:bg-[#BBC863] group-hover:text-[#31694E] group-hover:border-[#BBC863] group-hover:shadow-[0_10px_20px_rgba(187,200,99,0.4)]">
+//             <item.icon size={30} strokeWidth={1.5} />
+//             {/* Inner Glow on Hover */}
+//             <div className="absolute inset-0 rounded-2xl bg-white blur-md opacity-0 group-hover:opacity-40 transition-opacity" />
+//           </div>
+
+//           {/* Subtle Index Number */}
+//           <span className="text-4xl font-bold text-[#31694E]/10 group-hover:text-[#31694E]/20 transition-colors">
+//             0{index + 1}
+//           </span>
+//         </div>
+
+//         {/* Text Content */}
+//         {/* CHANGED: Text colors are deeper/darker */}
+//         <h3 className="text-2xl font-bold text-[#1E3F30] mb-3 group-hover:translate-x-1 transition-transform duration-300">
+//           {item.title}
+//         </h3>
+//         <p className="text-[#4A6B5D] leading-relaxed text-sm font-medium flex-grow mb-8 group-hover:text-[#31694E] transition-colors">
+//           {item.desc}
+//         </p>
+
+//         {/* Action Area */}
+//         <div className="pt-6 border-t border-[#31694E]/10 flex items-center justify-between group-hover:border-[#31694E]/20 transition-colors">
+//           <span className="text-xs font-bold text-[#658C58] uppercase tracking-widest group-hover:text-[#31694E] transition-colors">
+//             Learn More
+//           </span>
+//           <motion.div
+//             className="w-8 h-8 rounded-full bg-[#31694E]/10 flex items-center justify-center text-[#31694E] border border-[#31694E]/10"
+//             whileHover={{
+//               x: 5,
+//               backgroundColor: "#31694E",
+//               color: "#F0E491",
+//               borderColor: "#31694E",
+//             }}
+//           >
+//             <ArrowRight size={14} />
+//           </motion.div>
+//         </div>
+//       </div>
+//     </motion.div>
+//   );
+// };
+
+export const FundingCard = ({ item, index }) => {
   return (
-    <motion.div
-      ref={divRef}
-      initial={{ opacity: 0, y: 50 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ delay: index * 0.1, duration: 0.5, ease: "easeOut" }}
-      onMouseMove={handleMouseMove}
-      // CHANGED: Background is now a 'Stone' gradient instead of white.
-      // Border is darker (#31694E/20) for better visibility.
-      className="group relative h-full rounded-[2rem] border border-[#31694E]/20 bg-gradient-to-br from-[#F5F5F2] to-[#E6E6E1] shadow-lg shadow-[#31694E]/5 overflow-hidden transition-colors duration-500 hover:border-[#BBC863]/50"
-    >
-      {/* 1. Spotlight Gradient Effect (Kept consistent) */}
-      <motion.div
-        className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-        style={{
-          background: useMotionTemplate`
-            radial-gradient(
-              600px circle at ${position.x}px ${position.y}px,
-              rgba(255, 255, 255, 0.8),
-              transparent 40%
-            )
-          `,
-        }}
-      />
-
-      {/* 2. Content Container */}
-      <div className="relative h-full p-8 flex flex-col z-10">
-        {/* Icon Header */}
-        <div className="flex justify-between items-start mb-6">
-          {/* CHANGED: Icon box is now Dark Green by default for contrast */}
-          <div className="relative w-16 h-16 rounded-2xl bg-[#31694E] border border-[#31694E] flex items-center justify-center text-[#F0E491] shadow-inner transition-all duration-500 group-hover:scale-110 group-hover:bg-[#BBC863] group-hover:text-[#31694E] group-hover:border-[#BBC863] group-hover:shadow-[0_10px_20px_rgba(187,200,99,0.4)]">
-            <item.icon size={30} strokeWidth={1.5} />
-            {/* Inner Glow on Hover */}
-            <div className="absolute inset-0 rounded-2xl bg-white blur-md opacity-0 group-hover:opacity-40 transition-opacity" />
+    <div className="group relative h-full flex flex-col justify-between overflow-hidden rounded-[2rem] border border-[#31694E]/10 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#BBC863] hover:shadow-[0_20px_40px_-15px_rgba(49,105,78,0.1)]">
+      <div className="relative z-10 p-6 flex flex-col h-full">
+        {/* --- Header: Icon & Decor --- */}
+        <div className="mb-6 flex justify-between items-start">
+          <div className="w-14 h-14 rounded-2xl bg-[#31694E] flex items-center justify-center text-[#F0E491] shadow-[0_8px_20px_-6px_rgba(49,105,78,0.3)] group-hover:scale-105 transition-transform duration-300">
+            <item.icon size={26} strokeWidth={2} />
           </div>
-
-          {/* Subtle Index Number */}
-          <span className="text-4xl font-bold text-[#31694E]/10 group-hover:text-[#31694E]/20 transition-colors">
-            0{index + 1}
-          </span>
         </div>
 
-        {/* Text Content */}
-        {/* CHANGED: Text colors are deeper/darker */}
-        <h3 className="text-2xl font-bold text-[#1E3F30] mb-3 group-hover:translate-x-1 transition-transform duration-300">
-          {item.title}
-        </h3>
-        <p className="text-[#4A6B5D] leading-relaxed text-sm font-medium flex-grow mb-8 group-hover:text-[#31694E] transition-colors">
-          {item.desc}
-        </p>
+        {/* --- Content --- */}
+        <div className="mb-8">
+          <h3 className="text-2xl font-bold text-[#1E3F30] mb-3 group-hover:text-[#31694E] transition-colors duration-300">
+            {item.title}
+          </h3>
+          <p className="text-[#5A7C6B] text-sm leading-relaxed font-medium">
+            {item.desc}
+          </p>
+        </div>
 
-        {/* Action Area */}
-        <div className="pt-6 border-t border-[#31694E]/10 flex items-center justify-between group-hover:border-[#31694E]/20 transition-colors">
-          <span className="text-xs font-bold text-[#658C58] uppercase tracking-widest group-hover:text-[#31694E] transition-colors">
+        {/* --- Footer: Action Line --- */}
+        <div className="mt-auto pt-6 border-t border-[#31694E]/10 flex items-center justify-between">
+          <span className="text-xs font-bold text-[#BBC863] uppercase tracking-[0.2em] group-hover:text-[#31694E] transition-colors duration-300">
             Learn More
           </span>
-          <motion.div
-            className="w-8 h-8 rounded-full bg-[#31694E]/10 flex items-center justify-center text-[#31694E] border border-[#31694E]/10"
-            whileHover={{
-              x: 5,
-              backgroundColor: "#31694E",
-              color: "#F0E491",
-              borderColor: "#31694E",
-            }}
-          >
-            <ArrowRight size={14} />
-          </motion.div>
+
+          <div className="w-8 h-8 rounded-full bg-[#FAFAF8] border border-[#31694E]/10 flex items-center justify-center text-[#31694E] transition-all duration-300 group-hover:bg-[#BBC863] group-hover:text-[#1E3F30] group-hover:border-transparent">
+            <ArrowRight
+              size={14}
+              className="group-hover:translate-x-0.5 transition-transform"
+            />
+          </div>
         </div>
       </div>
-    </motion.div>
+
+      {/* Bottom accent line using the gradient */}
+      <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-[#31694E] via-[#BBC863] to-[#F0E491] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+    </div>
   );
 };
 
@@ -427,98 +469,71 @@ export const FundingOptions = () => {
   ];
 
   return (
-    // Reduced padding from py-32 to py-16
-    <section className="relative py-10 overflow-hidden bg-[#FAFAF8]">
-      {/* --- 1. Background Layer (Fixed & Animated) --- */}
+    // Reduced padding to py-8 (compact)
+    <section className="relative py-8 overflow-hidden bg-[#FAFAF8]">
+      {/* --- 1. Static Background Layer --- */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {/* Technical Grid Overlay */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(49,105,78,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(49,105,78,0.03)_1px,transparent_1px)] bg-[size:50px_50px]" />
 
-        {/* TOP RIGHT: Yellow/Gold Orb */}
-        <motion.div
-          animate={{ scale: [1, 1.1, 1], opacity: [0.4, 0.6, 0.4] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-[10%] -right-[5%] w-[700px] h-[700px] bg-gradient-to-br from-[#F0E491] to-[#BBC863] rounded-full blur-[140px] opacity-40 mix-blend-multiply"
-        />
+        {/* TOP RIGHT: Static Yellow/Gold Orb */}
+        <div className="absolute -top-[10%] -right-[5%] w-[600px] h-[600px] bg-gradient-to-br from-[#F0E491] to-[#BBC863] rounded-full blur-[140px] opacity-40 mix-blend-multiply" />
 
-        {/* BOTTOM LEFT: Muted Gold/Green Orb */}
-        <motion.div
-          animate={{ scale: [1, 1.2, 1], x: [0, 50, 0] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -bottom-[10%] -left-[10%] w-[800px] h-[800px] bg-gradient-to-tr from-[#BBC863] to-[#658C58]/30 rounded-full blur-[150px] opacity-30 mix-blend-multiply"
-        />
+        {/* BOTTOM LEFT: Static Muted Gold/Green Orb */}
+        <div className="absolute -bottom-[10%] -left-[10%] w-[600px] h-[600px] bg-gradient-to-tr from-[#BBC863] to-[#658C58]/30 rounded-full blur-[150px] opacity-30 mix-blend-multiply" />
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
-        {/* --- 2. Header Section --- Reduced mb-20 to mb-12 */}
-        <div className="max-w-4xl mx-auto text-center mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            // Reduced mb-8 to mb-4
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/80 backdrop-blur-md border border-[#BBC863]/40 shadow-sm mb-4 hover:shadow-md transition-shadow cursor-default"
-          >
-            <Sparkles
-              size={14}
-              className="text-[#BBC863] fill-[#BBC863] animate-pulse"
-            />
-            <span className="text-[#31694E] font-bold text-xs uppercase tracking-[0.2em]">
+        {/* --- 2. Header Section --- */}
+        {/* Reduced margin-bottom from mb-12 to mb-10 */}
+        <div className="max-w-4xl mx-auto text-center mb-10">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 backdrop-blur-md border border-[#BBC863]/40 shadow-sm mb-4 cursor-default">
+            <Sparkles size={12} className="text-[#BBC863] fill-[#BBC863]" />
+            <span className="text-[#31694E] font-bold text-[10px] uppercase tracking-[0.2em]">
               Tailored Funding Solutions
             </span>
-          </motion.div>
+          </div>
 
-          <motion.h2
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            // Reduced mb-6 to mb-4
-            className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-[#31694E] tracking-tight leading-[1.1] mb-4"
-          >
+          {/* Title: Reduced font size significantly to save vertical space */}
+          <h2 className="text-4xl md:text-5xl font-extrabold text-[#31694E] tracking-tight leading-[1.1] mb-3">
             Funding Options <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#BBC863] via-[#658C58] to-[#31694E]">
               Engineered for Growth
             </span>
-          </motion.h2>
+          </h2>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.3 }}
-            className="text-lg md:text-xl text-[#5A7C6B] font-medium leading-relaxed max-w-2xl mx-auto"
-          >
+          {/* Description: Reduced font size to base/sm */}
+          <p className="text-base text-[#5A7C6B] font-medium leading-relaxed max-w-2xl mx-auto">
             Select the funding option that fits your goals. Our AI-driven
             assessment approves you in record time, so you can focus on
             building.
-          </motion.p>
+          </p>
         </div>
 
         {/* --- 3. Cards Grid --- */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* Reduced gap from gap-8 to gap-5 */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
           {options.map((opt, idx) => (
             <FundingCard key={idx} item={opt} index={idx} />
           ))}
         </div>
 
-        {/* --- 4. Bottom CTA --- Reduced mt-20 to mt-12 */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.6 }}
-          className="mt-12 flex justify-center"
-        >
-          <button className="group relative px-10 py-5 bg-[#31694E] text-white rounded-full font-bold shadow-[0_20px_40px_-10px_rgba(49,105,78,0.4)] overflow-hidden transition-all hover:scale-105 hover:shadow-[0_25px_50px_-10px_rgba(49,105,78,0.5)] active:scale-95">
-            <span className="relative z-10 flex items-center gap-3">
+        {/* --- 4. Bottom CTA --- */}
+        {/* Reduced margin-top from mt-12 to mt-8 */}
+        <div className="mt-8 flex justify-center">
+          <button className="group relative px-8 py-4 bg-[#31694E] text-white rounded-full font-bold shadow-[0_20px_40px_-10px_rgba(49,105,78,0.4)] overflow-hidden transition-all hover:scale-105 hover:shadow-[0_25px_50px_-10px_rgba(49,105,78,0.5)] active:scale-95">
+            <span className="relative z-10 flex items-center gap-2 text-sm">
               View All Solutions
-              <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+              <ArrowRight
+                size={16}
+                className="group-hover:translate-x-1 transition-transform"
+              />
             </span>
-            {/* Shimmer Effect */}
-            <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+            {/* Hover Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#31694E] to-[#2A5943] opacity-0 group-hover:opacity-100 transition-opacity" />
           </button>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
