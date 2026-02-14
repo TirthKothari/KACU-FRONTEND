@@ -19,8 +19,8 @@ const LandingPage = () => {
         <Hero />
         <TrustStrip />
         <FundingOptions />
-        <BusinessForm />
         <CreditScoreSelector />
+        <BusinessForm />
         <DarkFeatureSection />
         <CustomerStories />
       </main>
