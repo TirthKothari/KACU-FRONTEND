@@ -2,6 +2,7 @@ import React from "react";
 import { Navbar } from "../components/Navbar";
 import { BusinessForm } from "../components/BusinessForm.jsx";
 import { Footer } from "../components/Footer";
+import { PreQualificationForm } from "../components/prequalificationForm.jsx";
 import {
   Hero,
   TrustStrip,
@@ -19,10 +20,11 @@ const LandingPage = () => {
         <Hero />
         <TrustStrip />
         <FundingOptions />
+        {/* <BusinessForm /> */}
+        <PreQualificationForm />
         <CreditScoreSelector />
-        <BusinessForm />
-        <DarkFeatureSection />
         <CustomerStories />
+        <DarkFeatureSection />
       </main>
       <Footer />
     </div>
