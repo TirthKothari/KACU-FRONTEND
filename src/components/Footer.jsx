@@ -1,17 +1,10 @@
 import React from "react";
 import { ArrowRight } from "lucide-react";
 
-// PALETTE REFERENCE:
-// Highlight/Accent: #F0E491 (Pale Cream/Yellow)
-// Cards/Container:  #BBC863 (Olive/Muted Lime)
-// Interaction:      #658C58 (Sage Green)
-// Primary/Text:     #31694E (Deep Forest Green)
-
 export const Footer = () => (
   <footer className="bg-[#31694E] text-white pt-24 pb-12 border-t border-[#658C58]/30 relative overflow-hidden">
     {/* Subtle Decorative Background Blob */}
     <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#658C58] rounded-full blur-[150px] opacity-20 pointer-events-none -translate-y-1/2 translate-x-1/3"></div>
-
     <div className="container mx-auto px-6 relative z-10">
       <div className="grid md:grid-cols-4 gap-12 mb-16">
         {/* Brand Column */}

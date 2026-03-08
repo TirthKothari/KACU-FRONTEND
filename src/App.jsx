@@ -7,11 +7,13 @@ import ClientDashboard from "./pages/ClientDashboard";
 const App = () => {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/clientdashboard" element={<ClientDashboard />} />
-        <Route path="/wizard" element={<ApplicationWizard />} />
-      </Routes>
+      <div className="min-h-screen flex flex-col">
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/clientdashboard" element={<ClientDashboard />} />
+          <Route path="/wizard" element={<ApplicationWizard />} />
+        </Routes>
+      </div>
     </Router>
   );
 };

@@ -60,31 +60,278 @@ const GridPattern = () => (
   <div className="absolute inset-0 bg-[linear-gradient(rgba(49,105,78,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(49,105,78,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
 );
 
+// export const Hero = () => {
+//   return (
+//     // ⭐⭐ HEIGHT CONTROL 1:
+//     // I increased py-10 to py-20.
+//     // To make it taller, change 'min-h-[800px]' to a larger number or 'min-h-screen'.
+//     <section className="relative flex items-center pt-24 pb-2 min-h-[450px] overflow-hidden bg-[#FAFAF8] selection:bg-[#BBC863] selection:text-white">
+//       {/* --- Static Ambient Background --- */}
+//       <div className="absolute inset-0 overflow-hidden pointer-events-none">
+//         <GridPattern />
+//         {/* Static Orbs (No animation) */}
+//         <div className="absolute -top-[20%] -right-[10%] w-[400px] h-[400px] bg-[#F0E491] rounded-full mix-blend-multiply filter blur-[120px] opacity-40" />
+//         <div className="absolute top-[20%] -left-[10%] w-[600px] h-[600px] bg-[#BBC863] rounded-full mix-blend-multiply filter blur-[120px] opacity-30" />
+//         <div className="absolute bottom-0 right-[20%] w-[500px] h-[500px] bg-[#658C58] rounded-full mix-blend-multiply filter blur-[100px] opacity-20" />
+//       </div>
+
+//       <div className="container mx-auto px-16 relative z-10">
+//         <div className="grid lg:grid-cols-12 gap-12 items-center">
+//           {/* --- Left Column: Content --- */}
+//           <div className="lg:col-span-6 flex flex-col justify-center">
+//             {/* Badge */}
+//             <motion.div
+//               initial={{ opacity: 0, y: 10 }}
+//               animate={{ opacity: 1, y: 0 }}
+//               transition={{ duration: 0.5 }}
+//               className="w-fit mb-6"
+//             >
+//               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#BBC863]/30 shadow-sm">
+//                 <span className="relative flex h-3 w-3">
+//                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#BBC863] opacity-75"></span>
+//                   <span className="relative inline-flex rounded-full h-3 w-3 bg-[#658C58]"></span>
+//                 </span>
+//                 <span className="text-xs font-bold tracking-widest text-[#31694E] uppercase">
+//                   Finance Management
+//                 </span>
+//               </div>
+//             </motion.div>
+
+//             {/* Heading */}
+//             <motion.h1
+//               initial={{ opacity: 0, y: 10 }}
+//               animate={{ opacity: 1, y: 0 }}
+//               transition={{ duration: 0.5, delay: 0.1 }}
+//               className="text-5xl lg:text-7xl font-extrabold text-[#31694E] leading-[1.1] mb-6 tracking-tight"
+//             >
+//               The First Step Toward{" "}
+//               <span className="relative inline-block whitespace-nowrap">
+//                 <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-[#658C58] to-[#31694E]">
+//                   Natural Growth.
+//                 </span>
+//                 {/* Static Underline */}
+//                 <div className="absolute bottom-2 left-0 w-full h-4 bg-[#F0E491]/60 -z-0 -rotate-1" />
+//               </span>
+//             </motion.h1>
+
+//             {/* Subtext */}
+//             <motion.p
+//               initial={{ opacity: 0, y: 10 }}
+//               animate={{ opacity: 1, y: 0 }}
+//               transition={{ duration: 0.5, delay: 0.2 }}
+//               className="text-lg text-[#658C58] font-medium leading-relaxed max-w-lg mb-8"
+//             >
+//               Kacu provides the resources and eco-friendly funding solutions you
+//               need to cultivate your business's financial future today.
+//             </motion.p>
+
+//             {/* Actions */}
+//             <motion.div
+//               initial={{ opacity: 0, y: 10 }}
+//               animate={{ opacity: 1, y: 0 }}
+//               transition={{ duration: 0.5, delay: 0.3 }}
+//               className="flex flex-col sm:flex-row gap-5 mb-10"
+//             >
+//               <Button variant="primary">
+//                 Get Started <ArrowRight size={18} />
+//               </Button>
+//               <Button variant="secondary">
+//                 <PlayCircle size={18} /> How it works
+//               </Button>
+//             </motion.div>
+
+//             {/* Social Proof */}
+//             <motion.div
+//               initial={{ opacity: 0 }}
+//               animate={{ opacity: 1 }}
+//               transition={{ delay: 0.4 }}
+//               className="flex items-center gap-6"
+//             >
+//               <div className="flex -space-x-4 p-2 bg-white rounded-full shadow-lg shadow-[#BBC863]/10 border border-[#FAFAF8]">
+//                 {[32, 44, 86].map((num, i) => (
+//                   <img
+//                     key={num}
+//                     src={`https://randomuser.me/api/portraits/${i === 1 ? "women" : "men"}/${num}.jpg`}
+//                     className="w-10 h-10 rounded-full border-2 border-white object-cover"
+//                     alt="User"
+//                   />
+//                 ))}
+//               </div>
+//               <div>
+//                 <div className="flex items-center gap-1">
+//                   <span className="text-2xl font-bold text-[#31694E]">
+//                     3.5M+
+//                   </span>
+//                   <Activity size={16} className="text-[#BBC863]" />
+//                 </div>
+//                 <p className="text-xs font-bold text-[#658C58] tracking-wide uppercase opacity-80">
+//                   Active Users
+//                 </p>
+//               </div>
+//             </motion.div>
+//           </div>
+
+//           {/* --- Right Column: Visuals --- */}
+//           {/* ⭐⭐ HEIGHT CONTROL 2:
+//               To match the section height increase, increase h-[600px] to 700px or 800px.
+//           */}
+//           <div className="lg:col-span-6 relative h-[520px] w-full perspective-1000 mt-10 lg:mt-0">
+//             <motion.div
+//               initial={{ opacity: 0, scale: 0.95 }}
+//               animate={{ opacity: 1, scale: 1 }}
+//               transition={{ duration: 0.8 }}
+//               className="relative w-full h-full z-10"
+//             >
+//               {/* Border Outline */}
+//               <div className="absolute top-10 right-10 w-[90%] h-[90%] border border-[#BBC863]/30 rounded-[3rem] -z-10 translate-x-4 translate-y-4" />
+
+//               {/* Main Image */}
+//               <img
+//                 src="https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=1000&auto=format&fit=crop"
+//                 alt="Kacu Success Story"
+//                 className="w-full h-full object-cover rounded-[3rem] shadow-[0_40px_80px_-20px_rgba(49,105,78,0.3)]"
+//                 style={{ objectPosition: "top" }}
+//               />
+//               <div className="absolute inset-0 rounded-[3rem] bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
+//             </motion.div>
+
+//             {/* Static Floating Widget 1 */}
+//             <div className="absolute top-10 -left-8 z-30">
+//               <GlassCard className="p-6 min-w-[260px]">
+//                 <div className="flex justify-between items-start mb-2">
+//                   <div>
+//                     <p className="text-[10px] font-bold text-[#BBC863] uppercase tracking-wider mb-1">
+//                       Funds Available
+//                     </p>
+//                     <h3 className="text-3xl font-bold text-[#31694E]">
+//                       $8,952
+//                     </h3>
+//                   </div>
+//                   <div className="w-10 h-10 rounded-full bg-[#F0E491]/30 flex items-center justify-center text-[#31694E]">
+//                     <ShieldCheck size={20} />
+//                   </div>
+//                 </div>
+//                 <div className="mt-2 w-full h-1.5 bg-[#F0E491]/30 rounded-full overflow-hidden">
+//                   <div className="w-[75%] h-full bg-gradient-to-r from-[#658C58] to-[#31694E] rounded-full" />
+//                 </div>
+//               </GlassCard>
+//             </div>
+
+//             {/* Static Floating Widget 2 */}
+//             <div className="absolute top-[40%] -left-4 z-40">
+//               <GlassCard className="flex items-center gap-4 py-3 px-4 pr-8">
+//                 <div className="relative">
+//                   <div className="absolute inset-0 bg-[#BBC863] rounded-full blur opacity-40"></div>
+//                   <img
+//                     src="https://randomuser.me/api/portraits/women/65.jpg"
+//                     alt="Agent"
+//                     className="relative w-12 h-12 rounded-full border-2 border-white object-cover"
+//                   />
+//                 </div>
+//                 <div>
+//                   <p className="text-sm font-bold text-[#31694E]">
+//                     Sarah Jenkins
+//                   </p>
+//                   <p className="text-[10px] text-[#658C58] font-medium uppercase tracking-wide">
+//                     Loan Specialist
+//                   </p>
+//                 </div>
+//               </GlassCard>
+//             </div>
+
+//             {/* Static Floating Widget 3 */}
+//             <div className="absolute bottom-8 -right-6 z-40">
+//               <GlassCard className="p-6 w-72">
+//                 <div className="flex justify-between items-center mb-4">
+//                   <div>
+//                     <p className="text-[10px] font-bold text-[#BBC863] uppercase tracking-wider">
+//                       Current Balance
+//                     </p>
+//                     <p className="text-2xl font-bold text-[#31694E]">
+//                       $15,649.00
+//                     </p>
+//                   </div>
+//                   <div className="p-2 bg-[#658C58]/10 rounded-lg text-[#31694E]">
+//                     <TrendingUp size={20} />
+//                   </div>
+//                 </div>
+//                 <div className="relative h-24 w-full">
+//                   <svg
+//                     viewBox="0 0 200 100"
+//                     className="w-full h-full overflow-visible"
+//                   >
+//                     <defs>
+//                       <linearGradient
+//                         id="chartGradient"
+//                         x1="0"
+//                         y1="0"
+//                         x2="0"
+//                         y2="1"
+//                       >
+//                         <stop
+//                           offset="0%"
+//                           stopColor="#658C58"
+//                           stopOpacity="0.2"
+//                         />
+//                         <stop
+//                           offset="100%"
+//                           stopColor="#658C58"
+//                           stopOpacity="0"
+//                         />
+//                       </linearGradient>
+//                     </defs>
+//                     <path
+//                       d="M0 70 C 40 70, 60 30, 100 40 C 140 50, 160 10, 200 20 V 100 H 0 Z"
+//                       fill="url(#chartGradient)"
+//                     />
+//                     <path
+//                       d="M0 70 C 40 70, 60 30, 100 40 C 140 50, 160 10, 200 20"
+//                       fill="none"
+//                       stroke="#658C58"
+//                       strokeWidth="3"
+//                       strokeLinecap="round"
+//                     />
+//                     <circle
+//                       cx="200"
+//                       cy="20"
+//                       r="4"
+//                       fill="#FFFFFF"
+//                       stroke="#31694E"
+//                       strokeWidth="3"
+//                     />
+//                   </svg>
+//                 </div>
+//               </GlassCard>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//     </section>
+//   );
+// };
+
 export const Hero = () => {
   return (
-    // ⭐⭐ HEIGHT CONTROL 1:
-    // I increased py-10 to py-20.
-    // To make it taller, change 'min-h-[800px]' to a larger number or 'min-h-screen'.
-    <section className="relative flex items-center pt-24 pb-20 min-h-[825px] overflow-hidden bg-[#FAFAF8] selection:bg-[#BBC863] selection:text-white">
-      {/* --- Static Ambient Background --- */}
+    <section className="relative flex items-center pt-25 pb-14 min-h-[480px] overflow-hidden bg-[#FAFAF8] selection:bg-[#BBC863] selection:text-white">
+      {/* Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <GridPattern />
-        {/* Static Orbs (No animation) */}
-        <div className="absolute -top-[20%] -right-[10%] w-[800px] h-[800px] bg-[#F0E491] rounded-full mix-blend-multiply filter blur-[120px] opacity-40" />
-        <div className="absolute top-[20%] -left-[10%] w-[600px] h-[600px] bg-[#BBC863] rounded-full mix-blend-multiply filter blur-[120px] opacity-30" />
-        <div className="absolute bottom-0 right-[20%] w-[500px] h-[500px] bg-[#658C58] rounded-full mix-blend-multiply filter blur-[100px] opacity-20" />
+
+        <div className="absolute -top-[20%] -right-[10%] w-[300px] h-[300px] bg-[#F0E491] rounded-full mix-blend-multiply filter blur-[120px] opacity-40" />
+        <div className="absolute top-[20%] -left-[10%] w-[400px] h-[400px] bg-[#BBC863] rounded-full mix-blend-multiply filter blur-[120px] opacity-30" />
+        <div className="absolute bottom-0 right-[20%] w-[350px] h-[350px] bg-[#658C58] rounded-full mix-blend-multiply filter blur-[100px] opacity-20" />
       </div>
 
-      <div className="container mx-auto px-6 relative z-10">
-        <div className="grid lg:grid-cols-12 gap-12 items-center">
-          {/* --- Left Column: Content --- */}
+      <div className="container mx-auto px-18 relative z-10">
+        <div className="grid lg:grid-cols-12 gap-10 items-center">
+          {/* LEFT CONTENT */}
           <div className="lg:col-span-6 flex flex-col justify-center">
             {/* Badge */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="w-fit mb-6"
+              className="w-fit mb-5"
             >
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#BBC863]/30 shadow-sm">
                 <span className="relative flex h-3 w-3">
@@ -102,15 +349,14 @@ export const Hero = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-5xl lg:text-7xl font-extrabold text-[#31694E] leading-[1.1] mb-6 tracking-tight"
+              className="text-4xl lg:text-5xl font-extrabold text-[#31694E] leading-[1.1] mb-5 tracking-tight"
             >
               The First Step Toward{" "}
               <span className="relative inline-block whitespace-nowrap">
                 <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-[#658C58] to-[#31694E]">
                   Natural Growth.
                 </span>
-                {/* Static Underline */}
-                <div className="absolute bottom-2 left-0 w-full h-4 bg-[#F0E491]/60 -z-0 -rotate-1" />
+                <div className="absolute bottom-1 left-0 w-full h-3 bg-[#F0E491]/60 -z-0 -rotate-1" />
               </span>
             </motion.h1>
 
@@ -119,22 +365,23 @@ export const Hero = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="text-lg text-[#658C58] font-medium leading-relaxed max-w-lg mb-8"
+              className="text-base text-[#658C58] font-medium leading-relaxed max-w-lg mb-6"
             >
               Kacu provides the resources and eco-friendly funding solutions you
               need to cultivate your business's financial future today.
             </motion.p>
 
-            {/* Actions */}
+            {/* Buttons */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="flex flex-col sm:flex-row gap-5 mb-10"
+              className="flex flex-col sm:flex-row gap-4 mb-8"
             >
               <Button variant="primary">
                 Get Started <ArrowRight size={18} />
               </Button>
+
               <Button variant="secondary">
                 <PlayCircle size={18} /> How it works
               </Button>
@@ -145,21 +392,22 @@ export const Hero = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
-              className="flex items-center gap-6"
+              className="flex items-center gap-5"
             >
               <div className="flex -space-x-4 p-2 bg-white rounded-full shadow-lg shadow-[#BBC863]/10 border border-[#FAFAF8]">
                 {[32, 44, 86].map((num, i) => (
                   <img
                     key={num}
                     src={`https://randomuser.me/api/portraits/${i === 1 ? "women" : "men"}/${num}.jpg`}
-                    className="w-10 h-10 rounded-full border-2 border-white object-cover"
+                    className="w-9 h-9 rounded-full border-2 border-white object-cover"
                     alt="User"
                   />
                 ))}
               </div>
+
               <div>
                 <div className="flex items-center gap-1">
-                  <span className="text-2xl font-bold text-[#31694E]">
+                  <span className="text-xl font-bold text-[#31694E]">
                     3.5M+
                   </span>
                   <Activity size={16} className="text-[#BBC863]" />
@@ -171,136 +419,64 @@ export const Hero = () => {
             </motion.div>
           </div>
 
-          {/* --- Right Column: Visuals --- */}
-          {/* ⭐⭐ HEIGHT CONTROL 2: 
-              To match the section height increase, increase h-[600px] to 700px or 800px.
-          */}
-          <div className="lg:col-span-6 relative h-[600px] w-full perspective-1000 mt-10 lg:mt-0">
+          {/* RIGHT VISUAL */}
+          <div className="lg:col-span-6 relative h-[460px] w-full perspective-1000">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8 }}
               className="relative w-full h-full z-10"
             >
-              {/* Border Outline */}
-              <div className="absolute top-10 right-10 w-[90%] h-[90%] border border-[#BBC863]/30 rounded-[3rem] -z-10 translate-x-4 translate-y-4" />
+              <div className="absolute top-8 right-8 w-[90%] h-[90%] border border-[#BBC863]/30 rounded-[2.5rem] -z-10 translate-x-3 translate-y-3" />
 
-              {/* Main Image */}
               <img
                 src="https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=1000&auto=format&fit=crop"
                 alt="Kacu Success Story"
-                className="w-full h-full object-cover rounded-[3rem] shadow-[0_40px_80px_-20px_rgba(49,105,78,0.3)]"
-                style={{ objectPosition: "top" }}
+                className="w-full h-full object-cover rounded-[2.5rem] shadow-[0_30px_60px_-20px_rgba(49,105,78,0.3)]"
               />
-              <div className="absolute inset-0 rounded-[3rem] bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
+
+              <div className="absolute inset-0 rounded-[2.5rem] bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
             </motion.div>
 
-            {/* Static Floating Widget 1 */}
-            <div className="absolute top-10 -left-8 z-30">
-              <GlassCard className="p-6 min-w-[260px]">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <p className="text-[10px] font-bold text-[#BBC863] uppercase tracking-wider mb-1">
-                      Funds Available
-                    </p>
-                    <h3 className="text-3xl font-bold text-[#31694E]">
-                      $8,952
-                    </h3>
-                  </div>
-                  <div className="w-10 h-10 rounded-full bg-[#F0E491]/30 flex items-center justify-center text-[#31694E]">
-                    <ShieldCheck size={20} />
-                  </div>
-                </div>
-                <div className="mt-2 w-full h-1.5 bg-[#F0E491]/30 rounded-full overflow-hidden">
+            {/* Widget 1 */}
+            <div className="absolute top-4 -left-6 z-30">
+              <GlassCard className="p-4 min-w-[220px]">
+                <p className="text-[10px] font-bold text-[#BBC863] uppercase">
+                  Funds Available
+                </p>
+                <h3 className="text-2xl font-bold text-[#31694E]">$8,952</h3>
+                <div className="mt-2 w-full h-1.5 bg-[#F0E491]/30 rounded-full">
                   <div className="w-[75%] h-full bg-gradient-to-r from-[#658C58] to-[#31694E] rounded-full" />
                 </div>
               </GlassCard>
             </div>
 
-            {/* Static Floating Widget 2 */}
+            {/* Widget 2 */}
             <div className="absolute top-[40%] -left-4 z-40">
-              <GlassCard className="flex items-center gap-4 py-3 px-4 pr-8">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-[#BBC863] rounded-full blur opacity-40"></div>
-                  <img
-                    src="https://randomuser.me/api/portraits/women/65.jpg"
-                    alt="Agent"
-                    className="relative w-12 h-12 rounded-full border-2 border-white object-cover"
-                  />
-                </div>
+              <GlassCard className="flex items-center gap-3 py-2 px-3">
+                <img
+                  src="https://randomuser.me/api/portraits/women/65.jpg"
+                  className="w-10 h-10 rounded-full border-2 border-white"
+                  alt="Agent"
+                />
                 <div>
                   <p className="text-sm font-bold text-[#31694E]">
                     Sarah Jenkins
                   </p>
-                  <p className="text-[10px] text-[#658C58] font-medium uppercase tracking-wide">
+                  <p className="text-[10px] text-[#658C58] uppercase">
                     Loan Specialist
                   </p>
                 </div>
               </GlassCard>
             </div>
 
-            {/* Static Floating Widget 3 */}
-            <div className="absolute bottom-8 -right-6 z-40">
-              <GlassCard className="p-6 w-72">
-                <div className="flex justify-between items-center mb-4">
-                  <div>
-                    <p className="text-[10px] font-bold text-[#BBC863] uppercase tracking-wider">
-                      Current Balance
-                    </p>
-                    <p className="text-2xl font-bold text-[#31694E]">
-                      $15,649.00
-                    </p>
-                  </div>
-                  <div className="p-2 bg-[#658C58]/10 rounded-lg text-[#31694E]">
-                    <TrendingUp size={20} />
-                  </div>
-                </div>
-                <div className="relative h-24 w-full">
-                  <svg
-                    viewBox="0 0 200 100"
-                    className="w-full h-full overflow-visible"
-                  >
-                    <defs>
-                      <linearGradient
-                        id="chartGradient"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="0%"
-                          stopColor="#658C58"
-                          stopOpacity="0.2"
-                        />
-                        <stop
-                          offset="100%"
-                          stopColor="#658C58"
-                          stopOpacity="0"
-                        />
-                      </linearGradient>
-                    </defs>
-                    <path
-                      d="M0 70 C 40 70, 60 30, 100 40 C 140 50, 160 10, 200 20 V 100 H 0 Z"
-                      fill="url(#chartGradient)"
-                    />
-                    <path
-                      d="M0 70 C 40 70, 60 30, 100 40 C 140 50, 160 10, 200 20"
-                      fill="none"
-                      stroke="#658C58"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                    />
-                    <circle
-                      cx="200"
-                      cy="20"
-                      r="4"
-                      fill="#FFFFFF"
-                      stroke="#31694E"
-                      strokeWidth="3"
-                    />
-                  </svg>
-                </div>
+            {/* Widget 3 */}
+            <div className="absolute bottom-4 -right-6 z-40">
+              <GlassCard className="p-4 w-60">
+                <p className="text-[10px] font-bold text-[#BBC863] uppercase">
+                  Current Balance
+                </p>
+                <p className="text-xl font-bold text-[#31694E]">$15,649</p>
               </GlassCard>
             </div>
           </div>
