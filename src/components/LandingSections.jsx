@@ -60,256 +60,6 @@ const GridPattern = () => (
   <div className="absolute inset-0 bg-[linear-gradient(rgba(49,105,78,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(49,105,78,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
 );
 
-// export const Hero = () => {
-//   return (
-//     // ⭐⭐ HEIGHT CONTROL 1:
-//     // I increased py-10 to py-20.
-//     // To make it taller, change 'min-h-[800px]' to a larger number or 'min-h-screen'.
-//     <section className="relative flex items-center pt-24 pb-2 min-h-[450px] overflow-hidden bg-[#FAFAF8] selection:bg-[#BBC863] selection:text-white">
-//       {/* --- Static Ambient Background --- */}
-//       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-//         <GridPattern />
-//         {/* Static Orbs (No animation) */}
-//         <div className="absolute -top-[20%] -right-[10%] w-[400px] h-[400px] bg-[#F0E491] rounded-full mix-blend-multiply filter blur-[120px] opacity-40" />
-//         <div className="absolute top-[20%] -left-[10%] w-[600px] h-[600px] bg-[#BBC863] rounded-full mix-blend-multiply filter blur-[120px] opacity-30" />
-//         <div className="absolute bottom-0 right-[20%] w-[500px] h-[500px] bg-[#658C58] rounded-full mix-blend-multiply filter blur-[100px] opacity-20" />
-//       </div>
-
-//       <div className="container mx-auto px-16 relative z-10">
-//         <div className="grid lg:grid-cols-12 gap-12 items-center">
-//           {/* --- Left Column: Content --- */}
-//           <div className="lg:col-span-6 flex flex-col justify-center">
-//             {/* Badge */}
-//             <motion.div
-//               initial={{ opacity: 0, y: 10 }}
-//               animate={{ opacity: 1, y: 0 }}
-//               transition={{ duration: 0.5 }}
-//               className="w-fit mb-6"
-//             >
-//               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#BBC863]/30 shadow-sm">
-//                 <span className="relative flex h-3 w-3">
-//                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#BBC863] opacity-75"></span>
-//                   <span className="relative inline-flex rounded-full h-3 w-3 bg-[#658C58]"></span>
-//                 </span>
-//                 <span className="text-xs font-bold tracking-widest text-[#31694E] uppercase">
-//                   Finance Management
-//                 </span>
-//               </div>
-//             </motion.div>
-
-//             {/* Heading */}
-//             <motion.h1
-//               initial={{ opacity: 0, y: 10 }}
-//               animate={{ opacity: 1, y: 0 }}
-//               transition={{ duration: 0.5, delay: 0.1 }}
-//               className="text-5xl lg:text-7xl font-extrabold text-[#31694E] leading-[1.1] mb-6 tracking-tight"
-//             >
-//               The First Step Toward{" "}
-//               <span className="relative inline-block whitespace-nowrap">
-//                 <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-[#658C58] to-[#31694E]">
-//                   Natural Growth.
-//                 </span>
-//                 {/* Static Underline */}
-//                 <div className="absolute bottom-2 left-0 w-full h-4 bg-[#F0E491]/60 -z-0 -rotate-1" />
-//               </span>
-//             </motion.h1>
-
-//             {/* Subtext */}
-//             <motion.p
-//               initial={{ opacity: 0, y: 10 }}
-//               animate={{ opacity: 1, y: 0 }}
-//               transition={{ duration: 0.5, delay: 0.2 }}
-//               className="text-lg text-[#658C58] font-medium leading-relaxed max-w-lg mb-8"
-//             >
-//               Kacu provides the resources and eco-friendly funding solutions you
-//               need to cultivate your business's financial future today.
-//             </motion.p>
-
-//             {/* Actions */}
-//             <motion.div
-//               initial={{ opacity: 0, y: 10 }}
-//               animate={{ opacity: 1, y: 0 }}
-//               transition={{ duration: 0.5, delay: 0.3 }}
-//               className="flex flex-col sm:flex-row gap-5 mb-10"
-//             >
-//               <Button variant="primary">
-//                 Get Started <ArrowRight size={18} />
-//               </Button>
-//               <Button variant="secondary">
-//                 <PlayCircle size={18} /> How it works
-//               </Button>
-//             </motion.div>
-
-//             {/* Social Proof */}
-//             <motion.div
-//               initial={{ opacity: 0 }}
-//               animate={{ opacity: 1 }}
-//               transition={{ delay: 0.4 }}
-//               className="flex items-center gap-6"
-//             >
-//               <div className="flex -space-x-4 p-2 bg-white rounded-full shadow-lg shadow-[#BBC863]/10 border border-[#FAFAF8]">
-//                 {[32, 44, 86].map((num, i) => (
-//                   <img
-//                     key={num}
-//                     src={`https://randomuser.me/api/portraits/${i === 1 ? "women" : "men"}/${num}.jpg`}
-//                     className="w-10 h-10 rounded-full border-2 border-white object-cover"
-//                     alt="User"
-//                   />
-//                 ))}
-//               </div>
-//               <div>
-//                 <div className="flex items-center gap-1">
-//                   <span className="text-2xl font-bold text-[#31694E]">
-//                     3.5M+
-//                   </span>
-//                   <Activity size={16} className="text-[#BBC863]" />
-//                 </div>
-//                 <p className="text-xs font-bold text-[#658C58] tracking-wide uppercase opacity-80">
-//                   Active Users
-//                 </p>
-//               </div>
-//             </motion.div>
-//           </div>
-
-//           {/* --- Right Column: Visuals --- */}
-//           {/* ⭐⭐ HEIGHT CONTROL 2:
-//               To match the section height increase, increase h-[600px] to 700px or 800px.
-//           */}
-//           <div className="lg:col-span-6 relative h-[520px] w-full perspective-1000 mt-10 lg:mt-0">
-//             <motion.div
-//               initial={{ opacity: 0, scale: 0.95 }}
-//               animate={{ opacity: 1, scale: 1 }}
-//               transition={{ duration: 0.8 }}
-//               className="relative w-full h-full z-10"
-//             >
-//               {/* Border Outline */}
-//               <div className="absolute top-10 right-10 w-[90%] h-[90%] border border-[#BBC863]/30 rounded-[3rem] -z-10 translate-x-4 translate-y-4" />
-
-//               {/* Main Image */}
-//               <img
-//                 src="https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=1000&auto=format&fit=crop"
-//                 alt="Kacu Success Story"
-//                 className="w-full h-full object-cover rounded-[3rem] shadow-[0_40px_80px_-20px_rgba(49,105,78,0.3)]"
-//                 style={{ objectPosition: "top" }}
-//               />
-//               <div className="absolute inset-0 rounded-[3rem] bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
-//             </motion.div>
-
-//             {/* Static Floating Widget 1 */}
-//             <div className="absolute top-10 -left-8 z-30">
-//               <GlassCard className="p-6 min-w-[260px]">
-//                 <div className="flex justify-between items-start mb-2">
-//                   <div>
-//                     <p className="text-[10px] font-bold text-[#BBC863] uppercase tracking-wider mb-1">
-//                       Funds Available
-//                     </p>
-//                     <h3 className="text-3xl font-bold text-[#31694E]">
-//                       $8,952
-//                     </h3>
-//                   </div>
-//                   <div className="w-10 h-10 rounded-full bg-[#F0E491]/30 flex items-center justify-center text-[#31694E]">
-//                     <ShieldCheck size={20} />
-//                   </div>
-//                 </div>
-//                 <div className="mt-2 w-full h-1.5 bg-[#F0E491]/30 rounded-full overflow-hidden">
-//                   <div className="w-[75%] h-full bg-gradient-to-r from-[#658C58] to-[#31694E] rounded-full" />
-//                 </div>
-//               </GlassCard>
-//             </div>
-
-//             {/* Static Floating Widget 2 */}
-//             <div className="absolute top-[40%] -left-4 z-40">
-//               <GlassCard className="flex items-center gap-4 py-3 px-4 pr-8">
-//                 <div className="relative">
-//                   <div className="absolute inset-0 bg-[#BBC863] rounded-full blur opacity-40"></div>
-//                   <img
-//                     src="https://randomuser.me/api/portraits/women/65.jpg"
-//                     alt="Agent"
-//                     className="relative w-12 h-12 rounded-full border-2 border-white object-cover"
-//                   />
-//                 </div>
-//                 <div>
-//                   <p className="text-sm font-bold text-[#31694E]">
-//                     Sarah Jenkins
-//                   </p>
-//                   <p className="text-[10px] text-[#658C58] font-medium uppercase tracking-wide">
-//                     Loan Specialist
-//                   </p>
-//                 </div>
-//               </GlassCard>
-//             </div>
-
-//             {/* Static Floating Widget 3 */}
-//             <div className="absolute bottom-8 -right-6 z-40">
-//               <GlassCard className="p-6 w-72">
-//                 <div className="flex justify-between items-center mb-4">
-//                   <div>
-//                     <p className="text-[10px] font-bold text-[#BBC863] uppercase tracking-wider">
-//                       Current Balance
-//                     </p>
-//                     <p className="text-2xl font-bold text-[#31694E]">
-//                       $15,649.00
-//                     </p>
-//                   </div>
-//                   <div className="p-2 bg-[#658C58]/10 rounded-lg text-[#31694E]">
-//                     <TrendingUp size={20} />
-//                   </div>
-//                 </div>
-//                 <div className="relative h-24 w-full">
-//                   <svg
-//                     viewBox="0 0 200 100"
-//                     className="w-full h-full overflow-visible"
-//                   >
-//                     <defs>
-//                       <linearGradient
-//                         id="chartGradient"
-//                         x1="0"
-//                         y1="0"
-//                         x2="0"
-//                         y2="1"
-//                       >
-//                         <stop
-//                           offset="0%"
-//                           stopColor="#658C58"
-//                           stopOpacity="0.2"
-//                         />
-//                         <stop
-//                           offset="100%"
-//                           stopColor="#658C58"
-//                           stopOpacity="0"
-//                         />
-//                       </linearGradient>
-//                     </defs>
-//                     <path
-//                       d="M0 70 C 40 70, 60 30, 100 40 C 140 50, 160 10, 200 20 V 100 H 0 Z"
-//                       fill="url(#chartGradient)"
-//                     />
-//                     <path
-//                       d="M0 70 C 40 70, 60 30, 100 40 C 140 50, 160 10, 200 20"
-//                       fill="none"
-//                       stroke="#658C58"
-//                       strokeWidth="3"
-//                       strokeLinecap="round"
-//                     />
-//                     <circle
-//                       cx="200"
-//                       cy="20"
-//                       r="4"
-//                       fill="#FFFFFF"
-//                       stroke="#31694E"
-//                       strokeWidth="3"
-//                     />
-//                   </svg>
-//                 </div>
-//               </GlassCard>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     </section>
-//   );
-// };
-
 export const Hero = () => {
   return (
     <section className="relative flex items-center pt-25 pb-14 min-h-[480px] overflow-hidden bg-[#FAFAF8] selection:bg-[#BBC863] selection:text-white">
@@ -488,12 +238,23 @@ export const Hero = () => {
 
 export const FundingCard = ({ item, index }) => {
   return (
-    <div className="group relative h-full flex flex-col justify-between overflow-hidden rounded-[2rem] border border-[#31694E]/10 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#BBC863] hover:shadow-[0_20px_40px_-15px_rgba(49,105,78,0.1)]">
+    <div className="group relative h-full flex flex-col justify-between overflow-hidden rounded-[2rem] border border-[#BBC863]/25 bg-white shadow-[0_8px_30px_-8px_rgba(49,105,78,0.12)] transition-all duration-300 hover:-translate-y-1 hover:border-[#BBC863] hover:shadow-[0_20px_40px_-15px_rgba(49,105,78,0.18)]">
       <div className="relative z-10 p-6 flex flex-col h-full">
         {/* --- Header: Icon & Decor --- */}
         <div className="mb-6 flex justify-between items-start">
-          <div className="w-14 h-14 rounded-2xl bg-[#31694E] flex items-center justify-center text-[#F0E491] shadow-[0_8px_20px_-6px_rgba(49,105,78,0.3)] group-hover:scale-105 transition-transform duration-300">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#31694E] to-[#2A5943] flex items-center justify-center text-[#F0E491] shadow-[0_8px_20px_-6px_rgba(49,105,78,0.35)] group-hover:scale-105 transition-transform duration-300">
             <item.icon size={26} strokeWidth={2} />
+          </div>
+          {/* Subtle decorative dot cluster */}
+          <div className="flex flex-col gap-1 opacity-30 group-hover:opacity-60 transition-opacity duration-300">
+            <div className="flex gap-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#BBC863]" />
+              <div className="w-1.5 h-1.5 rounded-full bg-[#BBC863]/50" />
+            </div>
+            <div className="flex gap-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#BBC863]/50" />
+              <div className="w-1.5 h-1.5 rounded-full bg-[#BBC863]" />
+            </div>
           </div>
         </div>
 
@@ -508,12 +269,12 @@ export const FundingCard = ({ item, index }) => {
         </div>
 
         {/* --- Footer: Action Line --- */}
-        <div className="mt-auto pt-6 border-t border-[#31694E]/10 flex items-center justify-between">
-          <span className="text-xs font-bold text-[#BBC863] uppercase tracking-[0.2em] group-hover:text-[#31694E] transition-colors duration-300">
+        <div className="mt-auto pt-6 border-t border-[#BBC863]/20 flex items-center justify-between">
+          <span className="text-xs font-bold text-[#31694E]/60 uppercase tracking-[0.2em] group-hover:text-[#BBC863] transition-colors duration-300">
             Learn More
           </span>
 
-          <div className="w-8 h-8 rounded-full bg-[#FAFAF8] border border-[#31694E]/10 flex items-center justify-center text-[#31694E] transition-all duration-300 group-hover:bg-[#BBC863] group-hover:text-[#1E3F30] group-hover:border-transparent">
+          <div className="w-8 h-8 rounded-full bg-[#F5F7F4] border border-[#BBC863]/30 flex items-center justify-center text-[#31694E] transition-all duration-300 group-hover:bg-[#BBC863] group-hover:text-[#1E3F30] group-hover:border-transparent shadow-sm">
             <ArrowRight
               size={14}
               className="group-hover:translate-x-0.5 transition-transform"
@@ -563,8 +324,7 @@ export const FundingOptions = () => {
   ];
 
   return (
-    // Reduced padding to py-8 (compact)
-    <section className="relative py-8 overflow-hidden bg-[#FAFAF8]">
+    <section className="relative py-12 overflow-hidden bg-[#FAFAF8]">
       {/* --- 1. Static Background Layer --- */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {/* Technical Grid Overlay */}
@@ -577,19 +337,19 @@ export const FundingOptions = () => {
         <div className="absolute -bottom-[10%] -left-[10%] w-[600px] h-[600px] bg-gradient-to-tr from-[#BBC863] to-[#658C58]/30 rounded-full blur-[150px] opacity-30 mix-blend-multiply" />
       </div>
 
-      <div className="container mx-auto px-4 relative z-10">
+      {/* Matches Hero's px-18 container padding */}
+      <div className="container mx-auto px-18 relative z-10">
         {/* --- 2. Header Section --- */}
-        {/* Reduced margin-bottom from mb-12 to mb-10 */}
         <div className="max-w-4xl mx-auto text-center mb-10">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 backdrop-blur-md border border-[#BBC863]/40 shadow-sm mb-4 cursor-default">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[#BBC863]/30 shadow-sm mb-4 cursor-default">
             <Sparkles size={12} className="text-[#BBC863] fill-[#BBC863]" />
             <span className="text-[#31694E] font-bold text-[10px] uppercase tracking-[0.2em]">
               Tailored Funding Solutions
             </span>
           </div>
 
-          {/* Title: Reduced font size significantly to save vertical space */}
+          {/* Title */}
           <h2 className="text-4xl md:text-5xl font-extrabold text-[#31694E] tracking-tight leading-[1.1] mb-3">
             Funding Options <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#BBC863] via-[#658C58] to-[#31694E]">
@@ -597,7 +357,7 @@ export const FundingOptions = () => {
             </span>
           </h2>
 
-          {/* Description: Reduced font size to base/sm */}
+          {/* Description */}
           <p className="text-base text-[#5A7C6B] font-medium leading-relaxed max-w-2xl mx-auto">
             Select the funding option that fits your goals. Our AI-driven
             assessment approves you in record time, so you can focus on
@@ -606,7 +366,6 @@ export const FundingOptions = () => {
         </div>
 
         {/* --- 3. Cards Grid --- */}
-        {/* Reduced gap from gap-8 to gap-5 */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
           {options.map((opt, idx) => (
             <FundingCard key={idx} item={opt} index={idx} />
@@ -614,7 +373,6 @@ export const FundingOptions = () => {
         </div>
 
         {/* --- 4. Bottom CTA --- */}
-        {/* Reduced margin-top from mt-12 to mt-8 */}
         <div className="mt-8 flex justify-center">
           <button className="group relative px-8 py-4 bg-[#31694E] text-white rounded-full font-bold shadow-[0_20px_40px_-10px_rgba(49,105,78,0.4)] overflow-hidden transition-all hover:scale-105 hover:shadow-[0_25px_50px_-10px_rgba(49,105,78,0.5)] active:scale-95">
             <span className="relative z-10 flex items-center gap-2 text-sm">
@@ -643,7 +401,7 @@ export const TrustStrip = () => {
 
   return (
     // Reduced padding from py-20 to py-10
-    <section className="bg-gradient-to-r from-[#31694E] via-[#2A5943] to-[#31694E] py-10 text-white relative overflow-hidden">
+    <section className="bg-gradient-to-r from-[#31694E] via-[#2A5943] to-[#31694E] py-6 not-last-of-type:text-white relative overflow-hidden">
       {/* Grid Pattern (Static) */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0 bg-[radial-gradient(#F0E491_1px,transparent_1px)] [background-size:30px_30px]" />
@@ -653,8 +411,8 @@ export const TrustStrip = () => {
       <div className="absolute top-0 left-0 w-64 h-64 bg-[#F0E491] rounded-full blur-[100px] opacity-20" />
       <div className="absolute bottom-0 right-0 w-80 h-80 bg-[#BBC863] rounded-full blur-[120px] opacity-20" />
 
-      <div className="container mx-auto px-6 relative z-10">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+      <div className="container mx-auto px-20 relative z-10">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-18">
           {stats.map((s, i) => (
             <div key={i} className="text-center lg:text-left group">
               <div className="relative inline-block">
@@ -733,25 +491,20 @@ export const CustomerStories = () => {
   ];
 
   return (
-    <section className="relative py-10 overflow-hidden bg-[#FAFAF8]">
+    <section className="relative py-12 overflow-hidden bg-[#FAFAF8]">
       {/* --- 1. Static Background Mesh --- */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Abstract Grid */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(49,105,78,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(49,105,78,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
-        {/* Top Left Corner */}
         <div className="absolute -top-40 -left-40 w-[800px] h-[800px] bg-[#F0E491]/30 rounded-full blur-[120px] mix-blend-multiply" />
-
-        {/* Bottom Right Corner */}
         <div className="absolute -bottom-40 -right-40 w-[600px] h-[600px] bg-[#658C58]/20 rounded-full blur-[100px] mix-blend-multiply" />
       </div>
 
-      <div className="container mx-auto px-6 relative z-10">
+      {/* px-18 matches Hero's container padding */}
+      <div className="container mx-auto px-18 relative z-10">
         {/* --- 2. Section Header --- */}
         <div className="text-center max-w-4xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white border border-[#BBC863]/30 shadow-sm mb-6">
-            <div className="relative">
-              <Star size={14} className="text-[#BBC863] fill-[#BBC863]" />
-            </div>
+            <Star size={14} className="text-[#BBC863] fill-[#BBC863]" />
             <span className="text-[#31694E] font-bold text-xs uppercase tracking-[0.2em]">
               Trusted by 5,000+ Businesses
             </span>
@@ -773,21 +526,21 @@ export const CustomerStories = () => {
           </p>
         </div>
 
-        {/* --- 3. Compact Reviews Grid --- */}
+        {/* --- 3. Reviews Grid --- */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {reviews.map((review, idx) => (
             <div key={idx} className="h-full">
-              {/* Reduced padding (p-6) and adjusted margins for height reduction */}
-              <div className="group relative h-full flex flex-col p-6 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/60 shadow-[0_10px_30px_-10px_rgba(49,105,78,0.05)] hover:shadow-[0_20px_40px_-10px_rgba(49,105,78,0.1)] transition-shadow duration-300 overflow-hidden">
-                {/* Hover Gradient Overlay (CSS Only) */}
+              <div className="group relative h-full flex flex-col p-6 rounded-2xl bg-white border border-[#BBC863]/25 shadow-[0_8px_30px_-8px_rgba(49,105,78,0.10)] hover:shadow-[0_20px_40px_-10px_rgba(49,105,78,0.16)] hover:border-[#BBC863]/50 transition-all duration-300 overflow-hidden">
+                {/* Hover Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-br from-[#F0E491]/10 via-transparent to-[#658C58]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                <div className="absolute top-5 right-5 text-[#BBC863]/20 group-hover:text-[#BBC863]/40 transition-colors">
+                {/* Quote icon — visible at rest, brightens on hover */}
+                <div className="absolute top-5 right-5 text-[#BBC863]/30 group-hover:text-[#BBC863]/50 transition-colors duration-300">
                   <Quote size={32} />
                 </div>
 
                 <div className="relative z-10 flex flex-col h-full">
-                  {/* Rating Header */}
+                  {/* Rating */}
                   <div className="flex justify-between items-center mb-4">
                     <div className="flex gap-1">
                       {[...Array(5)].map((_, i) => (
@@ -804,8 +557,8 @@ export const CustomerStories = () => {
                     </div>
                   </div>
 
-                  {/* Content - margins reduced */}
-                  <h3 className="text-lg font-bold text-[#1E3F30] mb-2 line-clamp-1 group-hover:text-[#31694E] transition-colors">
+                  {/* Content */}
+                  <h3 className="text-lg font-bold text-[#1E3F30] mb-2 line-clamp-1 group-hover:text-[#31694E] transition-colors duration-300">
                     "{review.title}"
                   </h3>
 
@@ -813,9 +566,9 @@ export const CustomerStories = () => {
                     {review.text}
                   </p>
 
-                  {/* Author Footer - padding reduced */}
-                  <div className="mt-auto pt-4 border-t border-[#31694E]/10 flex items-center gap-3">
-                    <div className="relative w-10 h-10 rounded-xl overflow-hidden shadow-inner">
+                  {/* Author Footer */}
+                  <div className="mt-auto pt-4 border-t border-[#BBC863]/20 flex items-center gap-3">
+                    <div className="relative w-10 h-10 rounded-xl overflow-hidden shadow-[0_4px_10px_-4px_rgba(49,105,78,0.3)]">
                       <div className="absolute inset-0 bg-gradient-to-br from-[#658C58] to-[#31694E]" />
                       <div className="absolute inset-0 flex items-center justify-center text-[#F0E491] font-bold text-base">
                         {review.name.charAt(0)}
@@ -844,9 +597,9 @@ export const CustomerStories = () => {
           ))}
         </div>
 
-        {/* --- 4. Static Trust Banner --- */}
+        {/* --- 4. Trust Banner --- */}
         <div className="mt-16 flex justify-center">
-          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 px-8 py-4 rounded-full bg-white shadow-[0_20px_40px_-10px_rgba(0,0,0,0.05)] border border-[#BBC863]/20 hover:scale-[1.01] transition-transform duration-300">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 px-8 py-4 rounded-full bg-white shadow-[0_20px_40px_-10px_rgba(0,0,0,0.05)] border border-[#BBC863]/25 hover:scale-[1.01] transition-transform duration-300">
             <div className="flex items-center gap-2">
               <span className="text-[#31694E] font-bold text-xl">
                 Excellent
@@ -878,25 +631,23 @@ export const CustomerStories = () => {
 
 export const DarkFeatureSection = () => {
   return (
-    <section className="relative py-32 overflow-hidden bg-[#1E3F30]">
+    <section className="relative py-20 overflow-hidden bg-[#1E3F30]">
       {/* --- Static Background --- */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#31694E] via-[#2A5943] to-[#1E3F30]">
         <GrainOverlay />
 
-        {/* Static Background Orbs */}
         <div className="absolute -top-[10%] -right-[10%] w-[800px] h-[800px] bg-[#658C58] rounded-full blur-[120px] opacity-20 mix-blend-screen" />
         <div className="absolute -bottom-[20%] -left-[10%] w-[600px] h-[600px] bg-[#BBC863] rounded-full blur-[100px] opacity-10 mix-blend-screen" />
-
-        {/* Techno Grid Overlay */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(240,228,145,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(240,228,145,0.03)_1px,transparent_1px)] bg-[size:60px_60px] opacity-30" />
       </div>
 
-      <div className="container mx-auto px-6 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+      {/* px-18 matches Hero's container padding */}
+      <div className="container mx-auto px-18 relative z-10">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* --- Left Column: Content --- */}
           <div>
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#BBC863]/10 border border-[#BBC863]/20 backdrop-blur-md mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#BBC863]/10 border border-[#BBC863]/25 backdrop-blur-md mb-8">
               <div className="w-1.5 h-1.5 rounded-full bg-[#F0E491] shadow-[0_0_10px_#F0E491]" />
               <span className="text-[#F0E491] font-bold tracking-[0.2em] text-[10px] uppercase">
                 Why Choose Kacu
@@ -910,7 +661,6 @@ export const DarkFeatureSection = () => {
                 <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-[#F0E491] to-[#BBC863]">
                   Financial Growth.
                 </span>
-                {/* Static Underline */}
                 <div className="absolute bottom-1 left-0 w-full h-3 bg-[#658C58]/40 -z-10 origin-left skew-x-12" />
               </span>
             </h2>
@@ -937,20 +687,19 @@ export const DarkFeatureSection = () => {
               ].map((feature, i) => (
                 <div
                   key={i}
-                  className="group relative flex gap-5 p-5 rounded-2xl bg-white/5 border border-white/5 overflow-hidden cursor-default hover:bg-white/10 transition-colors duration-300"
+                  className="group relative flex gap-5 p-5 rounded-2xl bg-white/[0.08] border border-white/10 overflow-hidden cursor-default hover:bg-white/[0.12] transition-colors duration-300"
                 >
-                  {/* Hover Gradient Border (CSS only) */}
+                  {/* Hover Gradient Border */}
                   <div className="absolute inset-0 rounded-2xl border border-[#BBC863]/0 group-hover:border-[#BBC863]/30 transition-colors duration-300" />
 
                   {/* Icon Box */}
-                  <div className="relative w-12 h-12 rounded-xl bg-[#31694E] border border-[#658C58]/30 flex items-center justify-center text-[#F0E491] shrink-0 shadow-lg">
+                  <div className="relative w-12 h-12 rounded-xl bg-[#31694E] border border-[#658C58]/40 flex items-center justify-center text-[#F0E491] shrink-0 shadow-[0_4px_12px_-4px_rgba(0,0,0,0.4),0_0_0_1px_rgba(240,228,145,0.08)]">
                     <feature.icon size={22} strokeWidth={2} />
-                    {/* Static Icon Glow on Hover */}
                     <div className="absolute inset-0 bg-[#F0E491] opacity-0 group-hover:opacity-20 blur-md transition-opacity duration-300 rounded-xl" />
                   </div>
 
                   <div className="relative z-10">
-                    <h3 className="text-lg font-bold mb-1 text-white group-hover:text-[#F0E491] transition-colors">
+                    <h3 className="text-lg font-bold mb-1 text-white group-hover:text-[#F0E491] transition-colors duration-300">
                       {feature.title}
                     </h3>
                     <p className="text-sm text-slate-300 leading-relaxed font-light">
@@ -965,7 +714,6 @@ export const DarkFeatureSection = () => {
             <button className="group relative px-10 py-4 bg-[#F0E491] rounded-full overflow-hidden shadow-[0_0_40px_-10px_rgba(240,228,145,0.3)] hover:scale-105 transition-transform duration-300">
               <div className="absolute inset-0 bg-gradient-to-r from-[#F0E491] to-[#BBC863]" />
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay transition-opacity" />
-
               <span className="relative z-10 flex items-center gap-3 text-[#31694E] font-bold tracking-wide">
                 Get Funded Now
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -981,20 +729,16 @@ export const DarkFeatureSection = () => {
 
               {/* Main Image Frame */}
               <div className="group relative rounded-[2.5rem] overflow-hidden border border-[#658C58]/30 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] bg-[#1E3F30]">
-                {/* Image */}
                 <img
                   src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1000&auto=format&fit=crop"
                   alt="Team Strategy"
                   className="w-full h-auto object-cover opacity-90"
                 />
-
-                {/* Overlay Gradient */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#1E3F30] via-transparent to-transparent opacity-80" />
               </div>
 
-              {/* Static "Happy Clients" Card */}
-              <div className="absolute -bottom-10 -left-6 md:-left-12 bg-[#FAFAF8]/10 backdrop-blur-xl border border-white/10 p-6 rounded-3xl shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
-                {/* Inner Glow */}
+              {/* "Happy Clients" Card */}
+              <div className="absolute -bottom-10 -left-6 md:-left-12 bg-[#FAFAF8]/10 backdrop-blur-xl border border-white/15 p-6 rounded-3xl shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-3xl pointer-events-none" />
 
                 <div className="relative flex items-center gap-5">
@@ -1006,9 +750,7 @@ export const DarkFeatureSection = () => {
                         className="relative w-12 h-12 rounded-full border-[3px] border-[#2A5943] bg-[#BBC863] overflow-hidden shadow-lg"
                       >
                         <img
-                          src={`https://randomuser.me/api/portraits/men/${
-                            i * 12 + 10
-                          }.jpg`}
+                          src={`https://randomuser.me/api/portraits/men/${i * 12 + 10}.jpg`}
                           alt="Client"
                           className="w-full h-full object-cover grayscale mix-blend-luminosity hover:grayscale-0 transition-all duration-300"
                         />
@@ -1086,25 +828,24 @@ export const CreditScoreSelector = () => {
   };
 
   const selectedData = fundingMap[selectedScore];
+  const IconComponent = selectedData.icon;
 
   return (
     <section className="relative py-20 bg-[#1E3F30] overflow-hidden">
       {/* --- Background Elements --- */}
       <div className="absolute inset-0 pointer-events-none">
-        {/* Technical Grid */}
         <div className="absolute inset-0 opacity-10 bg-[linear-gradient(rgba(240,228,145,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(240,228,145,0.1)_1px,transparent_1px)] bg-[size:40px_40px]" />
-
-        {/* Glow Effects */}
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#658C58] rounded-full blur-[120px] opacity-20" />
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#BBC863] rounded-full blur-[100px] opacity-10" />
       </div>
 
-      <div className="container mx-auto px-6 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+      {/* px-18 matches Hero's container padding */}
+      <div className="container mx-auto px-18 relative z-10">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* --- Left Column: Information --- */}
           <div className="text-white">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#BBC863]/10 border border-[#BBC863]/20 backdrop-blur-md mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#BBC863]/10 border border-[#BBC863]/25 backdrop-blur-md mb-6">
               <div className="w-2 h-2 rounded-full bg-[#F0E491] shadow-[0_0_10px_#F0E491]" />
               <span className="text-[#F0E491] font-bold tracking-[0.2em] text-[10px] uppercase">
                 Instant Qualification
@@ -1133,7 +874,7 @@ export const CreditScoreSelector = () => {
                 "Dedicated advisor for every account",
               ].map((item, i) => (
                 <li key={i} className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-full bg-[#31694E] flex items-center justify-center text-[#F0E491] shrink-0 border border-[#658C58]">
+                  <div className="w-6 h-6 rounded-full bg-[#31694E] flex items-center justify-center text-[#F0E491] shrink-0 border border-[#658C58]/40 shadow-[0_0_0_1px_rgba(240,228,145,0.08)]">
                     <Check size={14} strokeWidth={3} />
                   </div>
                   <span className="text-slate-200 font-medium">{item}</span>
@@ -1141,8 +882,9 @@ export const CreditScoreSelector = () => {
               ))}
             </ul>
 
-            <div className="flex items-center gap-4 text-sm text-[#BBC863]/80 font-medium">
-              <Shield size={16} />
+            {/* Security Footer */}
+            <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/[0.06] border border-white/10 text-sm text-[#BBC863]/80 font-medium">
+              <Shield size={14} />
               <span>Bank-level security & 256-bit encryption</span>
             </div>
           </div>
@@ -1150,15 +892,28 @@ export const CreditScoreSelector = () => {
           {/* --- Right Column: The Calculator --- */}
           <div className="relative">
             {/* Card Glow Background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#F0E491]/20 to-[#658C58]/20 rounded-[2.5rem] blur-xl" />
+            <div
+              className="absolute inset-0 rounded-[2.5rem] blur-xl transition-all duration-500"
+              style={{
+                background: `radial-gradient(ellipse at 60% 40%, ${selectedData.color}25, transparent 70%), radial-gradient(ellipse at 20% 80%, rgba(101,140,88,0.15), transparent 60%)`,
+              }}
+            />
 
-            <div className="relative bg-[#FAFAF8]/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 shadow-2xl">
+            <div className="relative bg-[#FAFAF8]/[0.07] backdrop-blur-xl border border-white/15 rounded-[2.5rem] p-8 shadow-2xl">
+              {/* Accent top border that reflects selected score */}
+              <div
+                className="absolute top-0 left-8 right-8 h-[2px] rounded-full transition-all duration-500"
+                style={{
+                  background: `linear-gradient(to right, transparent, ${selectedData.color}, transparent)`,
+                }}
+              />
+
               {/* Header */}
-              <div className="text-center mb-8">
+              <div className="text-center mb-8 pt-2">
                 <h3 className="text-2xl font-bold text-white mb-2">
                   Select Your Credit Score
                 </h3>
-                <p className="text-white/60 text-sm">
+                <p className="text-white/50 text-sm">
                   See your estimated funding power instantly
                 </p>
               </div>
@@ -1167,22 +922,35 @@ export const CreditScoreSelector = () => {
               <div className="grid grid-cols-5 gap-2 mb-8">
                 {Object.keys(fundingMap).map((score) => {
                   const isSelected = selectedScore === score;
+                  const scoreColor = fundingMap[score].color;
                   return (
                     <button
                       key={score}
                       onClick={() => setSelectedScore(score)}
                       className={`relative flex flex-col items-center gap-2 p-2 py-4 rounded-xl transition-all duration-300 ${
                         isSelected
-                          ? "bg-gradient-to-b from-[#F0E491] to-[#BBC863] text-[#1E3F30] shadow-lg scale-105 z-10"
-                          : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white"
+                          ? "text-[#1E3F30] shadow-lg scale-105 z-10"
+                          : "bg-white/[0.08] border border-white/10 text-white/60 hover:bg-white/[0.13] hover:text-white/90"
                       }`}
+                      style={
+                        isSelected
+                          ? {
+                              background: `linear-gradient(to bottom, ${scoreColor}, ${scoreColor}cc)`,
+                              boxShadow: `0 8px 24px -8px ${scoreColor}80`,
+                            }
+                          : {}
+                      }
                     >
                       <span className="text-[10px] uppercase font-bold tracking-wider">
                         {score}
                       </span>
-                      {/* Status Dot */}
                       <div
-                        className={`w-2 h-2 rounded-full ${isSelected ? "bg-[#1E3F30]" : "bg-white/20"}`}
+                        className="w-2 h-2 rounded-full transition-colors duration-300"
+                        style={{
+                          backgroundColor: isSelected
+                            ? "#1E3F30"
+                            : `${scoreColor}60`,
+                        }}
                       />
                     </button>
                   );
@@ -1190,29 +958,72 @@ export const CreditScoreSelector = () => {
               </div>
 
               {/* Result Display Area */}
-              <div className="bg-[#1E3F30]/50 rounded-3xl p-6 border border-white/5 text-center mb-8 relative overflow-hidden">
-                {/* Background Progress Bar (Visual) */}
+              <div className="bg-[#1E3F30]/60 rounded-3xl p-6 border border-white/10 text-center mb-6 relative overflow-hidden">
+                {/* Subtle color wash based on selection */}
                 <div
-                  className="absolute bottom-0 left-0 h-1 bg-[#F0E491] transition-all duration-500 ease-out"
-                  style={{ width: `${selectedData.progress}%` }}
+                  className="absolute inset-0 opacity-10 transition-all duration-500 pointer-events-none"
+                  style={{
+                    background: `radial-gradient(ellipse at 50% 120%, ${selectedData.color}, transparent 70%)`,
+                  }}
                 />
 
-                <p className="text-[#BBC863] text-xs font-bold uppercase tracking-widest mb-2">
+                <p className="text-[#BBC863] text-xs font-bold uppercase tracking-widest mb-3 relative z-10">
                   Estimated Funding Range
                 </p>
-                <div className="text-3xl md:text-4xl font-bold text-white mb-2 transition-all duration-300">
+
+                <div
+                  className="text-3xl md:text-4xl font-bold mb-3 relative z-10 transition-all duration-300"
+                  style={{ color: selectedData.color }}
+                >
                   {selectedData.range}
                 </div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white/90 text-sm font-medium">
-                  <selectedData.icon size={14} className="text-[#F0E491]" />
+
+                <div
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium relative z-10"
+                  style={{
+                    backgroundColor: `${selectedData.color}18`,
+                    border: `1px solid ${selectedData.color}35`,
+                    color: selectedData.color,
+                  }}
+                >
+                  <IconComponent size={13} />
                   {selectedData.label}
+                </div>
+
+                {/* Progress Track */}
+                <div className="mt-5 relative z-10">
+                  <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-500 ease-out"
+                      style={{
+                        width: `${selectedData.progress}%`,
+                        background: `linear-gradient(to right, ${selectedData.color}99, ${selectedData.color})`,
+                      }}
+                    />
+                  </div>
+                  <div className="flex justify-between mt-1.5">
+                    <span className="text-[10px] text-white/30 font-medium">
+                      Limited
+                    </span>
+                    <span className="text-[10px] text-white/30 font-medium">
+                      Maximum
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* CTA Button */}
-              <button className="w-full group relative py-4 bg-[#F0E491] text-[#31694E] rounded-xl font-bold text-lg shadow-lg overflow-hidden hover:scale-[1.02] transition-transform duration-300">
-                <div className="absolute inset-0 bg-gradient-to-r from-[#F0E491] to-[#BBC863] opacity-100 group-hover:opacity-90 transition-opacity" />
-                <span className="relative z-10 flex items-center justify-center gap-2">
+              <button className="w-full group relative py-4 rounded-xl font-bold text-lg shadow-lg overflow-hidden hover:scale-[1.02] transition-transform duration-300">
+                <div
+                  className="absolute inset-0 transition-opacity duration-300"
+                  style={{
+                    background: `linear-gradient(to right, ${selectedData.color}, ${selectedData.color}cc)`,
+                  }}
+                />
+                <span
+                  className="relative z-10 flex items-center justify-center gap-2 font-bold"
+                  style={{ color: "#1E3F30" }}
+                >
                   Check Eligibility
                   <ArrowRight
                     size={18}
@@ -1221,7 +1032,7 @@ export const CreditScoreSelector = () => {
                 </span>
               </button>
 
-              <p className="text-center text-white/40 text-xs mt-4">
+              <p className="text-center text-white/30 text-xs mt-4">
                 *Preliminary estimate based on credit tier.
               </p>
             </div>
