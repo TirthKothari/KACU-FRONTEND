@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import ApplicationWizard from "./pages/ApplicationWizard";
 import ClientDashboard from "./pages/ClientDashboard";
+import LoginPage from "./pages/LoginPage";
 
 const App = () => {
   return (
@@ -10,6 +11,7 @@ const App = () => {
       <div className="min-h-screen flex flex-col">
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/clientdashboard" element={<ClientDashboard />} />
           <Route path="/wizard" element={<ApplicationWizard />} />
         </Routes>
