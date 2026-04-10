@@ -190,6 +190,11 @@ export const Navbar = ({ onStartClick }) => {
     if (onStartClick) onStartClick(); // Triggers the reveal and scroll in LandingPage
   };
 
+  const handleLoginRedirect = () => {
+    setMobileMenuOpen(false);
+    navigate("/login");
+  };
+
   return (
     <>
       <motion.nav
@@ -220,9 +225,12 @@ export const Navbar = ({ onStartClick }) => {
             </div>
 
             <div className="hidden lg:flex items-center gap-4">
-              <a href="#" className="text-sm font-bold text-[#31694E]">
+              <button
+                onClick={handleLoginRedirect}
+                className="text-sm font-bold text-[#31694E] hover:opacity-70 transition-opacity"
+              >
                 Log In
-              </a>
+              </button>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -264,6 +272,12 @@ export const Navbar = ({ onStartClick }) => {
                   <MobileNavItem key={idx} item={item} />
                 ))}
                 <div className="mt-8 pt-6 border-t border-[#BBC863]/20 space-y-4">
+                  <button
+                    onClick={handleLoginRedirect}
+                    className="w-full py-4 border-2 border-[#31694E] text-[#31694E] rounded-xl font-bold text-lg flex items-center justify-center gap-2"
+                  >
+                    Log In <LogIn size={20} />
+                  </button>
                   <button
                     onClick={handleStart}
                     className="w-full py-4 bg-[#31694E] text-[#F0E491] rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"
