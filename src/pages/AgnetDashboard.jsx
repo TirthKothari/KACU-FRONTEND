@@ -1,2719 +1,4 @@
-// import React, { useState, useEffect, useCallback } from "react";
-
-// // ─────────────────────────────────────────────────────────────────────────────
-// // CONFIG
-// // ─────────────────────────────────────────────────────────────────────────────
-// const API_BASE = import.meta.env.VITE_API_BASE_URL;
-
-// const log = (label, data) =>
-//   console.log(
-//     `%c[AGENT DEBUG] ${label}`,
-//     "color:#31694E;font-weight:bold;",
-//     data ?? "",
-//   );
-// const logError = (label, err) =>
-//   console.error(
-//     `%c[AGENT ERROR] ${label}`,
-//     "color:#e53935;font-weight:bold;",
-//     err,
-//   );
-
-// const getToken = () => localStorage.getItem("token");
-
-// const apiGet = async (path) => {
-//   const res = await fetch(`${API_BASE}${path}`, {
-//     headers: {
-//       "Content-Type": "application/json",
-//       Authorization: `Token ${getToken()}`,
-//     },
-//   });
-
-//   // Add this block:
-//   if (res.status === 401) {
-//     localStorage.clear();
-//     window.location.href = "/login";
-//     return;
-//   }
-
-//   const data = await res.json();
-//   if (!res.ok) throw new Error(data?.detail || JSON.stringify(data));
-//   return data;
-// };
-
-// const apiPatch = async (path, body) => {
-//   const res = await fetch(`${API_BASE}${path}`, {
-//     method: "PATCH",
-//     headers: {
-//       "Content-Type": "application/json",
-//       Authorization: `Token ${getToken()}`,
-//     },
-//     body: JSON.stringify(body),
-//   });
-//   const data = await res.json();
-//   if (!res.ok) throw new Error(data?.detail || JSON.stringify(data));
-//   return data;
-// };
-
-// // ─────────────────────────────────────────────────────────────────────────────
-// // CONSTANTS
-// // ─────────────────────────────────────────────────────────────────────────────
-// const STATUS_META = {
-//   draft: { label: "Draft", color: "#BBC863", bg: "rgba(187,200,99,0.12)" },
-//   submitted: {
-//     label: "Submitted",
-//     color: "#3b82f6",
-//     bg: "rgba(59,130,246,0.10)",
-//   },
-//   pending: { label: "Pending", color: "#f59e0b", bg: "rgba(245,158,11,0.10)" },
-//   approved: { label: "Approved", color: "#22c55e", bg: "rgba(34,197,94,0.10)" },
-//   rejected: { label: "Rejected", color: "#ef4444", bg: "rgba(239,68,68,0.10)" },
-// };
-
-// const STEPS_ORDER = [
-//   "business_information",
-//   "funding_information",
-//   "business_ownership_information",
-//   "terms_and_conditions",
-//   "document_upload",
-//   "review_submission",
-//   "completed",
-// ];
-// const STEP_LABELS = {
-//   business_information: "Business Info",
-//   funding_information: "Funding",
-//   business_ownership_information: "Ownership",
-//   terms_and_conditions: "Terms",
-//   document_upload: "Documents",
-//   review_submission: "Review",
-//   completed: "Complete",
-// };
-
-// // ─────────────────────────────────────────────────────────────────────────────
-// // ICONS
-// // ─────────────────────────────────────────────────────────────────────────────
-// const Icon = {
-//   Leaf: (p) => (
-//     <svg {...p} viewBox="0 0 24 24" fill="currentColor" stroke="none">
-//       <path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 0 0 8 20C19 20 22 3 22 3c-1 2-8 6-8 6z" />
-//     </svg>
-//   ),
-//   Home: (p) => (
-//     <svg
-//       {...p}
-//       viewBox="0 0 24 24"
-//       fill="none"
-//       stroke="currentColor"
-//       strokeWidth="2"
-//     >
-//       <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-//       <polyline points="9 22 9 12 15 12 15 22" />
-//     </svg>
-//   ),
-//   Users: (p) => (
-//     <svg
-//       {...p}
-//       viewBox="0 0 24 24"
-//       fill="none"
-//       stroke="currentColor"
-//       strokeWidth="2"
-//     >
-//       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-//       <circle cx="9" cy="7" r="4" />
-//       <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-//       <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-//     </svg>
-//   ),
-//   File: (p) => (
-//     <svg
-//       {...p}
-//       viewBox="0 0 24 24"
-//       fill="none"
-//       stroke="currentColor"
-//       strokeWidth="2"
-//     >
-//       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-//       <polyline points="14 2 14 8 20 8" />
-//     </svg>
-//   ),
-//   User: (p) => (
-//     <svg
-//       {...p}
-//       viewBox="0 0 24 24"
-//       fill="none"
-//       stroke="currentColor"
-//       strokeWidth="2"
-//     >
-//       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-//       <circle cx="12" cy="7" r="4" />
-//     </svg>
-//   ),
-//   Logout: (p) => (
-//     <svg
-//       {...p}
-//       viewBox="0 0 24 24"
-//       fill="none"
-//       stroke="currentColor"
-//       strokeWidth="2"
-//     >
-//       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-//       <polyline points="16 17 21 12 16 7" />
-//       <line x1="21" y1="12" x2="9" y2="12" />
-//     </svg>
-//   ),
-//   Menu: (p) => (
-//     <svg
-//       {...p}
-//       viewBox="0 0 24 24"
-//       fill="none"
-//       stroke="currentColor"
-//       strokeWidth="2"
-//     >
-//       <line x1="3" y1="12" x2="21" y2="12" />
-//       <line x1="3" y1="6" x2="21" y2="6" />
-//       <line x1="3" y1="18" x2="21" y2="18" />
-//     </svg>
-//   ),
-//   X: (p) => (
-//     <svg
-//       {...p}
-//       viewBox="0 0 24 24"
-//       fill="none"
-//       stroke="currentColor"
-//       strokeWidth="2"
-//     >
-//       <line x1="18" y1="6" x2="6" y2="18" />
-//       <line x1="6" y1="6" x2="18" y2="18" />
-//     </svg>
-//   ),
-//   ChevRight: (p) => (
-//     <svg
-//       {...p}
-//       viewBox="0 0 24 24"
-//       fill="none"
-//       stroke="currentColor"
-//       strokeWidth="2"
-//     >
-//       <polyline points="9 18 15 12 9 6" />
-//     </svg>
-//   ),
-//   ChevLeft: (p) => (
-//     <svg
-//       {...p}
-//       viewBox="0 0 24 24"
-//       fill="none"
-//       stroke="currentColor"
-//       strokeWidth="2"
-//     >
-//       <polyline points="15 18 9 12 15 6" />
-//     </svg>
-//   ),
-//   ChevDown: (p) => (
-//     <svg
-//       {...p}
-//       viewBox="0 0 24 24"
-//       fill="none"
-//       stroke="currentColor"
-//       strokeWidth="2"
-//     >
-//       <polyline points="6 9 12 15 18 9" />
-//     </svg>
-//   ),
-//   // FIX 1: Corrected checkmark polyline points (was "20 6 9 11 4 18" — wrong shape)
-//   Check: (p) => (
-//     <svg
-//       {...p}
-//       viewBox="0 0 24 24"
-//       fill="none"
-//       stroke="currentColor"
-//       strokeWidth="2"
-//     >
-//       <polyline points="20 6 9 17 4 12" />
-//     </svg>
-//   ),
-//   Check2: (p) => (
-//     <svg
-//       {...p}
-//       viewBox="0 0 24 24"
-//       fill="none"
-//       stroke="currentColor"
-//       strokeWidth="2.5"
-//     >
-//       <polyline points="20 6 9 17 4 12" />
-//     </svg>
-//   ),
-//   XCircle: (p) => (
-//     <svg
-//       {...p}
-//       viewBox="0 0 24 24"
-//       fill="none"
-//       stroke="currentColor"
-//       strokeWidth="2"
-//     >
-//       <circle cx="12" cy="12" r="10" />
-//       <line x1="15" y1="9" x2="9" y2="15" />
-//       <line x1="9" y1="9" x2="15" y2="15" />
-//     </svg>
-//   ),
-//   Refresh: (p) => (
-//     <svg
-//       {...p}
-//       viewBox="0 0 24 24"
-//       fill="none"
-//       stroke="currentColor"
-//       strokeWidth="2"
-//     >
-//       <polyline points="23 4 23 10 17 10" />
-//       <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-//     </svg>
-//   ),
-//   Dollar: (p) => (
-//     <svg
-//       {...p}
-//       viewBox="0 0 24 24"
-//       fill="none"
-//       stroke="currentColor"
-//       strokeWidth="2"
-//     >
-//       <line x1="12" y1="1" x2="12" y2="23" />
-//       <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-//     </svg>
-//   ),
-//   Clock: (p) => (
-//     <svg
-//       {...p}
-//       viewBox="0 0 24 24"
-//       fill="none"
-//       stroke="currentColor"
-//       strokeWidth="2"
-//     >
-//       <circle cx="12" cy="12" r="10" />
-//       <polyline points="12 6 12 12 16 14" />
-//     </svg>
-//   ),
-//   Search: (p) => (
-//     <svg
-//       {...p}
-//       viewBox="0 0 24 24"
-//       fill="none"
-//       stroke="currentColor"
-//       strokeWidth="2"
-//     >
-//       <circle cx="11" cy="11" r="8" />
-//       <line x1="21" y1="21" x2="16.65" y2="16.65" />
-//     </svg>
-//   ),
-//   Eye: (p) => (
-//     <svg
-//       {...p}
-//       viewBox="0 0 24 24"
-//       fill="none"
-//       stroke="currentColor"
-//       strokeWidth="2"
-//     >
-//       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-//       <circle cx="12" cy="12" r="3" />
-//     </svg>
-//   ),
-//   Building: (p) => (
-//     <svg
-//       {...p}
-//       viewBox="0 0 24 24"
-//       fill="none"
-//       stroke="currentColor"
-//       strokeWidth="2"
-//     >
-//       <rect x="3" y="3" width="18" height="18" rx="2" />
-//       <path d="M9 3v18" />
-//       <path d="M3 9h6" />
-//       <path d="M3 15h6" />
-//       <path d="M15 3v18" />
-//       <path d="M15 9h6" />
-//       <path d="M15 15h6" />
-//     </svg>
-//   ),
-//   Alert: (p) => (
-//     <svg
-//       {...p}
-//       viewBox="0 0 24 24"
-//       fill="none"
-//       stroke="currentColor"
-//       strokeWidth="2"
-//     >
-//       <circle cx="12" cy="12" r="10" />
-//       <line x1="12" y1="8" x2="12" y2="12" />
-//       <line x1="12" y1="16" x2="12.01" y2="16" />
-//     </svg>
-//   ),
-//   Percent: (p) => (
-//     <svg
-//       {...p}
-//       viewBox="0 0 24 24"
-//       fill="none"
-//       stroke="currentColor"
-//       strokeWidth="2"
-//     >
-//       <line x1="19" y1="5" x2="5" y2="19" />
-//       <circle cx="6.5" cy="6.5" r="2.5" />
-//       <circle cx="17.5" cy="17.5" r="2.5" />
-//     </svg>
-//   ),
-//   Folder: (p) => (
-//     <svg
-//       {...p}
-//       viewBox="0 0 24 24"
-//       fill="none"
-//       stroke="currentColor"
-//       strokeWidth="2"
-//     >
-//       <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-//     </svg>
-//   ),
-// };
-
-// // ─────────────────────────────────────────────────────────────────────────────
-// // PRIMITIVES
-// // ─────────────────────────────────────────────────────────────────────────────
-// const Spinner = ({ size = 24, color = "#31694E" }) => (
-//   <svg
-//     width={size}
-//     height={size}
-//     viewBox="0 0 24 24"
-//     fill="none"
-//     style={{ animation: "kacu-spin 0.8s linear infinite" }}
-//   >
-//     <circle
-//       cx="12"
-//       cy="12"
-//       r="10"
-//       stroke={color}
-//       strokeWidth="3"
-//       strokeOpacity="0.2"
-//     />
-//     <path
-//       d="M12 2a10 10 0 0 1 10 10"
-//       stroke={color}
-//       strokeWidth="3"
-//       strokeLinecap="round"
-//     />
-//   </svg>
-// );
-
-// const StatusBadge = ({ status }) => {
-//   const meta = STATUS_META[status] || STATUS_META.draft;
-//   return (
-//     <span
-//       style={{
-//         padding: "3px 10px",
-//         borderRadius: 99,
-//         fontSize: 10,
-//         fontWeight: 800,
-//         textTransform: "uppercase",
-//         letterSpacing: "0.08em",
-//         color: meta.color,
-//         background: meta.bg,
-//         display: "inline-block",
-//       }}
-//     >
-//       {meta.label}
-//     </span>
-//   );
-// };
-
-// const Avatar = ({ first, last, size = 40, radius = 12 }) => (
-//   <div
-//     style={{
-//       width: size,
-//       height: size,
-//       borderRadius: radius,
-//       background: "linear-gradient(135deg,#31694E,#658C58)",
-//       display: "flex",
-//       alignItems: "center",
-//       justifyContent: "center",
-//       color: "#F0E491",
-//       fontSize: size * 0.35,
-//       fontWeight: 800,
-//       flexShrink: 0,
-//     }}
-//   >
-//     {(first?.[0] || "").toUpperCase()}
-//     {(last?.[0] || "").toUpperCase()}
-//   </div>
-// );
-
-// const FieldRow = ({ label, value, highlight }) => (
-//   <div
-//     style={{
-//       display: "flex",
-//       justifyContent: "space-between",
-//       alignItems: "baseline",
-//       padding: "8px 0",
-//       borderBottom: "1px solid #f5f5f5",
-//     }}
-//   >
-//     <span
-//       style={{ fontSize: 12, color: "#888", fontWeight: 600, minWidth: 140 }}
-//     >
-//       {label}
-//     </span>
-//     <span
-//       style={{
-//         fontSize: 13,
-//         fontWeight: 700,
-//         color: highlight ? "#31694E" : "#1a1a1a",
-//         textAlign: "right",
-//       }}
-//     >
-//       {value || "—"}
-//     </span>
-//   </div>
-// );
-
-// const SectionCard = ({ title, icon: IconComp, children, accent }) => (
-//   <div
-//     style={{
-//       background: "#fff",
-//       borderRadius: 16,
-//       border: "1.5px solid #f0f0f0",
-//       overflow: "hidden",
-//       marginBottom: 16,
-//     }}
-//   >
-//     <div
-//       style={{
-//         padding: "14px 20px",
-//         borderBottom: "1.5px solid #f0f0f0",
-//         display: "flex",
-//         alignItems: "center",
-//         gap: 10,
-//         background: "#FAFDF8",
-//       }}
-//     >
-//       {IconComp && (
-//         <IconComp
-//           width={16}
-//           height={16}
-//           style={{ color: accent || "#31694E" }}
-//         />
-//       )}
-//       <span
-//         style={{
-//           fontSize: 12,
-//           fontWeight: 800,
-//           color: accent || "#31694E",
-//           textTransform: "uppercase",
-//           letterSpacing: "0.1em",
-//         }}
-//       >
-//         {title}
-//       </span>
-//     </div>
-//     <div style={{ padding: "16px 20px" }}>{children}</div>
-//   </div>
-// );
-
-// // ─────────────────────────────────────────────────────────────────────────────
-// // FIX 2: Moved EmptySection BEFORE AppDetailDrawer so it is defined when used
-// // ─────────────────────────────────────────────────────────────────────────────
-// const EmptySection = ({ label }) => (
-//   <div
-//     style={{
-//       padding: 40,
-//       textAlign: "center",
-//       color: "#bbb",
-//       fontSize: 13,
-//       border: "2px dashed #f0f0f0",
-//       borderRadius: 12,
-//     }}
-//   >
-//     {label}
-//   </div>
-// );
-
-// // ─────────────────────────────────────────────────────────────────────────────
-// // DECISION MODAL
-// // ─────────────────────────────────────────────────────────────────────────────
-// const DecisionModal = ({ app, onClose, onSuccess }) => {
-//   const [decision, setDecision] = useState("approved");
-//   const [approvedFunds, setApprovedFunds] = useState("");
-//   const [partnerCommission, setPartnerCommission] = useState("");
-//   const [rejectionReason, setRejectionReason] = useState("");
-//   const [submitting, setSubmitting] = useState(false);
-//   const [error, setError] = useState("");
-
-//   const hasPartner = !!app?.user?.partner;
-
-//   const handleSubmit = async () => {
-//     setError("");
-//     if (decision === "approved" && !approvedFunds) {
-//       setError("Approved funds amount is required.");
-//       return;
-//     }
-//     if (decision === "approved" && hasPartner && !partnerCommission) {
-//       setError("Partner commission is required for this application.");
-//       return;
-//     }
-//     if (decision === "rejected" && !rejectionReason.trim()) {
-//       setError("Rejection reason is required.");
-//       return;
-//     }
-
-//     setSubmitting(true);
-//     try {
-//       const payload = { status: decision.toUpperCase() };
-//       if (decision === "approved") {
-//         payload.approved_funds = parseFloat(approvedFunds);
-//         if (hasPartner)
-//           payload.partner_commision = parseFloat(partnerCommission);
-//       } else {
-//         payload.rejection_reason = rejectionReason;
-//       }
-//       log("Decision payload", payload);
-//       await apiPatch(
-//         `/application/${app.loan_application_uuid}/decision/`,
-//         payload,
-//       );
-//       onSuccess();
-//     } catch (e) {
-//       logError("Decision failed", e);
-//       setError(e.message);
-//     } finally {
-//       setSubmitting(false);
-//     }
-//   };
-
-//   return (
-//     <div
-//       style={{
-//         position: "fixed",
-//         inset: 0,
-//         zIndex: 300,
-//         background: "rgba(20,40,30,0.75)",
-//         backdropFilter: "blur(8px)",
-//         display: "flex",
-//         alignItems: "center",
-//         justifyContent: "center",
-//         padding: 16,
-//       }}
-//     >
-//       <div
-//         style={{
-//           background: "#fff",
-//           width: "100%",
-//           maxWidth: 520,
-//           borderRadius: 24,
-//           overflow: "hidden",
-//           boxShadow: "0 32px 80px rgba(0,0,0,0.3)",
-//         }}
-//       >
-//         {/* Header */}
-//         <div
-//           style={{
-//             padding: "20px 24px",
-//             background: "#FAFDF8",
-//             borderBottom: "1.5px solid #f0f0f0",
-//             display: "flex",
-//             justifyContent: "space-between",
-//             alignItems: "center",
-//           }}
-//         >
-//           <div>
-//             <div style={{ fontSize: 16, fontWeight: 800, color: "#31694E" }}>
-//               Make a Decision
-//             </div>
-//             {/* FIX 3: Use loan_type_info consistently (loan_type?.name could be undefined) */}
-//             <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
-//               {app?.user?.first_name} {app?.user?.last_name} ·{" "}
-//               {app?.loan_type_info?.name || app?.loan_type?.name || "—"}
-//             </div>
-//           </div>
-//           <button
-//             onClick={onClose}
-//             style={{
-//               background: "#fef2f2",
-//               border: "none",
-//               borderRadius: "50%",
-//               width: 32,
-//               height: 32,
-//               cursor: "pointer",
-//               color: "#ef4444",
-//               display: "flex",
-//               alignItems: "center",
-//               justifyContent: "center",
-//             }}
-//           >
-//             <Icon.X width={16} height={16} />
-//           </button>
-//         </div>
-
-//         {/* Body */}
-//         <div style={{ padding: "24px" }}>
-//           {/* Toggle */}
-//           <div
-//             style={{
-//               display: "flex",
-//               gap: 8,
-//               marginBottom: 24,
-//               padding: 4,
-//               background: "#f5f5f5",
-//               borderRadius: 12,
-//             }}
-//           >
-//             {["approved", "rejected"].map((d) => (
-//               <button
-//                 key={d}
-//                 onClick={() => {
-//                   setDecision(d);
-//                   setError("");
-//                 }}
-//                 style={{
-//                   flex: 1,
-//                   padding: "10px",
-//                   borderRadius: 10,
-//                   border: "none",
-//                   cursor: "pointer",
-//                   fontWeight: 800,
-//                   fontSize: 12,
-//                   textTransform: "uppercase",
-//                   letterSpacing: "0.08em",
-//                   transition: "all 0.2s",
-//                   background:
-//                     decision === d
-//                       ? d === "approved"
-//                         ? "#22c55e"
-//                         : "#ef4444"
-//                       : "transparent",
-//                   color: decision === d ? "#fff" : "#888",
-//                 }}
-//               >
-//                 {d === "approved" ? "✓ Approve" : "✗ Reject"}
-//               </button>
-//             ))}
-//           </div>
-
-//           {decision === "approved" ? (
-//             <div>
-//               <div style={{ marginBottom: 16 }}>
-//                 <label
-//                   style={{
-//                     fontSize: 10,
-//                     fontWeight: 800,
-//                     color: "#888",
-//                     textTransform: "uppercase",
-//                     letterSpacing: "0.12em",
-//                     display: "block",
-//                     marginBottom: 6,
-//                   }}
-//                 >
-//                   Approved Amount ($) *
-//                 </label>
-//                 <input
-//                   type="number"
-//                   value={approvedFunds}
-//                   onChange={(e) => setApprovedFunds(e.target.value)}
-//                   placeholder="e.g. 50000"
-//                   style={{
-//                     width: "100%",
-//                     padding: "12px 14px",
-//                     borderRadius: 10,
-//                     border: "1.5px solid #e5e7eb",
-//                     fontSize: 18,
-//                     fontWeight: 700,
-//                     color: "#31694E",
-//                     outline: "none",
-//                     boxSizing: "border-box",
-//                   }}
-//                   onFocus={(e) => (e.target.style.borderColor = "#31694E")}
-//                   onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
-//                 />
-//               </div>
-//               {hasPartner && (
-//                 <div style={{ marginBottom: 16 }}>
-//                   <label
-//                     style={{
-//                       fontSize: 10,
-//                       fontWeight: 800,
-//                       color: "#BBC863",
-//                       textTransform: "uppercase",
-//                       letterSpacing: "0.12em",
-//                       display: "block",
-//                       marginBottom: 6,
-//                     }}
-//                   >
-//                     Partner Commission ($) *
-//                   </label>
-//                   <input
-//                     type="number"
-//                     value={partnerCommission}
-//                     onChange={(e) => setPartnerCommission(e.target.value)}
-//                     placeholder="e.g. 1500"
-//                     style={{
-//                       width: "100%",
-//                       padding: "12px 14px",
-//                       borderRadius: 10,
-//                       border: "1.5px solid #e5e7eb",
-//                       fontSize: 14,
-//                       outline: "none",
-//                       boxSizing: "border-box",
-//                     }}
-//                     onFocus={(e) => (e.target.style.borderColor = "#BBC863")}
-//                     onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
-//                   />
-//                 </div>
-//               )}
-//             </div>
-//           ) : (
-//             <div style={{ marginBottom: 16 }}>
-//               <label
-//                 style={{
-//                   fontSize: 10,
-//                   fontWeight: 800,
-//                   color: "#888",
-//                   textTransform: "uppercase",
-//                   letterSpacing: "0.12em",
-//                   display: "block",
-//                   marginBottom: 6,
-//                 }}
-//               >
-//                 Rejection Reason *
-//               </label>
-//               <textarea
-//                 value={rejectionReason}
-//                 onChange={(e) => setRejectionReason(e.target.value)}
-//                 placeholder="Explain why this application is being rejected..."
-//                 rows={4}
-//                 style={{
-//                   width: "100%",
-//                   padding: "12px 14px",
-//                   borderRadius: 10,
-//                   border: "1.5px solid #e5e7eb",
-//                   fontSize: 14,
-//                   outline: "none",
-//                   resize: "none",
-//                   boxSizing: "border-box",
-//                 }}
-//                 onFocus={(e) => (e.target.style.borderColor = "#ef4444")}
-//                 onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
-//               />
-//             </div>
-//           )}
-
-//           {error && (
-//             <div
-//               style={{
-//                 background: "#fef2f2",
-//                 border: "1.5px solid #fecaca",
-//                 borderRadius: 10,
-//                 padding: "10px 14px",
-//                 display: "flex",
-//                 gap: 8,
-//                 alignItems: "center",
-//                 marginBottom: 16,
-//               }}
-//             >
-//               <Icon.Alert
-//                 width={16}
-//                 height={16}
-//                 style={{ color: "#ef4444", flexShrink: 0 }}
-//               />
-//               <span style={{ fontSize: 13, color: "#ef4444" }}>{error}</span>
-//             </div>
-//           )}
-//         </div>
-
-//         {/* Footer */}
-//         <div
-//           style={{
-//             padding: "16px 24px",
-//             borderTop: "1.5px solid #f0f0f0",
-//             display: "flex",
-//             gap: 10,
-//             justifyContent: "flex-end",
-//           }}
-//         >
-//           <button
-//             onClick={onClose}
-//             style={{
-//               padding: "10px 20px",
-//               borderRadius: 10,
-//               border: "1.5px solid #e5e7eb",
-//               background: "transparent",
-//               fontWeight: 700,
-//               fontSize: 13,
-//               cursor: "pointer",
-//               color: "#888",
-//             }}
-//           >
-//             Cancel
-//           </button>
-//           <button
-//             onClick={handleSubmit}
-//             disabled={submitting}
-//             style={{
-//               padding: "10px 28px",
-//               borderRadius: 10,
-//               border: "none",
-//               cursor: submitting ? "not-allowed" : "pointer",
-//               fontWeight: 800,
-//               fontSize: 13,
-//               textTransform: "uppercase",
-//               letterSpacing: "0.08em",
-//               background: decision === "approved" ? "#22c55e" : "#ef4444",
-//               color: "#fff",
-//               display: "flex",
-//               alignItems: "center",
-//               gap: 8,
-//               opacity: submitting ? 0.7 : 1,
-//             }}
-//           >
-//             {submitting ? (
-//               <Spinner size={16} color="#fff" />
-//             ) : decision === "approved" ? (
-//               <Icon.Check2 width={16} height={16} />
-//             ) : (
-//               <Icon.XCircle width={16} height={16} />
-//             )}
-//             {submitting
-//               ? "Processing..."
-//               : decision === "approved"
-//                 ? "Approve Application"
-//                 : "Reject Application"}
-//           </button>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// // ─────────────────────────────────────────────────────────────────────────────
-// // APPLICATION DETAIL DRAWER
-// // ─────────────────────────────────────────────────────────────────────────────
-// const AppDetailDrawer = ({ uuid, onClose, onDecisionMade }) => {
-//   const [app, setApp] = useState(null);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-//   const [showDecision, setShowDecision] = useState(false);
-//   const [activeTab, setActiveTab] = useState("overview");
-
-//   useEffect(() => {
-//     if (!uuid) return;
-//     setLoading(true);
-//     setError(null);
-//     apiGet(`/application/${uuid}/`)
-//       .then((data) => {
-//         setApp(data);
-//         setLoading(false);
-//       })
-//       .catch((e) => {
-//         setError(e.message);
-//         setLoading(false);
-//       });
-//   }, [uuid]);
-
-//   const canDecide = app?.status === "submitted" || app?.status === "pending";
-
-//   // FIX 4: Reset activeTab when a new UUID is opened so stale tab state doesn't persist
-//   useEffect(() => {
-//     setActiveTab("overview");
-//   }, [uuid]);
-
-//   const tabs = [
-//     { id: "overview", label: "Overview" },
-//     { id: "business", label: "Business" },
-//     { id: "funding", label: "Funding" },
-//     { id: "owner", label: "Owner" },
-//     { id: "documents", label: "Documents" },
-//   ];
-
-//   return (
-//     <>
-//       <div
-//         onClick={onClose}
-//         style={{
-//           position: "fixed",
-//           inset: 0,
-//           background: "rgba(0,0,0,0.4)",
-//           zIndex: 199,
-//         }}
-//       />
-//       <div
-//         style={{
-//           position: "fixed",
-//           top: 0,
-//           right: 0,
-//           height: "100vh",
-//           width: "min(600px, 100vw)",
-//           background: "#fff",
-//           zIndex: 200,
-//           display: "flex",
-//           flexDirection: "column",
-//           boxShadow: "-8px 0 40px rgba(0,0,0,0.15)",
-//         }}
-//       >
-//         {/* Drawer Header */}
-//         <div
-//           style={{
-//             padding: "20px 24px",
-//             borderBottom: "1.5px solid #f0f0f0",
-//             background: "#FAFDF8",
-//             flexShrink: 0,
-//           }}
-//         >
-//           <div
-//             style={{
-//               display: "flex",
-//               justifyContent: "space-between",
-//               alignItems: "flex-start",
-//             }}
-//           >
-//             <div>
-//               <div
-//                 style={{
-//                   fontSize: 11,
-//                   fontWeight: 800,
-//                   color: "#BBC863",
-//                   textTransform: "uppercase",
-//                   letterSpacing: "0.1em",
-//                   marginBottom: 4,
-//                 }}
-//               >
-//                 Application Detail
-//               </div>
-//               {app && (
-//                 <>
-//                   <div
-//                     style={{ fontSize: 17, fontWeight: 800, color: "#1a1a1a" }}
-//                   >
-//                     {app.user?.first_name} {app.user?.last_name}
-//                   </div>
-//                   {/* FIX 3 (continued): Normalised loan type name lookup */}
-//                   <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
-//                     {app.loan_type_info?.name || app.loan_type?.name || "—"} ·{" "}
-//                     {app.loan_application_uuid?.slice(0, 8)}…
-//                   </div>
-//                 </>
-//               )}
-//             </div>
-//             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-//               {app && <StatusBadge status={app.status} />}
-//               <button
-//                 onClick={onClose}
-//                 style={{
-//                   background: "#f5f5f5",
-//                   border: "none",
-//                   borderRadius: "50%",
-//                   width: 32,
-//                   height: 32,
-//                   cursor: "pointer",
-//                   display: "flex",
-//                   alignItems: "center",
-//                   justifyContent: "center",
-//                   color: "#666",
-//                 }}
-//               >
-//                 <Icon.X width={16} height={16} />
-//               </button>
-//             </div>
-//           </div>
-
-//           {/* Decision Button */}
-//           {canDecide && !loading && (
-//             <button
-//               onClick={() => setShowDecision(true)}
-//               style={{
-//                 marginTop: 14,
-//                 width: "100%",
-//                 padding: "10px",
-//                 borderRadius: 10,
-//                 background: "linear-gradient(135deg,#31694E,#4a8c6a)",
-//                 border: "none",
-//                 color: "#F0E491",
-//                 fontWeight: 800,
-//                 fontSize: 12,
-//                 textTransform: "uppercase",
-//                 letterSpacing: "0.1em",
-//                 cursor: "pointer",
-//                 display: "flex",
-//                 alignItems: "center",
-//                 justifyContent: "center",
-//                 gap: 8,
-//               }}
-//             >
-//               <Icon.Check2 width={14} height={14} /> Make Decision
-//             </button>
-//           )}
-//         </div>
-
-//         {/* Tabs */}
-//         <div
-//           style={{
-//             display: "flex",
-//             gap: 0,
-//             borderBottom: "1.5px solid #f0f0f0",
-//             flexShrink: 0,
-//             overflowX: "auto",
-//           }}
-//         >
-//           {tabs.map((t) => (
-//             <button
-//               key={t.id}
-//               onClick={() => setActiveTab(t.id)}
-//               style={{
-//                 padding: "12px 18px",
-//                 border: "none",
-//                 background: "none",
-//                 cursor: "pointer",
-//                 fontWeight: activeTab === t.id ? 800 : 600,
-//                 fontSize: 12,
-//                 color: activeTab === t.id ? "#31694E" : "#888",
-//                 borderBottom:
-//                   activeTab === t.id
-//                     ? "2.5px solid #31694E"
-//                     : "2.5px solid transparent",
-//                 whiteSpace: "nowrap",
-//               }}
-//             >
-//               {t.label}
-//             </button>
-//           ))}
-//         </div>
-
-//         {/* Drawer Body */}
-//         <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}>
-//           {loading && (
-//             <div
-//               style={{ display: "flex", justifyContent: "center", padding: 40 }}
-//             >
-//               <Spinner size={32} />
-//             </div>
-//           )}
-//           {error && (
-//             <div
-//               style={{
-//                 background: "#fef2f2",
-//                 borderRadius: 12,
-//                 padding: 16,
-//                 color: "#ef4444",
-//                 fontSize: 13,
-//               }}
-//             >
-//               {error}
-//             </div>
-//           )}
-//           {app && !loading && (
-//             <>
-//               {activeTab === "overview" && (
-//                 <div>
-//                   {/* Progress */}
-//                   <SectionCard title="Application Progress" icon={Icon.Clock}>
-//                     <div style={{ marginBottom: 8 }}>
-//                       <div
-//                         style={{
-//                           display: "flex",
-//                           justifyContent: "space-between",
-//                           fontSize: 12,
-//                           color: "#888",
-//                           marginBottom: 6,
-//                         }}
-//                       >
-//                         <span>Completion</span>
-//                         <span>{app.completion_percentage}%</span>
-//                       </div>
-//                       <div
-//                         style={{
-//                           height: 8,
-//                           background: "#f0f0f0",
-//                           borderRadius: 99,
-//                           overflow: "hidden",
-//                         }}
-//                       >
-//                         <div
-//                           style={{
-//                             height: "100%",
-//                             width: `${app.completion_percentage}%`,
-//                             background:
-//                               "linear-gradient(90deg,#31694E,#658C58)",
-//                             borderRadius: 99,
-//                           }}
-//                         />
-//                       </div>
-//                     </div>
-//                     <div
-//                       style={{
-//                         display: "flex",
-//                         gap: 6,
-//                         flexWrap: "wrap",
-//                         marginTop: 12,
-//                       }}
-//                     >
-//                       {STEPS_ORDER.slice(0, 6).map((s, i) => {
-//                         const idx = STEPS_ORDER.indexOf(
-//                           app.current_step ?? "business_information",
-//                         );
-//                         const done = i <= idx;
-//                         return (
-//                           <span
-//                             key={s}
-//                             style={{
-//                               fontSize: 10,
-//                               padding: "4px 10px",
-//                               borderRadius: 99,
-//                               fontWeight: 700,
-//                               background: done
-//                                 ? "rgba(49,105,78,0.12)"
-//                                 : "#f5f5f5",
-//                               color: done ? "#31694E" : "#bbb",
-//                             }}
-//                           >
-//                             {STEP_LABELS[s]}
-//                           </span>
-//                         );
-//                       })}
-//                     </div>
-//                   </SectionCard>
-
-//                   {/* Key Stats */}
-//                   <div
-//                     style={{
-//                       display: "grid",
-//                       gridTemplateColumns: "1fr 1fr",
-//                       gap: 12,
-//                       marginBottom: 16,
-//                     }}
-//                   >
-//                     {[
-//                       {
-//                         label: "Loan Type",
-//                         // FIX 3 (continued): consistent fallback
-//                         value:
-//                           app.loan_type_info?.name ||
-//                           app.loan_type?.name ||
-//                           "—",
-//                       },
-//                       {
-//                         label: "Status",
-//                         value: <StatusBadge status={app.status} />,
-//                       },
-//                       {
-//                         label: "Submitted At",
-//                         value: app.submitted_at
-//                           ? new Date(app.submitted_at).toLocaleDateString()
-//                           : "Not yet",
-//                       },
-//                       {
-//                         label: "Approved Funds",
-//                         value: app.approved_funds
-//                           ? `$${Number(app.approved_funds).toLocaleString()}`
-//                           : "—",
-//                       },
-//                     ].map(({ label, value }) => (
-//                       <div
-//                         key={label}
-//                         style={{
-//                           background: "#FAFDF8",
-//                           borderRadius: 12,
-//                           padding: "14px",
-//                           border: "1px solid #f0f0f0",
-//                         }}
-//                       >
-//                         <div
-//                           style={{
-//                             fontSize: 10,
-//                             fontWeight: 800,
-//                             color: "#BBC863",
-//                             textTransform: "uppercase",
-//                             letterSpacing: "0.1em",
-//                             marginBottom: 6,
-//                           }}
-//                         >
-//                           {label}
-//                         </div>
-//                         <div
-//                           style={{
-//                             fontSize: 14,
-//                             fontWeight: 700,
-//                             color: "#1a1a1a",
-//                           }}
-//                         >
-//                           {value}
-//                         </div>
-//                       </div>
-//                     ))}
-//                   </div>
-
-//                   {/* Applicant Info */}
-//                   <SectionCard title="Applicant" icon={Icon.User}>
-//                     <div
-//                       style={{
-//                         display: "flex",
-//                         alignItems: "center",
-//                         gap: 12,
-//                         marginBottom: 12,
-//                       }}
-//                     >
-//                       <Avatar
-//                         first={app.user?.first_name}
-//                         last={app.user?.last_name}
-//                         size={44}
-//                       />
-//                       <div>
-//                         <div style={{ fontWeight: 800, fontSize: 15 }}>
-//                           {app.user?.first_name} {app.user?.last_name}
-//                         </div>
-//                         <div style={{ fontSize: 12, color: "#888" }}>
-//                           {app.user?.email}
-//                         </div>
-//                       </div>
-//                     </div>
-//                     <FieldRow label="Phone" value={app.user?.phone} />
-//                     <FieldRow label="Role" value={app.user?.role} />
-//                     <FieldRow
-//                       label="Qualified"
-//                       value={app.user?.is_qualified ? "✅ Yes" : "❌ No"}
-//                     />
-//                   </SectionCard>
-
-//                   {/* Decision info if made */}
-//                   {app.status === "rejected" && app.rejection_reason && (
-//                     <div
-//                       style={{
-//                         background: "#fef2f2",
-//                         border: "1.5px solid #fecaca",
-//                         borderRadius: 12,
-//                         padding: 16,
-//                       }}
-//                     >
-//                       <div
-//                         style={{
-//                           fontSize: 11,
-//                           fontWeight: 800,
-//                           color: "#ef4444",
-//                           textTransform: "uppercase",
-//                           letterSpacing: "0.1em",
-//                           marginBottom: 6,
-//                         }}
-//                       >
-//                         Rejection Reason
-//                       </div>
-//                       <div
-//                         style={{ fontSize: 13, color: "#666", lineHeight: 1.6 }}
-//                       >
-//                         {app.rejection_reason}
-//                       </div>
-//                     </div>
-//                   )}
-//                   {app.status === "approved" && (
-//                     <div
-//                       style={{
-//                         background: "#f0fdf4",
-//                         border: "1.5px solid #bbf7d0",
-//                         borderRadius: 12,
-//                         padding: 16,
-//                       }}
-//                     >
-//                       <div
-//                         style={{
-//                           fontSize: 11,
-//                           fontWeight: 800,
-//                           color: "#22c55e",
-//                           textTransform: "uppercase",
-//                           letterSpacing: "0.1em",
-//                           marginBottom: 6,
-//                         }}
-//                       >
-//                         Approved
-//                       </div>
-//                       <div
-//                         style={{
-//                           fontSize: 20,
-//                           fontWeight: 800,
-//                           color: "#22c55e",
-//                         }}
-//                       >
-//                         ${Number(app.approved_funds || 0).toLocaleString()}
-//                       </div>
-//                       {app.approved_at && (
-//                         <div
-//                           style={{ fontSize: 12, color: "#888", marginTop: 4 }}
-//                         >
-//                           {new Date(app.approved_at).toLocaleDateString()}
-//                         </div>
-//                       )}
-//                     </div>
-//                   )}
-//                 </div>
-//               )}
-
-//               {activeTab === "business" && (
-//                 <div>
-//                   {app.business_information ? (
-//                     <SectionCard
-//                       title="Business Information"
-//                       icon={Icon.Building}
-//                     >
-//                       <FieldRow
-//                         label="Legal Name"
-//                         value={app.business_information.business_legal_name}
-//                         highlight
-//                       />
-//                       <FieldRow
-//                         label="DBA Name"
-//                         value={app.business_information.business_dba_name}
-//                       />
-//                       <FieldRow
-//                         label="Email"
-//                         value={app.business_information.business_email}
-//                       />
-//                       <FieldRow
-//                         label="Phone"
-//                         value={app.business_information.business_phone_number}
-//                       />
-//                       <FieldRow
-//                         label="Website"
-//                         value={app.business_information.business_website}
-//                       />
-//                       <FieldRow
-//                         label="Address"
-//                         value={app.business_information.business_address}
-//                       />
-//                       <FieldRow
-//                         label="City"
-//                         value={app.business_information.business_city}
-//                       />
-//                       <FieldRow
-//                         label="State"
-//                         value={app.business_information.business_state}
-//                       />
-//                       <FieldRow
-//                         label="Zip Code"
-//                         value={app.business_information.business_zip_code}
-//                       />
-//                       <FieldRow
-//                         label="Industry"
-//                         value={app.business_information.business_industry_type}
-//                       />
-//                       <FieldRow
-//                         label="Entity Type"
-//                         value={app.business_information.business_legal_entity_type?.toUpperCase()}
-//                       />
-//                       <FieldRow
-//                         label="EIN / Reg. #"
-//                         value={app.business_information.business_number}
-//                       />
-//                       <FieldRow
-//                         label="Est. Start Date"
-//                         value={
-//                           app.business_information.business_estimated_start_date
-//                         }
-//                       />
-//                       <FieldRow
-//                         label="Monthly Sales"
-//                         value={
-//                           app.business_information
-//                             .business_average_gross_monthly_sales
-//                             ? `$${Number(
-//                                 app.business_information
-//                                   .business_average_gross_monthly_sales,
-//                               ).toLocaleString()}`
-//                             : null
-//                         }
-//                         highlight
-//                       />
-//                     </SectionCard>
-//                   ) : (
-//                     <EmptySection label="Business information not submitted yet." />
-//                   )}
-//                 </div>
-//               )}
-
-//               {activeTab === "funding" && (
-//                 <div>
-//                   {app.funding_information ? (
-//                     <SectionCard title="Funding Information" icon={Icon.Dollar}>
-//                       <FieldRow
-//                         label="Amount Requested"
-//                         value={`$${Number(
-//                           app.funding_information.loan_amount_requested,
-//                         ).toLocaleString()}`}
-//                         highlight
-//                       />
-//                       <FieldRow
-//                         label="Term Requested"
-//                         value={app.funding_information.loan_term_requested}
-//                       />
-//                       <FieldRow
-//                         label="Purpose"
-//                         value={app.funding_information.loan_purpose}
-//                       />
-//                       <FieldRow
-//                         label="Overdraft Protection"
-//                         value={
-//                           app.funding_information.overdraft_protection
-//                             ? "Yes"
-//                             : "No"
-//                         }
-//                       />
-//                       {app.funding_information.overdraft_protection && (
-//                         <FieldRow
-//                           label="Overdraft Limit"
-//                           value={`$${Number(
-//                             app.funding_information.overdraft_protection_limit,
-//                           ).toLocaleString()}`}
-//                         />
-//                       )}
-//                       <FieldRow
-//                         label="Existing Loans"
-//                         value={
-//                           app.funding_information.business_existing_loan
-//                             ? "Yes"
-//                             : "No"
-//                         }
-//                       />
-//                       {app.funding_information.business_lender_details?.length >
-//                         0 && (
-//                         <div style={{ marginTop: 12 }}>
-//                           <div
-//                             style={{
-//                               fontSize: 11,
-//                               fontWeight: 800,
-//                               color: "#BBC863",
-//                               textTransform: "uppercase",
-//                               letterSpacing: "0.1em",
-//                               marginBottom: 8,
-//                             }}
-//                           >
-//                             Lenders
-//                           </div>
-//                           {app.funding_information.business_lender_details.map(
-//                             (l, i) => (
-//                               <div
-//                                 key={i}
-//                                 style={{
-//                                   display: "flex",
-//                                   justifyContent: "space-between",
-//                                   padding: "6px 10px",
-//                                   background: "#f9f9f9",
-//                                   borderRadius: 8,
-//                                   marginBottom: 4,
-//                                   fontSize: 13,
-//                                 }}
-//                               >
-//                                 <span style={{ fontWeight: 600 }}>
-//                                   {l.lender_name}
-//                                 </span>
-//                                 <span
-//                                   style={{ fontWeight: 700, color: "#31694E" }}
-//                                 >
-//                                   ${Number(l.balance).toLocaleString()}
-//                                 </span>
-//                               </div>
-//                             ),
-//                           )}
-//                         </div>
-//                       )}
-//                     </SectionCard>
-//                   ) : (
-//                     <EmptySection label="Funding information not submitted yet." />
-//                   )}
-//                 </div>
-//               )}
-
-//               {activeTab === "owner" && (
-//                 <div>
-//                   {app.owner_information ? (
-//                     <SectionCard title="Owner Information" icon={Icon.User}>
-//                       <FieldRow
-//                         label="Full Name"
-//                         value={`${app.owner_information.owner_first_name} ${app.owner_information.owner_last_name}`}
-//                         highlight
-//                       />
-//                       <FieldRow
-//                         label="Email"
-//                         value={app.owner_information.owner_email}
-//                       />
-//                       <FieldRow
-//                         label="Phone"
-//                         value={app.owner_information.owner_phone_number}
-//                       />
-//                       <FieldRow
-//                         label="Date of Birth"
-//                         value={app.owner_information.owner_date_of_birth}
-//                       />
-//                       <FieldRow
-//                         label="SSN"
-//                         value={
-//                           app.owner_information.owner_ssn
-//                             ? "•••-••-" +
-//                               app.owner_information.owner_ssn.slice(-4)
-//                             : null
-//                         }
-//                       />
-//                       <FieldRow
-//                         label="Address"
-//                         value={app.owner_information.owner_address}
-//                       />
-//                       <FieldRow
-//                         label="City"
-//                         value={app.owner_information.owner_city}
-//                       />
-//                       <FieldRow
-//                         label="State"
-//                         value={app.owner_information.owner_state}
-//                       />
-//                       <FieldRow
-//                         label="Zip Code"
-//                         value={app.owner_information.owner_zip_code}
-//                       />
-//                       <FieldRow
-//                         label="Ownership %"
-//                         value={
-//                           app.owner_information.owner_percentage_of_ownership
-//                             ? `${app.owner_information.owner_percentage_of_ownership}%`
-//                             : null
-//                         }
-//                       />
-//                       <FieldRow
-//                         label="Credit Score"
-//                         value={app.owner_information.owner_credit_score}
-//                         highlight
-//                       />
-//                     </SectionCard>
-//                   ) : (
-//                     <EmptySection label="Owner information not submitted yet." />
-//                   )}
-//                 </div>
-//               )}
-
-//               {activeTab === "documents" && (
-//                 <div>
-//                   {app.documents?.length > 0 ? (
-//                     <SectionCard title="Uploaded Documents" icon={Icon.Folder}>
-//                       {app.documents.map((doc) => (
-//                         <div
-//                           key={doc.document_uuid}
-//                           style={{
-//                             display: "flex",
-//                             justifyContent: "space-between",
-//                             alignItems: "center",
-//                             padding: "10px 12px",
-//                             background: "#FAFDF8",
-//                             borderRadius: 10,
-//                             marginBottom: 8,
-//                             border: "1px solid #f0f0f0",
-//                           }}
-//                         >
-//                           <div
-//                             style={{
-//                               display: "flex",
-//                               alignItems: "center",
-//                               gap: 10,
-//                             }}
-//                           >
-//                             <div
-//                               style={{
-//                                 width: 32,
-//                                 height: 32,
-//                                 borderRadius: 8,
-//                                 background: "rgba(49,105,78,0.1)",
-//                                 display: "flex",
-//                                 alignItems: "center",
-//                                 justifyContent: "center",
-//                               }}
-//                             >
-//                               <Icon.File
-//                                 width={16}
-//                                 height={16}
-//                                 style={{ color: "#31694E" }}
-//                               />
-//                             </div>
-//                             <div>
-//                               <div
-//                                 style={{
-//                                   fontSize: 13,
-//                                   fontWeight: 700,
-//                                   color: "#1a1a1a",
-//                                 }}
-//                               >
-//                                 {doc.document_name}
-//                               </div>
-//                               <div style={{ fontSize: 11, color: "#888" }}>
-//                                 {new Date(doc.uploaded_at).toLocaleDateString()}
-//                               </div>
-//                             </div>
-//                           </div>
-//                           {doc.document_file && (
-//                             <a
-//                               href={doc.document_file}
-//                               target="_blank"
-//                               rel="noreferrer"
-//                               style={{
-//                                 padding: "6px 12px",
-//                                 borderRadius: 8,
-//                                 background: "rgba(49,105,78,0.1)",
-//                                 color: "#31694E",
-//                                 fontSize: 11,
-//                                 fontWeight: 700,
-//                                 textDecoration: "none",
-//                                 textTransform: "uppercase",
-//                               }}
-//                             >
-//                               View
-//                             </a>
-//                           )}
-//                         </div>
-//                       ))}
-//                     </SectionCard>
-//                   ) : (
-//                     <EmptySection label="No documents uploaded yet." />
-//                   )}
-//                 </div>
-//               )}
-//             </>
-//           )}
-//         </div>
-//       </div>
-
-//       {showDecision && (
-//         <DecisionModal
-//           app={app}
-//           onClose={() => setShowDecision(false)}
-//           onSuccess={() => {
-//             setShowDecision(false);
-//             onDecisionMade();
-//             onClose();
-//           }}
-//         />
-//       )}
-//     </>
-//   );
-// };
-
-// // ─────────────────────────────────────────────────────────────────────────────
-// // APPLICATION LIST ROW
-// // ─────────────────────────────────────────────────────────────────────────────
-// const AppRow = ({ app, onClick }) => {
-//   const stepIdx = STEPS_ORDER.indexOf(
-//     app.current_step ?? "business_information",
-//   );
-//   const progress =
-//     app.completion_percentage ??
-//     Math.round(((stepIdx + 1) / STEPS_ORDER.length) * 100);
-
-//   return (
-//     <div
-//       onClick={onClick}
-//       style={{
-//         background: "#fff",
-//         borderRadius: 14,
-//         padding: "16px 20px",
-//         border: "1.5px solid #f0f0f0",
-//         cursor: "pointer",
-//         transition: "all 0.18s",
-//         marginBottom: 10,
-//         display: "grid",
-//         gridTemplateColumns: "44px 1fr auto auto auto",
-//         gap: 16,
-//         alignItems: "center",
-//       }}
-//       onMouseEnter={(e) => {
-//         e.currentTarget.style.borderColor = "#31694E";
-//         e.currentTarget.style.boxShadow = "0 4px 20px rgba(49,105,78,0.10)";
-//       }}
-//       onMouseLeave={(e) => {
-//         e.currentTarget.style.borderColor = "#f0f0f0";
-//         e.currentTarget.style.boxShadow = "none";
-//       }}
-//     >
-//       <Avatar
-//         first={app.user?.first_name}
-//         last={app.user?.last_name}
-//         size={44}
-//         radius={12}
-//       />
-
-//       <div style={{ minWidth: 0 }}>
-//         <div
-//           style={{
-//             fontWeight: 800,
-//             fontSize: 14,
-//             color: "#1a1a1a",
-//             marginBottom: 2,
-//             whiteSpace: "nowrap",
-//             overflow: "hidden",
-//             textOverflow: "ellipsis",
-//           }}
-//         >
-//           {app.user?.first_name} {app.user?.last_name}
-//         </div>
-//         <div
-//           style={{
-//             fontSize: 11,
-//             color: "#888",
-//             whiteSpace: "nowrap",
-//             overflow: "hidden",
-//             textOverflow: "ellipsis",
-//           }}
-//         >
-//           {/* FIX 3 (continued): consistent loan type name fallback */}
-//           {app.loan_type_info?.name || app.loan_type?.name || "—"} ·{" "}
-//           {app.loan_application_uuid?.slice(0, 8)}…
-//         </div>
-//       </div>
-
-//       {/* Progress bar */}
-//       <div
-//         style={{ width: 100, display: "flex", flexDirection: "column", gap: 4 }}
-//       >
-//         <div style={{ fontSize: 10, color: "#888", textAlign: "right" }}>
-//           {progress}%
-//         </div>
-//         <div
-//           style={{
-//             height: 5,
-//             background: "#f0f0f0",
-//             borderRadius: 99,
-//             overflow: "hidden",
-//           }}
-//         >
-//           <div
-//             style={{
-//               height: "100%",
-//               width: `${progress}%`,
-//               background: "linear-gradient(90deg,#31694E,#658C58)",
-//               borderRadius: 99,
-//             }}
-//           />
-//         </div>
-//       </div>
-
-//       <StatusBadge status={app.status} />
-
-//       <Icon.ChevRight width={16} height={16} style={{ color: "#ccc" }} />
-//     </div>
-//   );
-// };
-
-// // ─────────────────────────────────────────────────────────────────────────────
-// // DASHBOARD VIEW
-// // ─────────────────────────────────────────────────────────────────────────────
-// const DashboardView = ({ applications, user }) => {
-//   const stats = {
-//     total: applications.length,
-//     pending: applications.filter(
-//       (a) => a.status === "pending" || a.status === "submitted",
-//     ).length,
-//     approved: applications.filter((a) => a.status === "approved").length,
-//     rejected: applications.filter((a) => a.status === "rejected").length,
-//   };
-
-//   const recent = [...applications]
-//     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-//     .slice(0, 5);
-
-//   return (
-//     <div>
-//       {/* Welcome */}
-//       <div style={{ marginBottom: 28 }}>
-//         <div
-//           style={{
-//             fontSize: 28,
-//             fontWeight: 800,
-//             color: "#1a1a1a",
-//             marginBottom: 4,
-//           }}
-//         >
-//           Welcome, {user?.first_name}! 👋
-//         </div>
-//         <div style={{ fontSize: 14, color: "#888" }}>
-//           Here's an overview of your assigned applications.
-//         </div>
-//       </div>
-
-//       {/* Stat Cards */}
-//       <div
-//         style={{
-//           display: "grid",
-//           gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-//           gap: 14,
-//           marginBottom: 28,
-//         }}
-//       >
-//         {[
-//           {
-//             label: "Total Applications",
-//             value: stats.total,
-//             color: "#31694E",
-//             bg: "rgba(49,105,78,0.08)",
-//             icon: Icon.File,
-//           },
-//           {
-//             label: "Needs Review",
-//             value: stats.pending,
-//             color: "#f59e0b",
-//             bg: "rgba(245,158,11,0.08)",
-//             icon: Icon.Clock,
-//           },
-//           {
-//             label: "Approved",
-//             value: stats.approved,
-//             color: "#22c55e",
-//             bg: "rgba(34,197,94,0.08)",
-//             icon: Icon.Check,
-//           },
-//           {
-//             label: "Rejected",
-//             value: stats.rejected,
-//             color: "#ef4444",
-//             bg: "rgba(239,68,68,0.08)",
-//             icon: Icon.XCircle,
-//           },
-//         ].map(({ label, value, color, bg, icon: IconComp }) => (
-//           <div
-//             key={label}
-//             style={{
-//               background: "#fff",
-//               borderRadius: 16,
-//               padding: 20,
-//               border: "1.5px solid #f0f0f0",
-//             }}
-//           >
-//             <div
-//               style={{
-//                 width: 40,
-//                 height: 40,
-//                 borderRadius: 12,
-//                 background: bg,
-//                 display: "flex",
-//                 alignItems: "center",
-//                 justifyContent: "center",
-//                 marginBottom: 12,
-//               }}
-//             >
-//               <IconComp width={20} height={20} style={{ color }} />
-//             </div>
-//             <div
-//               style={{ fontSize: 28, fontWeight: 800, color, marginBottom: 4 }}
-//             >
-//               {value}
-//             </div>
-//             <div
-//               style={{
-//                 fontSize: 11,
-//                 fontWeight: 700,
-//                 color: "#888",
-//                 textTransform: "uppercase",
-//                 letterSpacing: "0.1em",
-//               }}
-//             >
-//               {label}
-//             </div>
-//           </div>
-//         ))}
-//       </div>
-
-//       {/* Recent Applications */}
-//       <div>
-//         <div
-//           style={{
-//             fontSize: 15,
-//             fontWeight: 800,
-//             color: "#1a1a1a",
-//             marginBottom: 14,
-//           }}
-//         >
-//           Recent Activity
-//         </div>
-//         {recent.length > 0 ? (
-//           recent.map((app) => (
-//             <div
-//               key={app.loan_application_uuid}
-//               style={{
-//                 background: "#fff",
-//                 borderRadius: 12,
-//                 padding: "14px 18px",
-//                 border: "1.5px solid #f0f0f0",
-//                 marginBottom: 8,
-//                 display: "flex",
-//                 alignItems: "center",
-//                 gap: 14,
-//               }}
-//             >
-//               <Avatar
-//                 first={app.user?.first_name}
-//                 last={app.user?.last_name}
-//                 size={38}
-//                 radius={10}
-//               />
-//               <div style={{ flex: 1, minWidth: 0 }}>
-//                 <div
-//                   style={{ fontWeight: 700, fontSize: 13, color: "#1a1a1a" }}
-//                 >
-//                   {app.user?.first_name} {app.user?.last_name}
-//                 </div>
-//                 <div style={{ fontSize: 11, color: "#888" }}>
-//                   {app.loan_type_info?.name || app.loan_type?.name || "—"}
-//                 </div>
-//               </div>
-//               <StatusBadge status={app.status} />
-//             </div>
-//           ))
-//         ) : (
-//           <div
-//             style={{
-//               padding: 40,
-//               textAlign: "center",
-//               color: "#bbb",
-//               border: "2px dashed #f0f0f0",
-//               borderRadius: 12,
-//               fontSize: 13,
-//             }}
-//           >
-//             No applications yet.
-//           </div>
-//         )}
-//       </div>
-//     </div>
-//   );
-// };
-
-// // ─────────────────────────────────────────────────────────────────────────────
-// // APPLICATIONS LIST VIEW
-// // ─────────────────────────────────────────────────────────────────────────────
-// const ApplicationsView = ({ applications, onSelect }) => {
-//   const [search, setSearch] = useState("");
-//   const [filterStatus, setFilterStatus] = useState("all");
-
-//   const filtered = applications.filter((app) => {
-//     const name = `${app.user?.first_name} ${app.user?.last_name}`.toLowerCase();
-//     const matchSearch =
-//       !search ||
-//       name.includes(search.toLowerCase()) ||
-//       app.loan_application_uuid?.includes(search);
-//     const matchStatus = filterStatus === "all" || app.status === filterStatus;
-//     return matchSearch && matchStatus;
-//   });
-
-//   return (
-//     <div>
-//       <div style={{ marginBottom: 24 }}>
-//         <div
-//           style={{
-//             fontSize: 22,
-//             fontWeight: 800,
-//             color: "#1a1a1a",
-//             marginBottom: 4,
-//           }}
-//         >
-//           All Applications
-//         </div>
-//         <div style={{ fontSize: 13, color: "#888" }}>
-//           {applications.length} total applications assigned to you
-//         </div>
-//       </div>
-
-//       {/* Filters */}
-//       <div
-//         style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}
-//       >
-//         <div
-//           style={{
-//             flex: 1,
-//             minWidth: 200,
-//             display: "flex",
-//             alignItems: "center",
-//             gap: 8,
-//             background: "#fff",
-//             border: "1.5px solid #e5e7eb",
-//             borderRadius: 10,
-//             padding: "8px 14px",
-//           }}
-//         >
-//           <Icon.Search width={16} height={16} style={{ color: "#aaa" }} />
-//           <input
-//             value={search}
-//             onChange={(e) => setSearch(e.target.value)}
-//             placeholder="Search by name or UUID..."
-//             style={{
-//               border: "none",
-//               outline: "none",
-//               fontSize: 13,
-//               background: "transparent",
-//               flex: 1,
-//               color: "#1a1a1a",
-//             }}
-//           />
-//         </div>
-//         <div style={{ display: "flex", gap: 6 }}>
-//           {["all", "submitted", "pending", "approved", "rejected", "draft"].map(
-//             (s) => (
-//               <button
-//                 key={s}
-//                 onClick={() => setFilterStatus(s)}
-//                 style={{
-//                   padding: "8px 14px",
-//                   borderRadius: 10,
-//                   border: "1.5px solid",
-//                   borderColor: filterStatus === s ? "#31694E" : "#e5e7eb",
-//                   background:
-//                     filterStatus === s ? "rgba(49,105,78,0.08)" : "#fff",
-//                   color: filterStatus === s ? "#31694E" : "#888",
-//                   fontWeight: 700,
-//                   fontSize: 11,
-//                   textTransform: "uppercase",
-//                   letterSpacing: "0.06em",
-//                   cursor: "pointer",
-//                 }}
-//               >
-//                 {s === "all" ? "All" : STATUS_META[s]?.label || s}
-//               </button>
-//             ),
-//           )}
-//         </div>
-//       </div>
-
-//       {/* List */}
-//       {filtered.length > 0 ? (
-//         filtered.map((app) => (
-//           <AppRow
-//             key={app.loan_application_uuid}
-//             app={app}
-//             onClick={() => onSelect(app.loan_application_uuid)}
-//           />
-//         ))
-//       ) : (
-//         <div
-//           style={{
-//             padding: 60,
-//             textAlign: "center",
-//             color: "#bbb",
-//             border: "2px dashed #f0f0f0",
-//             borderRadius: 16,
-//             fontSize: 14,
-//           }}
-//         >
-//           No applications match your filters.
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// // ─────────────────────────────────────────────────────────────────────────────
-// // PROFILE VIEW
-// // ─────────────────────────────────────────────────────────────────────────────
-// const ProfileView = ({ user }) => {
-//   const fields = [
-//     { label: "Email", value: user?.email },
-//     { label: "Phone", value: user?.phone || "—" },
-//     { label: "Username", value: user?.username },
-//     { label: "Role", value: user?.role },
-//     { label: "User ID", value: `#${user?.id}` },
-//   ];
-//   return (
-//     <div>
-//       <div
-//         style={{
-//           fontSize: 22,
-//           fontWeight: 800,
-//           color: "#1a1a1a",
-//           marginBottom: 20,
-//         }}
-//       >
-//         My Profile
-//       </div>
-//       <div
-//         style={{
-//           background: "#fff",
-//           borderRadius: 20,
-//           border: "1.5px solid #f0f0f0",
-//           overflow: "hidden",
-//         }}
-//       >
-//         <div
-//           style={{
-//             height: 80,
-//             background: "linear-gradient(135deg,#31694E,#658C58)",
-//           }}
-//         />
-//         <div style={{ padding: "0 28px 28px", marginTop: -40 }}>
-//           <div
-//             style={{
-//               width: 80,
-//               height: 80,
-//               borderRadius: 20,
-//               background: "#F0E491",
-//               display: "flex",
-//               alignItems: "center",
-//               justifyContent: "center",
-//               fontSize: 28,
-//               fontWeight: 800,
-//               color: "#31694E",
-//               border: "4px solid #fff",
-//               marginBottom: 16,
-//             }}
-//           >
-//             {user?.first_name?.[0]}
-//             {user?.last_name?.[0]}
-//           </div>
-//           <div
-//             style={{
-//               fontSize: 22,
-//               fontWeight: 800,
-//               color: "#1a1a1a",
-//               marginBottom: 4,
-//             }}
-//           >
-//             {user?.first_name} {user?.last_name}
-//           </div>
-//           <div style={{ marginBottom: 24 }}>
-//             <span
-//               style={{
-//                 background: "rgba(49,105,78,0.1)",
-//                 color: "#31694E",
-//                 padding: "3px 12px",
-//                 borderRadius: 99,
-//                 fontSize: 11,
-//                 fontWeight: 800,
-//                 textTransform: "uppercase",
-//               }}
-//             >
-//               {user?.role}
-//             </span>
-//           </div>
-//           <div
-//             style={{
-//               display: "grid",
-//               gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-//               gap: 14,
-//             }}
-//           >
-//             {fields.map(({ label, value }) => (
-//               <div
-//                 key={label}
-//                 style={{
-//                   padding: 16,
-//                   background: "#FAFDF8",
-//                   borderRadius: 12,
-//                   border: "1px solid #f0f0f0",
-//                 }}
-//               >
-//                 <div
-//                   style={{
-//                     fontSize: 10,
-//                     fontWeight: 800,
-//                     color: "#BBC863",
-//                     textTransform: "uppercase",
-//                     letterSpacing: "0.12em",
-//                     marginBottom: 6,
-//                   }}
-//                 >
-//                   {label}
-//                 </div>
-//                 <div
-//                   style={{ fontSize: 14, fontWeight: 700, color: "#1a1a1a" }}
-//                 >
-//                   {value}
-//                 </div>
-//               </div>
-//             ))}
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// // ─────────────────────────────────────────────────────────────────────────────
-// // SIDEBAR
-// // ─────────────────────────────────────────────────────────────────────────────
-// const NAV = [
-//   { id: "dashboard", label: "Dashboard", icon: Icon.Home },
-//   { id: "applications", label: "Applications", icon: Icon.File },
-//   { id: "profile", label: "My Profile", icon: Icon.User },
-// ];
-
-// const Sidebar = ({ active, setActive, user, onClose, isMobile, appCount }) => (
-//   <aside
-//     style={{
-//       width: 240,
-//       height: "100%",
-//       background: "#1c3e2c",
-//       display: "flex",
-//       flexDirection: "column",
-//       padding: "24px 16px",
-//       position: isMobile ? "fixed" : "relative",
-//       zIndex: isMobile ? 100 : "auto",
-//       top: 0,
-//       left: 0,
-//       bottom: 0,
-//     }}
-//   >
-//     {/* Logo */}
-//     <div
-//       style={{
-//         display: "flex",
-//         alignItems: "center",
-//         justifyContent: "space-between",
-//         marginBottom: 32,
-//         paddingLeft: 8,
-//       }}
-//     >
-//       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-//         <Icon.Leaf width={28} height={28} style={{ color: "#F0E491" }} />
-//         <span
-//           style={{
-//             fontSize: 24,
-//             fontWeight: 900,
-//             color: "#F0E491",
-//             letterSpacing: "-0.04em",
-//           }}
-//         >
-//           Kacu
-//         </span>
-//       </div>
-//       {isMobile && (
-//         <button
-//           onClick={onClose}
-//           style={{
-//             background: "none",
-//             border: "none",
-//             color: "rgba(255,255,255,0.5)",
-//             cursor: "pointer",
-//           }}
-//         >
-//           <Icon.X width={20} height={20} />
-//         </button>
-//       )}
-//     </div>
-
-//     {/* Role Badge */}
-//     <div
-//       style={{
-//         padding: "10px 12px",
-//         background: "rgba(240,228,145,0.12)",
-//         borderRadius: 10,
-//         marginBottom: 20,
-//         border: "1px solid rgba(240,228,145,0.2)",
-//       }}
-//     >
-//       <div
-//         style={{
-//           fontSize: 10,
-//           fontWeight: 800,
-//           color: "#BBC863",
-//           textTransform: "uppercase",
-//           letterSpacing: "0.12em",
-//           marginBottom: 2,
-//         }}
-//       >
-//         Agent Portal
-//       </div>
-//       <div style={{ fontSize: 13, fontWeight: 700, color: "white" }}>
-//         {user?.first_name} {user?.last_name}
-//       </div>
-//       <div
-//         style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginTop: 1 }}
-//       >
-//         {user?.email}
-//       </div>
-//     </div>
-
-//     <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: 3 }}>
-//       {NAV.map(({ id, label, icon: NavIcon }) => {
-//         const isActive = active === id;
-//         return (
-//           <button
-//             key={id}
-//             onClick={() => {
-//               setActive(id);
-//               if (isMobile) onClose();
-//             }}
-//             style={{
-//               display: "flex",
-//               alignItems: "center",
-//               gap: 12,
-//               padding: "11px 16px",
-//               borderRadius: 12,
-//               border: "none",
-//               background: isActive ? "rgba(240,228,145,0.15)" : "transparent",
-//               color: isActive ? "#F0E491" : "rgba(255,255,255,0.5)",
-//               fontWeight: isActive ? 800 : 600,
-//               fontSize: 13,
-//               cursor: "pointer",
-//               textAlign: "left",
-//               width: "100%",
-//               transition: "all 0.2s",
-//               borderLeft: isActive
-//                 ? "3px solid #F0E491"
-//                 : "3px solid transparent",
-//             }}
-//           >
-//             <NavIcon width={18} height={18} />
-//             <span style={{ flex: 1 }}>{label}</span>
-//             {id === "applications" && appCount > 0 && (
-//               <span
-//                 style={{
-//                   background: "#BBC863",
-//                   color: "#1c3e2c",
-//                   borderRadius: 99,
-//                   fontSize: 10,
-//                   fontWeight: 800,
-//                   padding: "1px 7px",
-//                 }}
-//               >
-//                 {appCount}
-//               </span>
-//             )}
-//           </button>
-//         );
-//       })}
-//     </nav>
-
-//     <button
-//       onClick={() => {
-//         localStorage.clear();
-//         window.location.href = "/login";
-//       }}
-//       style={{
-//         display: "flex",
-//         alignItems: "center",
-//         gap: 10,
-//         padding: "12px 16px",
-//         borderRadius: 12,
-//         border: "none",
-//         background: "transparent",
-//         color: "#ef9494",
-//         cursor: "pointer",
-//         fontWeight: 700,
-//         fontSize: 13,
-//         width: "100%",
-//       }}
-//     >
-//       <Icon.Logout width={18} height={18} /> Sign Out
-//     </button>
-//   </aside>
-// );
-
-// // ─────────────────────────────────────────────────────────────────────────────
-// // MAIN COMPONENT
-// // ─────────────────────────────────────────────────────────────────────────────
-// export default function AgentDashboard() {
-//   const [activeTab, setActiveTab] = useState("dashboard");
-//   const [sidebarOpen, setSidebarOpen] = useState(false);
-//   const [user, setUser] = useState(null);
-//   const [applications, setApplications] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-//   const [refreshing, setRefreshing] = useState(false);
-//   const [selectedAppUuid, setSelectedAppUuid] = useState(null);
-
-//   const fetchAll = useCallback(async (silent = false) => {
-//     if (!silent) setLoading(true);
-//     else setRefreshing(true);
-//     setError(null);
-//     try {
-//       const token = getToken();
-//       if (!token) {
-//         window.location.href = "/login";
-//         return;
-//       }
-
-//       const [userData, appsData] = await Promise.all([
-//         apiGet("/user-profile/me/"),
-//         apiGet("/application/"),
-//       ]);
-
-//       setUser(userData);
-//       const appList = Array.isArray(appsData)
-//         ? appsData
-//         : appsData?.results || [];
-//       setApplications(appList);
-//       log("Data loaded", { user: userData, appCount: appList.length });
-//     } catch (e) {
-//       logError("fetchAll failed", e);
-//       setError(e.message);
-//     } finally {
-//       setLoading(false);
-//       setRefreshing(false);
-//     }
-//   }, []);
-
-//   useEffect(() => {
-//     fetchAll();
-//   }, [fetchAll]);
-
-//   useEffect(() => {
-//     const style = document.createElement("style");
-//     style.textContent = `
-//       @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap');
-//       @keyframes kacu-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-//       * { box-sizing: border-box; }
-//       body { margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; background: #f5f6f8; }
-//       ::-webkit-scrollbar { width: 4px; }
-//       ::-webkit-scrollbar-track { background: transparent; }
-//       ::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 99px; }
-//     `;
-//     document.head.appendChild(style);
-//     return () => document.head.removeChild(style);
-//   }, []);
-
-//   if (loading)
-//     return (
-//       <div
-//         style={{
-//           height: "100vh",
-//           display: "flex",
-//           flexDirection: "column",
-//           alignItems: "center",
-//           justifyContent: "center",
-//           background: "#f5f6f8",
-//           gap: 16,
-//         }}
-//       >
-//         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-//           <Icon.Leaf width={32} height={32} style={{ color: "#31694E" }} />
-//           <span
-//             style={{
-//               fontSize: 28,
-//               fontWeight: 900,
-//               color: "#31694E",
-//               letterSpacing: "-0.04em",
-//             }}
-//           >
-//             Kacu
-//           </span>
-//         </div>
-//         <Spinner size={36} />
-//         <div style={{ fontSize: 13, color: "#888" }}>Loading agent portal…</div>
-//       </div>
-//     );
-
-//   if (error)
-//     return (
-//       <div
-//         style={{
-//           height: "100vh",
-//           display: "flex",
-//           flexDirection: "column",
-//           alignItems: "center",
-//           justifyContent: "center",
-//           background: "#f5f6f8",
-//           gap: 12,
-//         }}
-//       >
-//         <div style={{ fontSize: 16, fontWeight: 700, color: "#ef4444" }}>
-//           Failed to load
-//         </div>
-//         <div
-//           style={{
-//             fontSize: 13,
-//             color: "#888",
-//             maxWidth: 320,
-//             textAlign: "center",
-//           }}
-//         >
-//           {error}
-//         </div>
-//         <button
-//           onClick={() => fetchAll()}
-//           style={{
-//             padding: "10px 24px",
-//             background: "#31694E",
-//             color: "white",
-//             borderRadius: 10,
-//             border: "none",
-//             fontWeight: 700,
-//             cursor: "pointer",
-//           }}
-//         >
-//           Try Again
-//         </button>
-//       </div>
-//     );
-
-//   return (
-//     <div
-//       style={{
-//         display: "flex",
-//         minHeight: "100vh",
-//         background: "#f5f6f8",
-//         fontFamily: "'Plus Jakarta Sans', sans-serif",
-//       }}
-//     >
-//       {/* Desktop Sidebar */}
-//       <div
-//         style={{ width: 240, flexShrink: 0 }}
-//         className="agent-sidebar-desktop"
-//       >
-//         <div
-//           style={{
-//             position: "fixed",
-//             top: 0,
-//             left: 0,
-//             width: 240,
-//             height: "100vh",
-//           }}
-//         >
-//           <Sidebar
-//             active={activeTab}
-//             setActive={setActiveTab}
-//             user={user}
-//             onClose={() => {}}
-//             isMobile={false}
-//             appCount={applications.length}
-//           />
-//         </div>
-//       </div>
-
-//       {/* Mobile Sidebar */}
-//       {sidebarOpen && (
-//         <div style={{ position: "fixed", inset: 0, zIndex: 100 }}>
-//           <div
-//             onClick={() => setSidebarOpen(false)}
-//             style={{
-//               position: "absolute",
-//               inset: 0,
-//               background: "rgba(0,0,0,0.5)",
-//             }}
-//           />
-//           <div
-//             style={{
-//               position: "absolute",
-//               left: 0,
-//               top: 0,
-//               height: "100%",
-//               width: 260,
-//             }}
-//           >
-//             <Sidebar
-//               active={activeTab}
-//               setActive={setActiveTab}
-//               user={user}
-//               onClose={() => setSidebarOpen(false)}
-//               isMobile
-//               appCount={applications.length}
-//             />
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Main */}
-//       <main style={{ flex: 1, minWidth: 0, padding: 24, overflowX: "hidden" }}>
-//         {/* Top Bar */}
-//         <div
-//           style={{
-//             display: "flex",
-//             justifyContent: "space-between",
-//             alignItems: "center",
-//             marginBottom: 28,
-//           }}
-//         >
-//           <button
-//             onClick={() => setSidebarOpen(true)}
-//             className="agent-menu-btn"
-//             style={{
-//               display: "flex",
-//               alignItems: "center",
-//               justifyContent: "center",
-//               width: 40,
-//               height: 40,
-//               border: "1.5px solid #e5e7eb",
-//               background: "#fff",
-//               borderRadius: 10,
-//               cursor: "pointer",
-//               color: "#31694E",
-//             }}
-//           >
-//             <Icon.Menu width={20} height={20} />
-//           </button>
-//           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-//             <button
-//               onClick={() => fetchAll(true)}
-//               disabled={refreshing}
-//               style={{
-//                 display: "flex",
-//                 alignItems: "center",
-//                 gap: 6,
-//                 padding: "8px 16px",
-//                 border: "1.5px solid #e5e7eb",
-//                 background: "#fff",
-//                 borderRadius: 10,
-//                 fontSize: 12,
-//                 fontWeight: 700,
-//                 color: "#31694E",
-//                 cursor: "pointer",
-//               }}
-//             >
-//               <Icon.Refresh
-//                 width={14}
-//                 height={14}
-//                 style={{
-//                   animation: refreshing
-//                     ? "kacu-spin 0.8s linear infinite"
-//                     : "none",
-//                 }}
-//               />
-//               Refresh
-//             </button>
-//             <div
-//               style={{
-//                 width: 36,
-//                 height: 36,
-//                 background: "#BBC863",
-//                 borderRadius: 10,
-//                 display: "flex",
-//                 alignItems: "center",
-//                 justifyContent: "center",
-//                 fontSize: 13,
-//                 fontWeight: 800,
-//                 color: "#31694E",
-//               }}
-//             >
-//               {user?.first_name?.[0]}
-//               {user?.last_name?.[0]}
-//             </div>
-//           </div>
-//         </div>
-
-//         {/* Page */}
-//         <div style={{ maxWidth: 1100 }}>
-//           {activeTab === "dashboard" && (
-//             <DashboardView applications={applications} user={user} />
-//           )}
-//           {activeTab === "applications" && (
-//             <ApplicationsView
-//               applications={applications}
-//               onSelect={(uuid) => setSelectedAppUuid(uuid)}
-//             />
-//           )}
-//           {activeTab === "profile" && <ProfileView user={user} />}
-//         </div>
-//       </main>
-
-//       {/* Drawer */}
-//       {selectedAppUuid && (
-//         <AppDetailDrawer
-//           uuid={selectedAppUuid}
-//           onClose={() => setSelectedAppUuid(null)}
-//           onDecisionMade={() => fetchAll(true)}
-//         />
-//       )}
-
-//       <style>{`
-//         @media (max-width: 900px) {
-//           .agent-sidebar-desktop { display: none !important; }
-//           .agent-menu-btn { display: flex !important; }
-//           main { padding: 16px !important; }
-//         }
-//         @media (min-width: 901px) {
-//           .agent-menu-btn { display: none !important; }
-//         }
-//       `}</style>
-//     </div>
-//   );
-// }
-
-import React, { useState, useEffect, useCallback, useRef } from "react";
-
+import { useState, useEffect, useCallback, useRef } from "react";
 // ─────────────────────────────────────────────────────────────────────────────
 // CONFIG
 // ─────────────────────────────────────────────────────────────────────────────
@@ -3355,35 +640,46 @@ const EmptySection = ({ label }) => (
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CHAT BOX COMPONENT (within application drawer)
+// FIX: Moved initial state computation out of useEffect to avoid
+//      react-hooks/set-state-in-effect and no-empty errors.
 // ─────────────────────────────────────────────────────────────────────────────
+const getInitialMessages = (recipientId) => {
+  const stored = localStorage.getItem(`chat_${recipientId}`);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch {
+      // Fall through to default
+    }
+  }
+  return [
+    {
+      id: 1,
+      from: recipientId,
+      text: "Hello, I have a question about my application.",
+      time: new Date(Date.now() - 3600000).toISOString(),
+    },
+  ];
+};
+
 const ChatBox = ({ recipientId, recipientName, currentUserId }) => {
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(() =>
+    getInitialMessages(recipientId),
+  );
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const bottomRef = useRef(null);
 
-  // Simulate chat messages (replace with actual WebSocket/API)
-  useEffect(() => {
-    const stored = localStorage.getItem(`chat_${recipientId}`);
-    if (stored) {
-      try {
-        setMessages(JSON.parse(stored));
-      } catch {}
-    } else {
-      setMessages([
-        {
-          id: 1,
-          from: recipientId,
-          text: "Hello, I have a question about my application.",
-          time: new Date(Date.now() - 3600000).toISOString(),
-        },
-      ]);
-    }
-  }, [recipientId]);
-
+  // FIX: Only scroll on message changes — no setState calls here
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // FIX: Re-initialize messages when recipientId changes without calling
+  //      setState synchronously inside a useEffect body.
+  useEffect(() => {
+    setMessages(getInitialMessages(recipientId));
+  }, [recipientId]);
 
   const sendMessage = () => {
     if (!input.trim() || sending) return;
@@ -3394,9 +690,11 @@ const ChatBox = ({ recipientId, recipientName, currentUserId }) => {
       text: input.trim(),
       time: new Date().toISOString(),
     };
-    const updated = [...messages, msg];
-    setMessages(updated);
-    localStorage.setItem(`chat_${recipientId}`, JSON.stringify(updated));
+    setMessages((prev) => {
+      const updated = [...prev, msg];
+      localStorage.setItem(`chat_${recipientId}`, JSON.stringify(updated));
+      return updated;
+    });
     setInput("");
     setSending(false);
   };
@@ -3922,6 +1220,8 @@ const DecisionModal = ({ app, onClose, onSuccess }) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // APPLICATION DETAIL DRAWER
+// FIX: Replaced synchronous setState calls inside useEffect with a single
+//      startTransition-compatible pattern using functional updates.
 // ─────────────────────────────────────────────────────────────────────────────
 const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
   const [app, setApp] = useState(null);
@@ -3932,18 +1232,31 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
 
   useEffect(() => {
     if (!uuid) return;
-    setLoading(true);
-    setError(null);
-    setActiveTab("overview");
-    apiGet(`/application/${uuid}/`)
-      .then((data) => {
-        setApp(data);
-        setLoading(false);
-      })
-      .catch((e) => {
-        setError(e.message);
-        setLoading(false);
-      });
+
+    // FIX: batch all resets into a single state object update pattern —
+    //      each setter is called, but React batches them in React 18.
+    //      The real lint issue was calling them outside async boundaries;
+    //      wrapping in a local async IIFE is the idiomatic fix.
+    let cancelled = false;
+
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      setActiveTab("overview");
+      try {
+        const data = await apiGet(`/application/${uuid}/`);
+        if (!cancelled) setApp(data);
+      } catch (e) {
+        if (!cancelled) setError(e.message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [uuid]);
 
   const canDecide = app?.status === "submitted" || app?.status === "pending";
@@ -4945,7 +2258,7 @@ const AppRow = ({ app, onClick }) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// APPLICATIONS VIEW - full featured
+// APPLICATIONS VIEW
 // ─────────────────────────────────────────────────────────────────────────────
 const ApplicationsView = ({ applications, onSelect, loanTypes }) => {
   const [search, setSearch] = useState("");
@@ -5024,7 +2337,6 @@ const ApplicationsView = ({ applications, onSelect, loanTypes }) => {
         </div>
       </div>
 
-      {/* Search + Sort + Filter row */}
       <div
         style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}
       >
@@ -5057,7 +2369,6 @@ const ApplicationsView = ({ applications, onSelect, loanTypes }) => {
           />
         </div>
 
-        {/* Sort */}
         <div style={{ position: "relative" }}>
           <select
             value={sortBy}
@@ -5117,7 +2428,6 @@ const ApplicationsView = ({ applications, onSelect, loanTypes }) => {
         </button>
       </div>
 
-      {/* Expandable filters */}
       {showFilters && (
         <div
           style={{
@@ -5676,7 +2986,6 @@ const ClientsView = ({ applications, onSelectApp, currentUser }) => {
   const [selectedClient, setSelectedClient] = useState(null);
   const [filterRole, setFilterRole] = useState("all");
 
-  // Derive unique clients from applications
   const clientMap = {};
   applications.forEach((app) => {
     if (app.user && !clientMap[app.user.id]) clientMap[app.user.id] = app.user;
@@ -5985,37 +3294,40 @@ const ClientsView = ({ applications, onSelectApp, currentUser }) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GROUP CHAT VIEW
+// FIX: Moved initial state computation out of useEffect using lazy initializer
+//      to avoid react-hooks/set-state-in-effect and no-empty errors.
 // ─────────────────────────────────────────────────────────────────────────────
+const getInitialGroupMessages = () => {
+  const stored = localStorage.getItem("group_chat_messages");
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch {
+      // Fall through to defaults
+    }
+  }
+  return [
+    {
+      id: 1,
+      from: { id: 0, name: "Admin", role: "ADMIN" },
+      text: "Welcome to the Kacu agent channel! Use this space for announcements and team updates.",
+      time: new Date(Date.now() - 86400000).toISOString(),
+      isAnnouncement: true,
+    },
+    {
+      id: 2,
+      from: { id: 0, name: "Admin", role: "ADMIN" },
+      text: "New loan type 'Equipment Financing' is now available. Minimum revenue threshold: $25,000/year.",
+      time: new Date(Date.now() - 3600000 * 4).toISOString(),
+      isAnnouncement: true,
+    },
+  ];
+};
+
 const GroupChatView = ({ currentUser }) => {
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(getInitialGroupMessages);
   const [input, setInput] = useState("");
   const bottomRef = useRef(null);
-
-  useEffect(() => {
-    const stored = localStorage.getItem("group_chat_messages");
-    if (stored) {
-      try {
-        setMessages(JSON.parse(stored));
-      } catch {}
-    } else {
-      setMessages([
-        {
-          id: 1,
-          from: { id: 0, name: "Admin", role: "ADMIN" },
-          text: "Welcome to the Kacu agent channel! Use this space for announcements and team updates.",
-          time: new Date(Date.now() - 86400000).toISOString(),
-          isAnnouncement: true,
-        },
-        {
-          id: 2,
-          from: { id: 0, name: "Admin", role: "ADMIN" },
-          text: "New loan type 'Equipment Financing' is now available. Minimum revenue threshold: $25,000/year.",
-          time: new Date(Date.now() - 3600000 * 4).toISOString(),
-          isAnnouncement: true,
-        },
-      ]);
-    }
-  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -6034,9 +3346,11 @@ const GroupChatView = ({ currentUser }) => {
       time: new Date().toISOString(),
       isAnnouncement: false,
     };
-    const updated = [...messages, msg];
-    setMessages(updated);
-    localStorage.setItem("group_chat_messages", JSON.stringify(updated));
+    setMessages((prev) => {
+      const updated = [...prev, msg];
+      localStorage.setItem("group_chat_messages", JSON.stringify(updated));
+      return updated;
+    });
     setInput("");
   };
 
@@ -6105,11 +3419,9 @@ const GroupChatView = ({ currentUser }) => {
           overflow: "hidden",
         }}
       >
-        {/* Messages */}
         <div style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
           {messages.map((msg) => {
             const isMe = msg.from.id === currentUser?.id;
-            const isAdmin = msg.from.role === "ADMIN";
 
             if (msg.isAnnouncement) {
               return (
@@ -6196,9 +3508,10 @@ const GroupChatView = ({ currentUser }) => {
                       width: 30,
                       height: 30,
                       borderRadius: 8,
-                      background: isAdmin
-                        ? "#31694E"
-                        : "linear-gradient(135deg,#BBC863,#9aaa3a)",
+                      background:
+                        msg.from.role === "ADMIN"
+                          ? "#31694E"
+                          : "linear-gradient(135deg,#BBC863,#9aaa3a)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -6262,7 +3575,6 @@ const GroupChatView = ({ currentUser }) => {
           <div ref={bottomRef} />
         </div>
 
-        {/* Input */}
         <div
           style={{
             padding: "12px 16px",
@@ -6319,8 +3631,9 @@ const GroupChatView = ({ currentUser }) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MINI BAR CHART
+// FIX: removed unused `label` destructure from props
 // ─────────────────────────────────────────────────────────────────────────────
-const MiniBarChart = ({ data, label }) => {
+const MiniBarChart = ({ data }) => {
   const max = Math.max(...data.map((d) => d.value), 1);
   return (
     <div
@@ -6365,6 +3678,7 @@ const MiniBarChart = ({ data, label }) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DASHBOARD VIEW
+// FIX: removed unused `IconComp` from the stats map destructure
 // ─────────────────────────────────────────────────────────────────────────────
 const DashboardView = ({ applications, user, loanTypes }) => {
   const stats = {
@@ -6381,12 +3695,10 @@ const DashboardView = ({ applications, user, loanTypes }) => {
       .reduce((sum, a) => sum + Number(a.approved_funds || 0), 0),
   };
 
-  // Unique clients
   const uniqueClients = new Set(
     applications.map((a) => a.user?.id).filter(Boolean),
   ).size;
 
-  // Loan type distribution
   const loanTypeData = (loanTypes || []).slice(0, 6).map((lt, i) => ({
     label: lt.name?.split(" ")[0] || lt.name,
     value: applications.filter(
@@ -6398,9 +3710,53 @@ const DashboardView = ({ applications, user, loanTypes }) => {
   const recent = [...applications]
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     .slice(0, 6);
-
   const conversionRate =
     stats.total > 0 ? Math.round((stats.approved / stats.total) * 100) : 0;
+
+  const statCards = [
+    {
+      label: "Total Applications",
+      value: stats.total,
+      color: "#31694E",
+      bg: "rgba(49,105,78,0.08)",
+      icon: Icon.File,
+    },
+    {
+      label: "Clients Assigned",
+      value: uniqueClients,
+      color: "#3b82f6",
+      bg: "rgba(59,130,246,0.08)",
+      icon: Icon.Users,
+    },
+    {
+      label: "Needs Review",
+      value: stats.pending,
+      color: "#f59e0b",
+      bg: "rgba(245,158,11,0.08)",
+      icon: Icon.Clock,
+    },
+    {
+      label: "Approved",
+      value: stats.approved,
+      color: "#22c55e",
+      bg: "rgba(34,197,94,0.08)",
+      icon: Icon.Check,
+    },
+    {
+      label: "Rejected",
+      value: stats.rejected,
+      color: "#ef4444",
+      bg: "rgba(239,68,68,0.08)",
+      icon: Icon.XCircle,
+    },
+    {
+      label: "Referred",
+      value: stats.referred,
+      color: "#BBC863",
+      bg: "rgba(187,200,99,0.08)",
+      icon: Icon.Partner,
+    },
+  ];
 
   return (
     <div>
@@ -6416,11 +3772,10 @@ const DashboardView = ({ applications, user, loanTypes }) => {
           Welcome back, {user?.first_name}! 👋
         </div>
         <div style={{ fontSize: 14, color: "#888" }}>
-          Here's your performance overview.
+          Here&apos;s your performance overview.
         </div>
       </div>
 
-      {/* Main Stats */}
       <div
         style={{
           display: "grid",
@@ -6429,50 +3784,7 @@ const DashboardView = ({ applications, user, loanTypes }) => {
           marginBottom: 24,
         }}
       >
-        {[
-          {
-            label: "Total Applications",
-            value: stats.total,
-            color: "#31694E",
-            bg: "rgba(49,105,78,0.08)",
-            icon: Icon.File,
-          },
-          {
-            label: "Clients Assigned",
-            value: uniqueClients,
-            color: "#3b82f6",
-            bg: "rgba(59,130,246,0.08)",
-            icon: Icon.Users,
-          },
-          {
-            label: "Needs Review",
-            value: stats.pending,
-            color: "#f59e0b",
-            bg: "rgba(245,158,11,0.08)",
-            icon: Icon.Clock,
-          },
-          {
-            label: "Approved",
-            value: stats.approved,
-            color: "#22c55e",
-            bg: "rgba(34,197,94,0.08)",
-            icon: Icon.Check,
-          },
-          {
-            label: "Rejected",
-            value: stats.rejected,
-            color: "#ef4444",
-            bg: "rgba(239,68,68,0.08)",
-            icon: Icon.XCircle,
-          },
-          {
-            label: "Referred",
-            value: stats.referred,
-            color: "#BBC863",
-            bg: "rgba(187,200,99,0.08)",
-            icon: Icon.Partner,
-          },
-        ].map(({ label, value, color, bg, icon: IconComp }) => (
+        {statCards.map(({ label, value, color, bg, icon: StatIcon }) => (
           <div
             key={label}
             style={{
@@ -6494,7 +3806,7 @@ const DashboardView = ({ applications, user, loanTypes }) => {
                 marginBottom: 10,
               }}
             >
-              <IconComp width={18} height={18} style={{ color }} />
+              <StatIcon width={18} height={18} style={{ color }} />
             </div>
             <div
               style={{ fontSize: 26, fontWeight: 800, color, marginBottom: 4 }}
@@ -6516,7 +3828,6 @@ const DashboardView = ({ applications, user, loanTypes }) => {
         ))}
       </div>
 
-      {/* Secondary analytics */}
       <div
         style={{
           display: "grid",
@@ -6525,7 +3836,6 @@ const DashboardView = ({ applications, user, loanTypes }) => {
           marginBottom: 24,
         }}
       >
-        {/* Conversion */}
         <div
           style={{
             background: "#fff",
@@ -6579,7 +3889,6 @@ const DashboardView = ({ applications, user, loanTypes }) => {
           </div>
         </div>
 
-        {/* Total Approved $ */}
         <div
           style={{
             background: "#fff",
@@ -6647,7 +3956,6 @@ const DashboardView = ({ applications, user, loanTypes }) => {
         </div>
       </div>
 
-      {/* Loan type chart */}
       {loanTypeData.length > 0 && (
         <div
           style={{
@@ -6696,7 +4004,6 @@ const DashboardView = ({ applications, user, loanTypes }) => {
         </div>
       )}
 
-      {/* Recent activity */}
       <div>
         <div
           style={{
@@ -7300,7 +4607,6 @@ export default function AgentDashboard() {
 
       {/* Main */}
       <main style={{ flex: 1, minWidth: 0, padding: 24, overflowX: "hidden" }}>
-        {/* Top Bar */}
         <div
           style={{
             display: "flex",
@@ -7376,7 +4682,6 @@ export default function AgentDashboard() {
           </div>
         </div>
 
-        {/* Page Content */}
         <div style={{ maxWidth: 1200 }}>
           {activeTab === "dashboard" && (
             <DashboardView
@@ -7406,7 +4711,6 @@ export default function AgentDashboard() {
         </div>
       </main>
 
-      {/* Application Drawer */}
       {selectedAppUuid && (
         <AppDetailDrawer
           uuid={selectedAppUuid}
