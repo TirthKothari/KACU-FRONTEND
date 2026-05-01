@@ -53,9 +53,16 @@ const LoginPage = () => {
             JSON.stringify(data.user || { username: data.username }),
           );
         }
-
-        // 3. Redirect to the authorized dashboard
-        window.location.href = "/clientdashboard";
+        // 3. ROLE-BASED REDIRECTION
+        // Check if the backend sent a role. Adjust 'data.role' to match your API key.
+        if (
+          data.role === "AGENT" ||
+          (data.user && data.user.role === "AGENT")
+        ) {
+          window.location.href = "/agentdashboard";
+        } else {
+          window.location.href = "/clientdashboard";
+        }
       } else {
         // Handle Django REST framework error messages (data.message or data.detail)
         setError(
