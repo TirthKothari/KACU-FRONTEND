@@ -5,6 +5,7 @@ import ApplicationWizard from "./pages/ApplicationWizard";
 import ClientDashboard from "./pages/ClientDashboard";
 import LoginPage from "./pages/LoginPage";
 import AgentDashboard from "./pages/AgnetDashboard";
+import AdminDashboard from "./pages/AdminPage";
 
 const App = () => {
   return (
@@ -14,6 +15,7 @@ const App = () => {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/clientdashboard" element={<ClientDashboard />} />
+          <Route path="/admindashboard" element={<AdminDashboard />} />
           <Route path="/agentdashboard" element={<AgentDashboard />} />
           <Route path="/wizard" element={<ApplicationWizard />} />
         </Routes>
