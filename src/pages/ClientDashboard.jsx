@@ -5,20 +5,18 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 // ─────────────────────────────────────────────────────────────────────────────
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
-const log = (label, data) => {
+const log = (label, data) =>
   console.log(
     `%c[KACU DEBUG] ${label}`,
     "color:#31694E;font-weight:bold;",
     data ?? "",
   );
-};
-const logError = (label, err) => {
+const logError = (label, err) =>
   console.error(
     `%c[KACU ERROR] ${label}`,
     "color:#e53935;font-weight:bold;",
     err,
   );
-};
 
 const STATUS_META = {
   draft: { label: "Draft", color: "#BBC863", bg: "#F0E491" },
@@ -46,6 +44,14 @@ const STEPS_ORDER = [
   "document_upload",
   "review_submission",
   "completed",
+];
+
+// Signature font options
+const SIG_FONTS = [
+  { label: "Cursive", value: "'Dancing Script', cursive" },
+  { label: "Elegant", value: "'Great Vibes', cursive" },
+  { label: "Bold Script", value: "'Pacifico', cursive" },
+  { label: "Classic", value: "Georgia, serif" },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -117,17 +123,6 @@ const Icon = {
     >
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
       <polyline points="14 2 14 8 20 8" />
-    </svg>
-  ),
-  Folder: (p) => (
-    <svg
-      {...p}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-    >
-      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
     </svg>
   ),
   Chat: (p) => (
@@ -373,73 +368,117 @@ const Icon = {
       <line x1="12" y1="16" x2="12.01" y2="16" />
     </svg>
   ),
+  Search: (p) => (
+    <svg
+      {...p}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  ),
+  ExternalLink: (p) => (
+    <svg
+      {...p}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      <polyline points="15 3 21 3 21 9" />
+      <line x1="10" y1="14" x2="21" y2="3" />
+    </svg>
+  ),
+  Send: (p) => (
+    <svg
+      {...p}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <line x1="22" y1="2" x2="11" y2="13" />
+      <polygon points="22 2 15 22 11 13 2 9 22 2" />
+    </svg>
+  ),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // API LAYER
 // ─────────────────────────────────────────────────────────────────────────────
-const getToken = () => localStorage.getItem("token");
+const getToken = () => {
+  const match = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("kacu_auth_token="));
+  return match ? decodeURIComponent(match.split("=")[1]) : null;
+};
+
+const authHeaders = () => ({ Authorization: `Token ${getToken()}` });
+const jsonHeaders = () => ({
+  "Content-Type": "application/json",
+  ...authHeaders(),
+});
 
 const safeJson = async (res) => {
   const ct = res.headers.get("content-type") || "";
   if (!ct.includes("application/json")) {
-    const text = await res.text();
-    log("Non-JSON response body", text.slice(0, 200));
+    const t = await res.text();
+    log("Non-JSON", t.slice(0, 200));
     return null;
   }
   return res.json();
 };
 
 const apiGet = async (path) => {
-  log(`GET ${path}`, null);
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: { Authorization: `Token ${getToken()}` },
-  });
+  const res = await fetch(`${API_BASE}${path}`, { headers: authHeaders() });
   const data = await safeJson(res);
-  log(`RESPONSE ${path}`, data);
   if (!res.ok)
     throw new Error(data?.detail || `HTTP ${res.status} on GET ${path}`);
   return data;
 };
 
 const apiPost = async (path, body) => {
-  log(`POST ${path}`, body);
   const res = await fetch(`${API_BASE}${path}`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Token ${getToken()}`,
-    },
+    headers: jsonHeaders(),
     body: JSON.stringify(body),
   });
   const data = await safeJson(res);
-  log(`POST RESPONSE ${path}`, data);
   if (!res.ok)
     throw new Error(
-      data?.detail ||
-        JSON.stringify(data) ||
-        `HTTP ${res.status} on POST ${path}`,
+      data?.detail || JSON.stringify(data) || `HTTP ${res.status}`,
     );
   return data;
 };
 
 const apiPatch = async (path, body) => {
-  log(`PATCH ${path}`, body);
   const res = await fetch(`${API_BASE}${path}`, {
     method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Token ${getToken()}`,
-    },
+    headers: jsonHeaders(),
     body: JSON.stringify(body),
   });
   const data = await safeJson(res);
-  log(`PATCH RESPONSE ${path}`, data);
   if (!res.ok)
     throw new Error(
-      data?.detail ||
-        JSON.stringify(data) ||
-        `HTTP ${res.status} on PATCH ${path}`,
+      data?.detail || JSON.stringify(data) || `HTTP ${res.status}`,
+    );
+  return data;
+};
+
+const apiMultipart = async (path, formData, method = "POST") => {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method,
+    headers: authHeaders(),
+    body: formData,
+  });
+  const data = await safeJson(res);
+  if (!res.ok)
+    throw new Error(
+      data?.detail || JSON.stringify(data) || `HTTP ${res.status}`,
     );
   return data;
 };
@@ -447,7 +486,7 @@ const apiPatch = async (path, body) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // WIZARD FORM PRIMITIVES
 // ─────────────────────────────────────────────────────────────────────────────
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 6; // added Document Upload step
 
 const WizardField = ({ label, children, span = 1 }) => (
   <div style={{ gridColumn: `span ${span}` }}>
@@ -500,7 +539,7 @@ const WizardSelect = ({ children, ...props }) => (
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
-// REVIEW PAGE PRIMITIVES — hoisted to module level to fix ESLint errors
+// REVIEW PAGE PRIMITIVES
 // ─────────────────────────────────────────────────────────────────────────────
 const ReviewSection = ({ title, children }) => (
   <div
@@ -565,7 +604,7 @@ const ReviewField = ({ label, value }) => (
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
-// APPLICATION WIZARD — FULL PAGE (not modal)
+// APPLICATION WIZARD — FULL PAGE (step-by-step API calls)
 // ─────────────────────────────────────────────────────────────────────────────
 const ApplicationWizardPage = ({
   onClose,
@@ -575,6 +614,9 @@ const ApplicationWizardPage = ({
 }) => {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+  const [appUuid, setAppUuid] = useState(null);
+  const [stepError, setStepError] = useState(null);
+
   const [formData, setFormData] = useState({
     loan_type: prequalData?.id || loanTypes?.[0]?.id || 1,
     is_dba: false,
@@ -583,7 +625,7 @@ const ApplicationWizardPage = ({
     business_email: "",
     business_phone_number: "",
     business_website: "",
-    business_country: "US",
+    business_country: "USA",
     business_state: "",
     business_address: "",
     business_city: "",
@@ -612,11 +654,14 @@ const ApplicationWizardPage = ({
     owner_city: "",
     owner_state: "",
     owner_zip_code: "",
-    owner_country: "US",
+    owner_country: "USA",
     owner_percentage_of_ownership: "",
     owner_credit_score: "",
     signature_name: "",
+    signature_font: SIG_FONTS[0].value,
     terms_accepted: false,
+    // documents
+    documents: [], // array of {document_name, document_file}
   });
 
   const set = (e) => {
@@ -648,13 +693,123 @@ const ApplicationWizardPage = ({
       ),
     }));
 
-  const handleSubmit = async () => {
+  const addDoc = () =>
+    setFormData((p) => ({
+      ...p,
+      documents: [...p.documents, { document_name: "", document_file: null }],
+    }));
+  const updateDoc = (i, f, v) => {
+    const list = [...formData.documents];
+    list[i][f] = v;
+    setFormData((p) => ({ ...p, documents: list }));
+  };
+  const removeDoc = (i) =>
+    setFormData((p) => ({
+      ...p,
+      documents: p.documents.filter((_, idx) => idx !== i),
+    }));
+
+  // Step-by-step API submission
+  const handleStepContinue = async () => {
+    setStepError(null);
     setSubmitting(true);
     try {
-      await onComplete(formData);
+      if (step === 1) {
+        // Create application shell
+        const core = await apiPost("/application/create/", {
+          loan_type: formData.loan_type,
+        });
+        const uuid = core.loan_application_uuid;
+        setAppUuid(uuid);
+        // Submit business info
+        await apiPost("/application/business-information/create/", {
+          loan_application_uuid: uuid,
+          is_dba: formData.is_dba,
+          business_legal_name: formData.business_legal_name,
+          business_dba_name: formData.business_dba_name,
+          business_email: formData.business_email,
+          business_phone_number: formData.business_phone_number,
+          business_website: formData.business_website,
+          business_country: formData.business_country,
+          business_state: formData.business_state,
+          business_address: formData.business_address,
+          business_city: formData.business_city,
+          business_zip_code: formData.business_zip_code,
+          business_industry_type: formData.business_industry_type,
+          business_legal_entity_type: formData.business_legal_entity_type,
+          business_length_of_ownership: formData.business_length_of_ownership,
+          business_number: formData.business_number,
+          business_estimated_start_date: formData.business_estimated_start_date,
+          business_province_of_incorporation:
+            formData.business_province_of_incorporation,
+          business_average_gross_monthly_sales:
+            formData.business_average_gross_monthly_sales,
+        });
+        setStep(2);
+      } else if (step === 2) {
+        // Submit funding info
+        await apiPost("/application/funding-information/create/", {
+          loan_application_uuid: appUuid,
+          loan_amount_requested: formData.loan_amount_requested,
+          loan_purpose: formData.loan_purpose,
+          loan_term_requested: formData.loan_term_requested,
+          overdraft_protection: formData.overdraft_protection,
+          overdraft_protection_limit:
+            formData.overdraft_protection_limit || null,
+          business_existing_loan: formData.business_existing_loan,
+          business_lender_details: formData.business_lender_details,
+        });
+        setStep(3);
+      } else if (step === 3) {
+        // Submit owner info
+        await apiPost("/application/owner-information/create/", {
+          loan_application_uuid: appUuid,
+          owner_first_name: formData.owner_first_name,
+          owner_last_name: formData.owner_last_name,
+          owner_email: formData.owner_email,
+          owner_phone_number: formData.owner_phone_number,
+          owner_date_of_birth: formData.owner_date_of_birth,
+          owner_ssn: formData.owner_ssn,
+          owner_address: formData.owner_address,
+          owner_city: formData.owner_city,
+          owner_state: formData.owner_state,
+          owner_zip_code: formData.owner_zip_code,
+          owner_country: formData.owner_country,
+          owner_percentage_of_ownership: formData.owner_percentage_of_ownership,
+          owner_credit_score: formData.owner_credit_score,
+        });
+        setStep(4);
+      } else if (step === 4) {
+        // Upload documents (optional, can skip)
+        for (const doc of formData.documents) {
+          if (doc.document_file && doc.document_name) {
+            const fd = new FormData();
+            fd.append("loan_application_uuid", appUuid);
+            fd.append("document_name", doc.document_name);
+            fd.append("document_file", doc.document_file);
+            await apiMultipart("/application/documents/create/", fd);
+          }
+        }
+        setStep(5);
+      } else if (step === 5) {
+        // Submit terms — multipart because signature_image may be included
+        const fd = new FormData();
+        fd.append("loan_application_uuid", appUuid);
+        fd.append("signature_name", formData.signature_name);
+        fd.append("terms_accepted", formData.terms_accepted);
+        await apiMultipart("/application/terms-and-conditions/create/", fd);
+        setStep(6);
+      }
+    } catch (e) {
+      logError("Step submit failed", e);
+      setStepError(e.message);
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleFinish = () => {
+    onComplete && onComplete();
   };
 
   const grid2 = {
@@ -747,17 +902,9 @@ const ApplicationWizardPage = ({
         </div>
         {/* Step Progress */}
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {[1, 2, 3, 4, 5].map((i) => (
+          {[1, 2, 3, 4, 5, 6].map((i) => (
             <React.Fragment key={i}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  cursor: "pointer",
-                }}
-                onClick={() => i < step && setStep(i)}
-              >
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <div
                   style={{
                     width: 28,
@@ -777,10 +924,10 @@ const ApplicationWizardPage = ({
                   {i < step ? <Icon.Check width={14} height={14} /> : i}
                 </div>
               </div>
-              {i < 5 && (
+              {i < 6 && (
                 <div
                   style={{
-                    width: 32,
+                    width: 24,
                     height: 2,
                     background: i < step ? "#31694E" : "#f0f0f0",
                     borderRadius: 99,
@@ -793,7 +940,6 @@ const ApplicationWizardPage = ({
         </div>
       </div>
 
-      {/* Content */}
       <div
         style={{
           flex: 1,
@@ -812,7 +958,7 @@ const ApplicationWizardPage = ({
               border: "1px solid #f0f0f0",
             }}
           >
-            {/* STEP 1 — Business Identity */}
+            {/* STEP 1 — Business Identity + Operational Data */}
             {step === 1 && (
               <div>
                 {sectionHeader(
@@ -854,56 +1000,6 @@ const ApplicationWizardPage = ({
                       placeholder="https://..."
                     />
                   </WizardField>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    marginTop: 20,
-                    padding: "14px 16px",
-                    background: "rgba(240,228,145,0.15)",
-                    borderRadius: 12,
-                    border: "1.5px solid #F0E491",
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    name="is_dba"
-                    checked={formData.is_dba}
-                    onChange={set}
-                    style={{ width: 18, height: 18, accentColor: "#31694E" }}
-                  />
-                  <label
-                    style={{ fontSize: 14, fontWeight: 700, color: "#31694E" }}
-                  >
-                    Does this business operate under a DBA (Doing Business As)?
-                  </label>
-                </div>
-                {formData.is_dba && (
-                  <div style={{ marginTop: 16 }}>
-                    <WizardField label="DBA Name">
-                      <WizardInput
-                        name="business_dba_name"
-                        value={formData.business_dba_name}
-                        onChange={set}
-                        placeholder="Trading name..."
-                      />
-                    </WizardField>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* STEP 2 — Operational Data */}
-            {step === 2 && (
-              <div>
-                {sectionHeader(
-                  2,
-                  "Operational Data",
-                  "Physical location, legal structure, and financials.",
-                )}
-                <div style={grid2}>
                   <WizardField label="Street Address" span={2}>
                     <WizardInput
                       name="business_address"
@@ -931,6 +1027,14 @@ const ApplicationWizardPage = ({
                       name="business_zip_code"
                       value={formData.business_zip_code}
                       onChange={set}
+                    />
+                  </WizardField>
+                  <WizardField label="Country">
+                    <WizardInput
+                      name="business_country"
+                      value={formData.business_country}
+                      onChange={set}
+                      placeholder="USA"
                     />
                   </WizardField>
                   <WizardField label="Industry Type">
@@ -1004,14 +1108,51 @@ const ApplicationWizardPage = ({
                     />
                   </WizardField>
                 </div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    marginTop: 20,
+                    padding: "14px 16px",
+                    background: "rgba(240,228,145,0.15)",
+                    borderRadius: 12,
+                    border: "1.5px solid #F0E491",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    name="is_dba"
+                    checked={formData.is_dba}
+                    onChange={set}
+                    style={{ width: 18, height: 18, accentColor: "#31694E" }}
+                  />
+                  <label
+                    style={{ fontSize: 14, fontWeight: 700, color: "#31694E" }}
+                  >
+                    Does this business operate under a DBA (Doing Business As)?
+                  </label>
+                </div>
+                {formData.is_dba && (
+                  <div style={{ marginTop: 16 }}>
+                    <WizardField label="DBA Name">
+                      <WizardInput
+                        name="business_dba_name"
+                        value={formData.business_dba_name}
+                        onChange={set}
+                        placeholder="Trading name..."
+                      />
+                    </WizardField>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* STEP 3 — Funding */}
-            {step === 3 && (
+            {/* STEP 2 — Funding */}
+            {step === 2 && (
               <div>
                 {sectionHeader(
-                  3,
+                  2,
                   "Funding & Financials",
                   "Tell us how much you need and current debt obligations.",
                 )}
@@ -1223,11 +1364,11 @@ const ApplicationWizardPage = ({
               </div>
             )}
 
-            {/* STEP 4 — Owner Info */}
-            {step === 4 && (
+            {/* STEP 3 — Owner Info */}
+            {step === 3 && (
               <div>
                 {sectionHeader(
-                  4,
+                  3,
                   "Primary Owner Details",
                   "Personal information required for credit assessment.",
                 )}
@@ -1324,11 +1465,114 @@ const ApplicationWizardPage = ({
                       onChange={set}
                     />
                   </WizardField>
+                  <WizardField label="Country">
+                    <WizardInput
+                      name="owner_country"
+                      value={formData.owner_country}
+                      onChange={set}
+                      placeholder="USA"
+                    />
+                  </WizardField>
                 </div>
               </div>
             )}
 
-            {/* STEP 5 — Review & Sign */}
+            {/* STEP 4 — Document Upload */}
+            {step === 4 && (
+              <div>
+                {sectionHeader(
+                  4,
+                  "Document Upload",
+                  "Upload supporting documents (bank statements, IDs, etc). Optional — you can skip.",
+                )}
+                {formData.documents.map((doc, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: "flex",
+                      gap: 12,
+                      alignItems: "flex-end",
+                      marginBottom: 14,
+                      padding: 16,
+                      background: "#fafafa",
+                      border: "1.5px solid #e5e7eb",
+                      borderRadius: 14,
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <WizardField label="Document Name">
+                        <WizardInput
+                          value={doc.document_name}
+                          onChange={(e) =>
+                            updateDoc(i, "document_name", e.target.value)
+                          }
+                          placeholder="e.g. bank_statement_2024"
+                        />
+                      </WizardField>
+                    </div>
+                    <div style={{ flex: 2 }}>
+                      <WizardField label="File">
+                        <input
+                          type="file"
+                          onChange={(e) =>
+                            updateDoc(i, "document_file", e.target.files[0])
+                          }
+                          style={{ ...inputBase, padding: "8px 14px" }}
+                        />
+                      </WizardField>
+                    </div>
+                    <button
+                      onClick={() => removeDoc(i)}
+                      style={{
+                        marginBottom: 2,
+                        padding: 8,
+                        border: "none",
+                        background: "#fef2f2",
+                        color: "#ef4444",
+                        borderRadius: 8,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <Icon.Trash width={16} height={16} />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  onClick={addDoc}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: "#31694E",
+                    background: "rgba(49,105,78,0.08)",
+                    border: "none",
+                    padding: "10px 20px",
+                    borderRadius: 10,
+                    cursor: "pointer",
+                  }}
+                >
+                  <Icon.Plus width={16} height={16} /> Add Document
+                </button>
+                <div
+                  style={{
+                    marginTop: 20,
+                    padding: 14,
+                    background: "rgba(240,228,145,0.12)",
+                    borderRadius: 10,
+                    border: "1px solid #F0E491",
+                    fontSize: 13,
+                    color: "#658C58",
+                  }}
+                >
+                  <strong>Note:</strong> Documents can also be uploaded later
+                  from your application page.
+                </div>
+              </div>
+            )}
+
+            {/* STEP 5 — Terms & Signature */}
             {step === 5 && (
               <div style={{ textAlign: "center" }}>
                 <div
@@ -1357,68 +1601,21 @@ const ApplicationWizardPage = ({
                     marginBottom: 6,
                   }}
                 >
-                  Review & Sign
+                  Terms & Signature
                 </div>
                 <div
                   style={{ fontSize: 14, color: "#658C58", marginBottom: 32 }}
                 >
-                  Please review your details before final submission.
+                  Please agree to our terms and sign below.
                 </div>
-                <div
-                  style={{
-                    maxWidth: 480,
-                    margin: "0 auto 28px",
-                    padding: 24,
-                    background: "#FAFDF8",
-                    border: "1.5px solid #e5e7eb",
-                    borderRadius: 16,
-                    textAlign: "left",
-                  }}
-                >
-                  {[
-                    ["Business", formData.business_legal_name || "—"],
-                    ["Email", formData.business_email || "—"],
-                    ["Industry", formData.business_industry_type || "—"],
-                    [
-                      "Amount Requested",
-                      formData.loan_amount_requested
-                        ? `$${Number(formData.loan_amount_requested).toLocaleString()}`
-                        : "—",
-                    ],
-                    ["Term", formData.loan_term_requested || "—"],
-                    [
-                      "Owner",
-                      `${formData.owner_first_name} ${formData.owner_last_name}`.trim() ||
-                        "—",
-                    ],
-                    ["Owner Email", formData.owner_email || "—"],
-                  ].map(([k, v]) => (
-                    <div
-                      key={k}
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                        fontSize: 13,
-                      }}
-                    >
-                      <span style={{ fontWeight: 600, color: "#888" }}>
-                        {k}
-                      </span>
-                      <span style={{ fontWeight: 700, color: "#31694E" }}>
-                        {v}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+
                 <div
                   style={{
                     display: "flex",
                     alignItems: "center",
                     gap: 12,
                     justifyContent: "center",
-                    marginBottom: 24,
+                    marginBottom: 28,
                   }}
                 >
                   <input
@@ -1440,7 +1637,59 @@ const ApplicationWizardPage = ({
                     I certify all provided information is accurate
                   </label>
                 </div>
-                <div style={{ maxWidth: 340, margin: "0 auto" }}>
+
+                {/* Signature font selector */}
+                <div
+                  style={{
+                    maxWidth: 480,
+                    margin: "0 auto 20px",
+                    textAlign: "left",
+                  }}
+                >
+                  <label
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 800,
+                      color: "#888",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.1em",
+                      display: "block",
+                      marginBottom: 8,
+                    }}
+                  >
+                    Signature Style
+                  </label>
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                    {SIG_FONTS.map((f) => (
+                      <button
+                        key={f.value}
+                        onClick={() =>
+                          setFormData((p) => ({
+                            ...p,
+                            signature_font: f.value,
+                          }))
+                        }
+                        style={{
+                          padding: "8px 16px",
+                          borderRadius: 10,
+                          border: `2px solid ${formData.signature_font === f.value ? "#31694E" : "#e5e7eb"}`,
+                          background:
+                            formData.signature_font === f.value
+                              ? "rgba(49,105,78,0.08)"
+                              : "#fff",
+                          cursor: "pointer",
+                          fontFamily: f.value,
+                          fontSize: 15,
+                          color: "#1a1a1a",
+                        }}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ maxWidth: 480, margin: "0 auto" }}>
                   <label
                     style={{
                       fontSize: 10,
@@ -1454,113 +1703,227 @@ const ApplicationWizardPage = ({
                   >
                     Type Full Name to Sign
                   </label>
-                  <WizardInput
-                    name="signature_name"
-                    value={formData.signature_name}
-                    onChange={set}
-                    placeholder="John Doe"
+                  <div
                     style={{
-                      textAlign: "center",
-                      fontSize: 20,
-                      fontFamily: "Georgia, serif",
-                      fontStyle: "italic",
+                      border: "2px solid #31694E",
+                      borderRadius: 12,
+                      padding: "20px 24px",
+                      background: "#FAFDF8",
+                      minHeight: 80,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
+                  >
+                    <input
+                      name="signature_name"
+                      value={formData.signature_name}
+                      onChange={set}
+                      placeholder="Your full name"
+                      style={{
+                        border: "none",
+                        outline: "none",
+                        background: "transparent",
+                        textAlign: "center",
+                        fontSize: 32,
+                        fontFamily: formData.signature_font,
+                        fontStyle: "italic",
+                        color: "#1c3e2c",
+                        width: "100%",
+                      }}
+                    />
+                  </div>
+                  <div style={{ fontSize: 11, color: "#aaa", marginTop: 8 }}>
+                    This constitutes your digital signature
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 6 — Confirmation */}
+            {step === 6 && (
+              <div style={{ textAlign: "center", padding: "20px 0" }}>
+                <div
+                  style={{
+                    width: 80,
+                    height: 80,
+                    background: "#dcfce7",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    margin: "0 auto 20px",
+                  }}
+                >
+                  <Icon.Check
+                    width={40}
+                    height={40}
+                    style={{ color: "#22c55e" }}
                   />
                 </div>
+                <div
+                  style={{
+                    fontSize: 26,
+                    fontWeight: 800,
+                    color: "#31694E",
+                    marginBottom: 8,
+                  }}
+                >
+                  Application Submitted!
+                </div>
+                <div
+                  style={{ fontSize: 14, color: "#658C58", marginBottom: 32 }}
+                >
+                  Your loan application has been submitted successfully. Your
+                  agent will review it shortly.
+                </div>
+                <button
+                  onClick={handleFinish}
+                  style={{
+                    background: "#31694E",
+                    color: "#F0E491",
+                    padding: "14px 40px",
+                    borderRadius: 12,
+                    border: "none",
+                    fontWeight: 800,
+                    fontSize: 13,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.12em",
+                    cursor: "pointer",
+                  }}
+                >
+                  Go to Dashboard
+                </button>
+              </div>
+            )}
+
+            {stepError && (
+              <div
+                style={{
+                  marginTop: 16,
+                  padding: "12px 16px",
+                  background: "#fef2f2",
+                  border: "1px solid #fecaca",
+                  borderRadius: 10,
+                  color: "#ef4444",
+                  fontSize: 13,
+                  fontWeight: 600,
+                }}
+              >
+                ❌ {stepError}
               </div>
             )}
           </div>
 
           {/* Footer Nav */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginTop: 24,
-              padding: "0 4px",
-            }}
-          >
-            <button
-              onClick={() => setStep((s) => s - 1)}
-              disabled={step === 1}
+          {step < 6 && (
+            <div
               style={{
                 display: "flex",
+                justifyContent: "space-between",
                 alignItems: "center",
-                gap: 6,
-                fontSize: 13,
-                fontWeight: 700,
-                color: step === 1 ? "#ccc" : "#31694E",
-                background: "none",
-                border: "none",
-                cursor: step === 1 ? "not-allowed" : "pointer",
+                marginTop: 24,
+                padding: "0 4px",
               }}
             >
-              <Icon.ChevLeft width={18} height={18} /> Previous
-            </button>
-            {step < TOTAL_STEPS ? (
               <button
-                onClick={() => setStep((s) => s + 1)}
+                onClick={() => {
+                  setStepError(null);
+                  setStep((s) => s - 1);
+                }}
+                disabled={step === 1}
                 style={{
-                  background: "#31694E",
-                  color: "#F0E491",
-                  padding: "14px 40px",
-                  borderRadius: 12,
-                  border: "none",
-                  fontWeight: 800,
-                  fontSize: 13,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.12em",
-                  cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
-                  gap: 8,
-                }}
-              >
-                Continue <Icon.ChevRight width={16} height={16} />
-              </button>
-            ) : (
-              <button
-                onClick={handleSubmit}
-                disabled={
-                  !formData.terms_accepted ||
-                  !formData.signature_name ||
-                  submitting
-                }
-                style={{
-                  background:
-                    !formData.terms_accepted || !formData.signature_name
-                      ? "#ccc"
-                      : "#22c55e",
-                  color: "white",
-                  padding: "14px 44px",
-                  borderRadius: 12,
-                  border: "none",
-                  fontWeight: 800,
+                  gap: 6,
                   fontSize: 13,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.1em",
-                  cursor:
-                    !formData.terms_accepted || !formData.signature_name
-                      ? "not-allowed"
-                      : "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
+                  fontWeight: 700,
+                  color: step === 1 ? "#ccc" : "#31694E",
+                  background: "none",
+                  border: "none",
+                  cursor: step === 1 ? "not-allowed" : "pointer",
                 }}
               >
-                {submitting ? (
-                  <>
-                    <Spinner size={16} color="#fff" /> Submitting…
-                  </>
-                ) : (
-                  <>
-                    <Icon.Check width={16} height={16} /> Submit Application
-                  </>
-                )}
+                <Icon.ChevLeft width={18} height={18} /> Previous
               </button>
-            )}
-          </div>
+
+              {step === 5 ? (
+                <button
+                  onClick={handleStepContinue}
+                  disabled={
+                    !formData.terms_accepted ||
+                    !formData.signature_name ||
+                    submitting
+                  }
+                  style={{
+                    background:
+                      !formData.terms_accepted || !formData.signature_name
+                        ? "#ccc"
+                        : "#22c55e",
+                    color: "white",
+                    padding: "14px 44px",
+                    borderRadius: 12,
+                    border: "none",
+                    fontWeight: 800,
+                    fontSize: 13,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.1em",
+                    cursor:
+                      !formData.terms_accepted || !formData.signature_name
+                        ? "not-allowed"
+                        : "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  {submitting ? (
+                    <>
+                      <Spinner size={16} color="#fff" /> Submitting…
+                    </>
+                  ) : (
+                    <>
+                      <Icon.Check width={16} height={16} /> Submit Application
+                    </>
+                  )}
+                </button>
+              ) : (
+                <button
+                  onClick={
+                    step < 4 || step === 4
+                      ? handleStepContinue
+                      : () => setStep((s) => s + 1)
+                  }
+                  disabled={submitting}
+                  style={{
+                    background: "#31694E",
+                    color: "#F0E491",
+                    padding: "14px 40px",
+                    borderRadius: 12,
+                    border: "none",
+                    fontWeight: 800,
+                    fontSize: 13,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.12em",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  {submitting ? (
+                    <>
+                      <Spinner size={16} color="#F0E491" /> Saving…
+                    </>
+                  ) : (
+                    <>
+                      Continue <Icon.ChevRight width={16} height={16} />
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -1568,7 +1931,7 @@ const ApplicationWizardPage = ({
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// EDIT WIZARD — pre-fills existing data for updating sections
+// EDIT WIZARD — PATCH with correct payload format
 // ─────────────────────────────────────────────────────────────────────────────
 const EditApplicationPage = ({ app, onClose, onComplete }) => {
   const uuid = app?.loan_application_uuid;
@@ -1586,7 +1949,7 @@ const EditApplicationPage = ({ app, onClose, onComplete }) => {
     business_email: biz.business_email || "",
     business_phone_number: biz.business_phone_number || "",
     business_website: biz.business_website || "",
-    business_country: biz.business_country || "US",
+    business_country: biz.business_country || "USA",
     business_state: biz.business_state || "",
     business_address: biz.business_address || "",
     business_city: biz.business_city || "",
@@ -1624,7 +1987,7 @@ const EditApplicationPage = ({ app, onClose, onComplete }) => {
     owner_city: owner.owner_city || "",
     owner_state: owner.owner_state || "",
     owner_zip_code: owner.owner_zip_code || "",
-    owner_country: owner.owner_country || "US",
+    owner_country: owner.owner_country || "USA",
     owner_percentage_of_ownership: owner.owner_percentage_of_ownership || "",
     owner_credit_score: owner.owner_credit_score || "",
   });
@@ -1639,13 +2002,14 @@ const EditApplicationPage = ({ app, onClose, onComplete }) => {
     setTimeout(() => setSaveMsg(null), 3000);
   };
 
+  // Fixed: correct URL patterns from backend urls.py
   const saveBiz = async () => {
     setSaving(true);
     try {
-      await apiPatch(`/application/business-information/${uuid}/update/`, {
-        ...bizData,
-        loan_application_uuid: uuid,
-      });
+      await apiPatch(
+        `/application/business-information/${uuid}/update/`,
+        bizData,
+      );
       flash("Business information updated");
     } catch (e) {
       flash(e.message, "error");
@@ -1657,10 +2021,10 @@ const EditApplicationPage = ({ app, onClose, onComplete }) => {
   const saveFund = async () => {
     setSaving(true);
     try {
-      await apiPatch(`/application/funding-information/${uuid}/update/`, {
-        ...fundData,
-        loan_application_uuid: uuid,
-      });
+      await apiPatch(
+        `/application/funding-information/${uuid}/update/`,
+        fundData,
+      );
       flash("Funding information updated");
     } catch (e) {
       flash(e.message, "error");
@@ -1679,7 +2043,7 @@ const EditApplicationPage = ({ app, onClose, onComplete }) => {
           loan_application_uuid: uuid,
         });
       } else {
-        await apiPost(`/application/owner-information/create`, {
+        await apiPost(`/application/owner-information/create/`, {
           ...ownerData,
           loan_application_uuid: uuid,
         });
@@ -1712,7 +2076,6 @@ const EditApplicationPage = ({ app, onClose, onComplete }) => {
         flexDirection: "column",
       }}
     >
-      {/* Top Bar */}
       <div
         style={{
           background: "#fff",
@@ -1777,7 +2140,6 @@ const EditApplicationPage = ({ app, onClose, onComplete }) => {
           width: "100%",
         }}
       >
-        {/* Sidebar */}
         <div style={{ width: 200, flexShrink: 0 }}>
           <div
             style={{
@@ -1818,7 +2180,6 @@ const EditApplicationPage = ({ app, onClose, onComplete }) => {
           </div>
         </div>
 
-        {/* Form Area */}
         <div style={{ flex: 1 }}>
           <div
             style={{
@@ -1898,6 +2259,13 @@ const EditApplicationPage = ({ app, onClose, onComplete }) => {
                     <WizardInput
                       name="business_zip_code"
                       value={bizData.business_zip_code}
+                      onChange={setField(setBizData)}
+                    />
+                  </WizardField>
+                  <WizardField label="Country">
+                    <WizardInput
+                      name="business_country"
+                      value={bizData.business_country}
                       onChange={setField(setBizData)}
                     />
                   </WizardField>
@@ -2119,6 +2487,14 @@ const EditApplicationPage = ({ app, onClose, onComplete }) => {
                       onChange={setField(setOwnerData)}
                     />
                   </WizardField>
+                  <WizardField label="SSN">
+                    <WizardInput
+                      name="owner_ssn"
+                      value={ownerData.owner_ssn}
+                      onChange={setField(setOwnerData)}
+                      placeholder="XXX-XX-XXXX"
+                    />
+                  </WizardField>
                   <WizardField label="Address" span={2}>
                     <WizardInput
                       name="owner_address"
@@ -2144,6 +2520,13 @@ const EditApplicationPage = ({ app, onClose, onComplete }) => {
                     <WizardInput
                       name="owner_zip_code"
                       value={ownerData.owner_zip_code}
+                      onChange={setField(setOwnerData)}
+                    />
+                  </WizardField>
+                  <WizardField label="Country">
+                    <WizardInput
+                      name="owner_country"
+                      value={ownerData.owner_country}
                       onChange={setField(setOwnerData)}
                     />
                   </WizardField>
@@ -2190,10 +2573,9 @@ const EditApplicationPage = ({ app, onClose, onComplete }) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// REVIEW PAGE — full page detail view for an application
-// NOTE: Section and Field are now ReviewSection and ReviewField above (module-level)
+// REVIEW PAGE — full detail, no edit button, signature box, doc links
 // ─────────────────────────────────────────────────────────────────────────────
-const ReviewApplicationPage = ({ app, onClose, onEdit }) => {
+const ReviewApplicationPage = ({ app, onClose }) => {
   const status = STATUS_META[app?.status] || STATUS_META.draft;
   const biz = app?.business_information || {};
   const fund = app?.funding_information || {};
@@ -2217,7 +2599,6 @@ const ReviewApplicationPage = ({ app, onClose, onEdit }) => {
         flexDirection: "column",
       }}
     >
-      {/* Top Bar */}
       <div
         style={{
           background: "#fff",
@@ -2253,26 +2634,6 @@ const ReviewApplicationPage = ({ app, onClose, onEdit }) => {
           <div style={{ fontSize: 16, fontWeight: 800, color: "#1a1a1a" }}>
             Application Review
           </div>
-        </div>
-        <div style={{ display: "flex", gap: 10 }}>
-          <button
-            onClick={onEdit}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "8px 20px",
-              background: "none",
-              border: "1.5px solid #31694E",
-              color: "#31694E",
-              borderRadius: 10,
-              fontWeight: 700,
-              fontSize: 13,
-              cursor: "pointer",
-            }}
-          >
-            <Icon.Edit width={14} height={14} /> Edit Application
-          </button>
         </div>
       </div>
 
@@ -2311,7 +2672,7 @@ const ReviewApplicationPage = ({ app, onClose, onEdit }) => {
               Application Status
             </div>
             <div style={{ fontSize: 26, fontWeight: 800, marginBottom: 8 }}>
-              {app?.loan_type?.name || "Loan Application"}
+              {app?.loan_type_info?.name || "Loan Application"}
             </div>
             <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
               {[
@@ -2349,22 +2710,20 @@ const ReviewApplicationPage = ({ app, onClose, onEdit }) => {
               ))}
             </div>
           </div>
-          <div>
-            <span
-              style={{
-                padding: "8px 20px",
-                borderRadius: 99,
-                fontSize: 13,
-                fontWeight: 800,
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                color: status.color,
-                background: status.bg,
-              }}
-            >
-              {status.label}
-            </span>
-          </div>
+          <span
+            style={{
+              padding: "8px 20px",
+              borderRadius: 99,
+              fontSize: 13,
+              fontWeight: 800,
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              color: status.color,
+              background: status.bg,
+            }}
+          >
+            {status.label}
+          </span>
         </div>
 
         {/* Progress */}
@@ -2431,7 +2790,7 @@ const ReviewApplicationPage = ({ app, onClose, onEdit }) => {
           </div>
         </div>
 
-        {/* Sections — using ReviewSection and ReviewField (module-level) */}
+        {/* Business Info */}
         {biz.business_legal_name && (
           <ReviewSection title="Business Information">
             <ReviewField label="Legal Name" value={biz.business_legal_name} />
@@ -2449,6 +2808,19 @@ const ReviewApplicationPage = ({ app, onClose, onEdit }) => {
             <ReviewField label="City" value={biz.business_city} />
             <ReviewField label="State" value={biz.business_state} />
             <ReviewField label="Zip Code" value={biz.business_zip_code} />
+            <ReviewField label="Country" value={biz.business_country} />
+            <ReviewField
+              label="Province of Incorporation"
+              value={biz.business_province_of_incorporation}
+            />
+            <ReviewField
+              label="Est. Start Date"
+              value={biz.business_estimated_start_date}
+            />
+            <ReviewField
+              label="Length of Ownership"
+              value={biz.business_length_of_ownership}
+            />
             <ReviewField
               label="Avg. Monthly Sales"
               value={
@@ -2457,9 +2829,14 @@ const ReviewApplicationPage = ({ app, onClose, onEdit }) => {
                   : ""
               }
             />
+            <ReviewField
+              label="Operating as DBA"
+              value={biz.is_dba ? "Yes" : "No"}
+            />
           </ReviewSection>
         )}
 
+        {/* Funding Info */}
         {fund.loan_amount_requested && (
           <ReviewSection title="Funding Information">
             <ReviewField
@@ -2486,9 +2863,36 @@ const ReviewApplicationPage = ({ app, onClose, onEdit }) => {
               label="Existing Loans"
               value={fund.business_existing_loan ? "Yes" : "No"}
             />
+            {fund.business_existing_loan &&
+              fund.business_lender_details?.length > 0 && (
+                <div style={{ gridColumn: "1/-1" }}>
+                  <div
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 800,
+                      color: "#BBC863",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.12em",
+                      marginBottom: 8,
+                    }}
+                  >
+                    Lender Details
+                  </div>
+                  {fund.business_lender_details.map((l, i) => (
+                    <div
+                      key={i}
+                      style={{ fontSize: 13, color: "#444", marginBottom: 4 }}
+                    >
+                      {l.lender_name} —{" "}
+                      <strong>${Number(l.balance).toLocaleString()}</strong>
+                    </div>
+                  ))}
+                </div>
+              )}
           </ReviewSection>
         )}
 
+        {/* Owner Info */}
         {owner.owner_first_name && (
           <ReviewSection title="Owner Information">
             <ReviewField
@@ -2500,6 +2904,12 @@ const ReviewApplicationPage = ({ app, onClose, onEdit }) => {
             <ReviewField
               label="Date of Birth"
               value={owner.owner_date_of_birth}
+            />
+            <ReviewField
+              label="SSN"
+              value={
+                owner.owner_ssn ? "•••–••–" + owner.owner_ssn.slice(-4) : ""
+              }
             />
             <ReviewField
               label="Ownership %"
@@ -2516,27 +2926,103 @@ const ReviewApplicationPage = ({ app, onClose, onEdit }) => {
             <ReviewField label="Address" value={owner.owner_address} />
             <ReviewField label="City" value={owner.owner_city} />
             <ReviewField label="State" value={owner.owner_state} />
+            <ReviewField label="Zip Code" value={owner.owner_zip_code} />
+            <ReviewField label="Country" value={owner.owner_country} />
           </ReviewSection>
         )}
 
+        {/* Terms & Signature */}
         {terms.signature_name && (
-          <ReviewSection title="Terms & Conditions">
-            <ReviewField label="Signature" value={terms.signature_name} />
-            <ReviewField
-              label="Terms Accepted"
-              value={terms.terms_accepted ? "Yes" : "No"}
-            />
-            <ReviewField
-              label="Accepted At"
-              value={
-                terms.accepted_at
-                  ? new Date(terms.accepted_at).toLocaleDateString()
-                  : ""
-              }
-            />
-          </ReviewSection>
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 16,
+              padding: "28px 32px",
+              border: "1px solid #f0f0f0",
+              marginBottom: 20,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 800,
+                color: "#31694E",
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                marginBottom: 20,
+                paddingBottom: 12,
+                borderBottom: "2px solid #f0f0f0",
+              }}
+            >
+              Terms & Conditions
+            </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+                gap: 20,
+                marginBottom: 24,
+              }}
+            >
+              <ReviewField
+                label="Terms Accepted"
+                value={terms.terms_accepted ? "Yes" : "No"}
+              />
+              <ReviewField
+                label="Accepted At"
+                value={
+                  terms.accepted_at
+                    ? new Date(terms.accepted_at).toLocaleDateString()
+                    : ""
+                }
+              />
+            </div>
+            {/* Signature Box */}
+            <div style={{ marginTop: 8 }}>
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 800,
+                  color: "#BBC863",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.12em",
+                  marginBottom: 12,
+                }}
+              >
+                Signature
+              </div>
+              <div
+                style={{
+                  border: "2px solid #31694E",
+                  borderRadius: 12,
+                  padding: "24px 32px",
+                  background: "#FAFDF8",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minWidth: 320,
+                  minHeight: 80,
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 36,
+                    fontFamily: "'Dancing Script', cursive",
+                    fontStyle: "italic",
+                    color: "#1c3e2c",
+                  }}
+                >
+                  {terms.signature_name}
+                </span>
+              </div>
+              <div style={{ fontSize: 11, color: "#aaa", marginTop: 8 }}>
+                Digital signature — {terms.signature_name}
+              </div>
+            </div>
+          </div>
         )}
 
+        {/* Documents */}
         {docs.length > 0 && (
           <div
             style={{
@@ -2583,11 +3069,34 @@ const ReviewApplicationPage = ({ app, onClose, onEdit }) => {
                     {doc.document_name}
                   </span>
                 </div>
-                <span style={{ fontSize: 11, color: "#888" }}>
-                  {doc.uploaded_at
-                    ? new Date(doc.uploaded_at).toLocaleDateString()
-                    : ""}
-                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <span style={{ fontSize: 11, color: "#888" }}>
+                    {doc.uploaded_at
+                      ? new Date(doc.uploaded_at).toLocaleDateString()
+                      : ""}
+                  </span>
+                  {doc.document_file && (
+                    <a
+                      href={doc.document_file}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 4,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: "#31694E",
+                        textDecoration: "none",
+                        padding: "5px 12px",
+                        background: "rgba(49,105,78,0.08)",
+                        borderRadius: 8,
+                      }}
+                    >
+                      <Icon.ExternalLink width={12} height={12} /> View
+                    </a>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -2598,13 +3107,261 @@ const ReviewApplicationPage = ({ app, onClose, onEdit }) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DASHBOARD VIEW
+// CHAT VIEW
 // ─────────────────────────────────────────────────────────────────────────────
-const DashboardView = ({ user, appData, loanTypes, onStartApplication }) => {
-  const isNew = user?.is_new === true || !appData;
+const ChatView = ({ loanApplicationUuid, onClose }) => {
+  const [messages, setMessages] = useState([]);
+  const [newMsg, setNewMsg] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const bottomRef = useRef(null);
+
+  const fetchMessages = useCallback(async () => {
+    if (!loanApplicationUuid) return;
+    try {
+      const data = await apiGet(
+        `/chat/application/${loanApplicationUuid}/messages/`,
+      );
+      const arr = Array.isArray(data) ? data : data?.results || [];
+      setMessages(arr);
+    } catch (e) {
+      logError("Chat fetch failed", e);
+    } finally {
+      setLoading(false);
+    }
+  }, [loanApplicationUuid]);
+
+  useEffect(() => {
+    fetchMessages();
+  }, [fetchMessages]);
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const sendMessage = async () => {
+    if (!newMsg.trim() || sending) return;
+    setSending(true);
+    try {
+      await apiPost(
+        `/chat/application/${loanApplicationUuid}/messages/create/`,
+        { message: newMsg.trim() },
+      );
+      setNewMsg("");
+      await fetchMessages();
+    } catch (e) {
+      logError("Send failed", e);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        background: "#fff",
+        borderRadius: 20,
+        border: "1px solid #f0f0f0",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          padding: "16px 20px",
+          borderBottom: "1px solid #f0f0f0",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <div style={{ fontSize: 14, fontWeight: 800, color: "#31694E" }}>
+          Application Chat
+        </div>
+        <button
+          onClick={onClose}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "#888",
+          }}
+        >
+          <Icon.X width={18} height={18} />
+        </button>
+      </div>
+      <div
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          padding: 20,
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+        }}
+      >
+        {loading ? (
+          <div
+            style={{ display: "flex", justifyContent: "center", padding: 20 }}
+          >
+            <Spinner />
+          </div>
+        ) : messages.length === 0 ? (
+          <div
+            style={{
+              textAlign: "center",
+              color: "#aaa",
+              fontSize: 13,
+              padding: 40,
+            }}
+          >
+            No messages yet. Start the conversation!
+          </div>
+        ) : (
+          messages.map((m, i) => {
+            const isMe = m.sender_role === "applicant" || m.is_me;
+            return (
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  justifyContent: isMe ? "flex-end" : "flex-start",
+                }}
+              >
+                <div
+                  style={{
+                    maxWidth: "70%",
+                    padding: "10px 14px",
+                    borderRadius: isMe
+                      ? "16px 16px 4px 16px"
+                      : "16px 16px 16px 4px",
+                    background: isMe ? "#31694E" : "#f5f6f8",
+                    color: isMe ? "#F0E491" : "#1a1a1a",
+                    fontSize: 13,
+                    fontWeight: 600,
+                  }}
+                >
+                  {!isMe && (
+                    <div
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 800,
+                        color: "#BBC863",
+                        textTransform: "uppercase",
+                        marginBottom: 4,
+                      }}
+                    >
+                      {m.sender_name || "Agent"}
+                    </div>
+                  )}
+                  {m.message || m.content}
+                  <div
+                    style={{
+                      fontSize: 10,
+                      color: isMe ? "rgba(240,228,145,0.6)" : "#aaa",
+                      marginTop: 4,
+                    }}
+                  >
+                    {m.created_at
+                      ? new Date(m.created_at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : ""}
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+        <div ref={bottomRef} />
+      </div>
+      <div
+        style={{
+          padding: "12px 16px",
+          borderTop: "1px solid #f0f0f0",
+          display: "flex",
+          gap: 10,
+        }}
+      >
+        <input
+          value={newMsg}
+          onChange={(e) => setNewMsg(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+          placeholder="Type a message…"
+          style={{
+            flex: 1,
+            padding: "10px 14px",
+            borderRadius: 10,
+            border: "1.5px solid #e5e7eb",
+            outline: "none",
+            fontSize: 13,
+            background: "#fafafa",
+          }}
+        />
+        <button
+          onClick={sendMessage}
+          disabled={!newMsg.trim() || sending}
+          style={{
+            padding: "10px 16px",
+            background: newMsg.trim() ? "#31694E" : "#f0f0f0",
+            color: newMsg.trim() ? "#F0E491" : "#ccc",
+            border: "none",
+            borderRadius: 10,
+            cursor: newMsg.trim() ? "pointer" : "not-allowed",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            fontWeight: 700,
+            fontSize: 12,
+          }}
+        >
+          {sending ? (
+            <Spinner size={14} color="#F0E491" />
+          ) : (
+            <Icon.Send width={14} height={14} />
+          )}{" "}
+          Send
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DASHBOARD VIEW — uses /me data only, shows PreQual only for new users
+// ─────────────────────────────────────────────────────────────────────────────
+const DashboardView = ({ user, onStartApplication, onViewApplication }) => {
+  const [loanSearch, setLoanSearch] = useState("");
+  const [loanTypes, setLoanTypes] = useState([]);
+  const [ltLoading, setLtLoading] = useState(false);
+
+  const isNew = user?.is_new === true;
   const agent = user?.assigned_agent_details;
   const prequal = user?.prequalification_loan_type_applied_for;
-  const otherLoans = loanTypes?.filter((l) => l.id !== prequal?.id) || [];
+  const recentApp = user?.recent_active_loan_application;
+
+  // Only fetch loan types when user explicitly searches or tabs into that section
+  const fetchLoanTypes = async () => {
+    if (loanTypes.length > 0) return;
+    setLtLoading(true);
+    try {
+      const res = await apiGet("/loan-types/");
+      setLoanTypes(res?.data || []);
+    } catch (e) {
+      logError("Loan types fetch failed", e);
+    } finally {
+      setLtLoading(false);
+    }
+  };
+
+  const filteredLoans = loanTypes.filter(
+    (l) =>
+      !loanSearch ||
+      l.name?.toLowerCase().includes(loanSearch.toLowerCase()) ||
+      l.description?.toLowerCase().includes(loanSearch.toLowerCase()),
+  );
 
   return (
     <div>
@@ -2622,7 +3379,9 @@ const DashboardView = ({ user, appData, loanTypes, onStartApplication }) => {
             : `Good to see you, ${user?.first_name}!`}
         </div>
         <div style={{ fontSize: 14, color: "#888" }}>
-          You are very close to getting funded. Complete your application below.
+          {isNew
+            ? "You're pre-qualified. Complete your application to get funded."
+            : "Here's your current status."}
         </div>
       </div>
 
@@ -2634,88 +3393,92 @@ const DashboardView = ({ user, appData, loanTypes, onStartApplication }) => {
           marginBottom: 24,
         }}
       >
-        {/* Prequal Card */}
-        <div
-          style={{
-            background: "linear-gradient(135deg, #31694E 0%, #4a8c6a 100%)",
-            borderRadius: 20,
-            padding: "28px",
-            color: "white",
-            position: "relative",
-            overflow: "hidden",
-            boxShadow: "0 8px 32px rgba(49,105,78,0.25)",
-          }}
-        >
+        {/* PreQual Card — only for new users */}
+        {isNew && prequal && (
           <div
             style={{
-              position: "absolute",
-              right: -40,
-              top: -40,
-              width: 180,
-              height: 180,
-              borderRadius: "50%",
-              background: "rgba(255,255,255,0.06)",
+              background: "linear-gradient(135deg, #31694E 0%, #4a8c6a 100%)",
+              borderRadius: 20,
+              padding: "28px",
+              color: "white",
+              position: "relative",
+              overflow: "hidden",
+              boxShadow: "0 8px 32px rgba(49,105,78,0.25)",
             }}
-          />
-          <div style={{ position: "relative" }}>
+          >
             <div
               style={{
-                fontSize: 11,
-                fontWeight: 800,
-                letterSpacing: "0.15em",
-                textTransform: "uppercase",
-                color: "#F0E491",
-                marginBottom: 6,
+                position: "absolute",
+                right: -40,
+                top: -40,
+                width: 180,
+                height: 180,
+                borderRadius: "50%",
+                background: "rgba(255,255,255,0.06)",
               }}
-            >
-              Pre-Qualified For
-            </div>
-            <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>
-              {prequal?.name || "Loan Product"}
-            </div>
-            <div
-              style={{
-                fontSize: 13,
-                color: "rgba(255,255,255,0.75)",
-                marginBottom: 20,
-              }}
-            >
-              {prequal?.description}
-            </div>
-            <div
-              style={{
-                display: "flex",
-                gap: 20,
-                marginBottom: 24,
-                flexWrap: "wrap",
-              }}
-            >
-              {[
-                { label: "Amount", value: prequal?.amount },
-                { label: "Rate", value: `${prequal?.rates}%` },
-                { label: "Decision", value: prequal?.decision_time },
-              ].map(({ label, value }) => (
-                <div key={label}>
-                  <div
-                    style={{
-                      fontSize: 10,
-                      fontWeight: 700,
-                      color: "rgba(255,255,255,0.6)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.1em",
-                    }}
-                  >
-                    {label}
+            />
+            <div style={{ position: "relative" }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 800,
+                  letterSpacing: "0.15em",
+                  textTransform: "uppercase",
+                  color: "#F0E491",
+                  marginBottom: 6,
+                }}
+              >
+                Pre-Qualified For
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>
+                {prequal.name || "Loan Product"}
+              </div>
+              <div
+                style={{
+                  fontSize: 13,
+                  color: "rgba(255,255,255,0.75)",
+                  marginBottom: 20,
+                }}
+              >
+                {prequal.description}
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 20,
+                  marginBottom: 24,
+                  flexWrap: "wrap",
+                }}
+              >
+                {[
+                  { label: "Amount", value: prequal.amount },
+                  { label: "Rate", value: `${prequal.rates}%` },
+                  { label: "Decision", value: prequal.decision_time },
+                ].map(({ label, value }) => (
+                  <div key={label}>
+                    <div
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        color: "rgba(255,255,255,0.6)",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.1em",
+                      }}
+                    >
+                      {label}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 20,
+                        fontWeight: 800,
+                        color: "#F0E491",
+                      }}
+                    >
+                      {value}
+                    </div>
                   </div>
-                  <div
-                    style={{ fontSize: 20, fontWeight: 800, color: "#F0E491" }}
-                  >
-                    {value}
-                  </div>
-                </div>
-              ))}
-            </div>
-            {isNew && (
+                ))}
+              </div>
               <button
                 onClick={() => onStartApplication(prequal)}
                 style={{
@@ -2736,9 +3499,84 @@ const DashboardView = ({ user, appData, loanTypes, onStartApplication }) => {
               >
                 Start Application <Icon.Arrow width={16} height={16} />
               </button>
-            )}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Returning user — active app summary */}
+        {!isNew && recentApp && (
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 20,
+              padding: 24,
+              border: "1.5px solid #f0f0f0",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 800,
+                color: "#888",
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                marginBottom: 12,
+              }}
+            >
+              Active Application
+            </div>
+            <div
+              style={{
+                fontSize: 17,
+                fontWeight: 800,
+                color: "#1a1a1a",
+                marginBottom: 8,
+              }}
+            >
+              {recentApp.loan_type_info?.name || "Application"}
+            </div>
+            <div
+              style={{
+                height: 6,
+                background: "#f0f0f0",
+                borderRadius: 99,
+                overflow: "hidden",
+                marginBottom: 6,
+              }}
+            >
+              <div
+                style={{
+                  height: "100%",
+                  width: `${recentApp.completion_percentage ?? 0}%`,
+                  background: "linear-gradient(90deg, #31694E, #658C58)",
+                  borderRadius: 99,
+                }}
+              />
+            </div>
+            <div style={{ fontSize: 11, color: "#888", marginBottom: 16 }}>
+              {recentApp.completion_percentage ?? 0}% complete
+            </div>
+            <button
+              onClick={() => onViewApplication(recentApp)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "9px 18px",
+                background: "rgba(49,105,78,0.08)",
+                border: "none",
+                color: "#31694E",
+                borderRadius: 8,
+                fontWeight: 700,
+                fontSize: 12,
+                cursor: "pointer",
+                textTransform: "uppercase",
+              }}
+            >
+              <Icon.Eye width={14} height={14} /> View Application
+            </button>
+          </div>
+        )}
 
         {/* Agent Card */}
         {agent && (
@@ -2784,131 +3622,106 @@ const DashboardView = ({ user, appData, loanTypes, onStartApplication }) => {
                   fontWeight: 800,
                 }}
               >
-                {agent?.first_name?.[0]}
-                {agent?.last_name?.[0]}
+                {agent.first_name?.[0]}
+                {agent.last_name?.[0]}
               </div>
               <div>
                 <div
                   style={{ fontWeight: 800, color: "#1a1a1a", fontSize: 15 }}
                 >
-                  {agent?.first_name} {agent?.last_name}
+                  {agent.first_name} {agent.last_name}
                 </div>
                 <Badge color="#658C58" bg="rgba(101,140,88,0.1)">
-                  {agent?.role}
+                  {agent.role}
                 </Badge>
               </div>
             </div>
-            <div style={{ fontSize: 13, color: "#555", marginBottom: 4 }}>
-              📧 {agent?.email}
-            </div>
-            <button
-              style={{
-                marginTop: 12,
-                width: "100%",
-                padding: "10px",
-                borderRadius: 10,
-                border: "1.5px solid #31694E",
-                background: "transparent",
-                color: "#31694E",
-                fontWeight: 700,
-                fontSize: 12,
-                cursor: "pointer",
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-              }}
-            >
-              Send Message
-            </button>
+            <div style={{ fontSize: 13, color: "#555" }}>📧 {agent.email}</div>
           </div>
         )}
       </div>
 
-      {appData && (
+      {/* Explore Loan Types */}
+      <div>
         <div
           style={{
-            background: "#fff",
-            borderRadius: 16,
-            padding: 20,
-            border: "1.5px solid #f0f0f0",
-            marginBottom: 24,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 16,
           }}
         >
-          <div
+          <div style={{ fontSize: 16, fontWeight: 800, color: "#1a1a1a" }}>
+            Explore Loan Types
+          </div>
+          <button
+            onClick={fetchLoanTypes}
             style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: "#31694E",
+              background: "rgba(49,105,78,0.08)",
+              border: "none",
+              padding: "7px 14px",
+              borderRadius: 8,
+              cursor: "pointer",
               display: "flex",
-              justifyContent: "space-between",
               alignItems: "center",
-              marginBottom: 12,
+              gap: 6,
             }}
           >
-            <div>
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 800,
-                  color: "#888",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.1em",
-                  marginBottom: 4,
-                }}
-              >
-                Active Application
-              </div>
-              <div style={{ fontSize: 15, fontWeight: 800, color: "#1a1a1a" }}>
-                {appData?.loan_type_info?.name || "Application"}
-              </div>
-            </div>
-            <span
-              style={{
-                padding: "4px 12px",
-                borderRadius: 99,
-                fontSize: 11,
-                fontWeight: 800,
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                color: STATUS_META[appData?.status]?.color || "#888",
-                background: `${STATUS_META[appData?.status]?.color || "#888"}18`,
-              }}
-            >
-              {STATUS_META[appData?.status]?.label || appData?.status}
-            </span>
-          </div>
-          <div
-            style={{
-              height: 6,
-              background: "#f0f0f0",
-              borderRadius: 99,
-              overflow: "hidden",
-              marginBottom: 8,
-            }}
-          >
-            <div
-              style={{
-                height: "100%",
-                width: `${appData?.completion_percentage ?? 0}%`,
-                background: "linear-gradient(90deg, #31694E, #658C58)",
-                borderRadius: 99,
-              }}
-            />
-          </div>
-          <div style={{ fontSize: 11, color: "#888" }}>
-            {appData?.completion_percentage ?? 0}% complete
-          </div>
+            <Icon.Refresh width={12} height={12} /> Load Loans
+          </button>
         </div>
-      )}
 
-      {otherLoans.length > 0 && (
-        <div>
+        {loanTypes.length > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ position: "relative" }}>
+              <Icon.Search
+                width={16}
+                height={16}
+                style={{
+                  position: "absolute",
+                  left: 14,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "#aaa",
+                }}
+              />
+              <input
+                value={loanSearch}
+                onChange={(e) => setLoanSearch(e.target.value)}
+                placeholder="Search loan types…"
+                style={{ ...inputBase, paddingLeft: 40 }}
+              />
+            </div>
+          </div>
+        )}
+
+        {ltLoading && (
+          <div
+            style={{ display: "flex", justifyContent: "center", padding: 40 }}
+          >
+            <Spinner />
+          </div>
+        )}
+
+        {!ltLoading && loanTypes.length === 0 && (
           <div
             style={{
-              fontSize: 16,
-              fontWeight: 800,
-              color: "#1a1a1a",
-              marginBottom: 14,
+              padding: 32,
+              textAlign: "center",
+              border: "2px dashed #e5e7eb",
+              borderRadius: 16,
+              color: "#bbb",
+              fontSize: 13,
             }}
           >
-            Other Loan Types
+            Click "Load Loans" to explore available products.
           </div>
+        )}
+
+        {filteredLoans.length > 0 && (
           <div
             style={{
               display: "grid",
@@ -2916,7 +3729,7 @@ const DashboardView = ({ user, appData, loanTypes, onStartApplication }) => {
               gap: 16,
             }}
           >
-            {otherLoans.map((loan) => (
+            {filteredLoans.map((loan) => (
               <div
                 key={loan.id}
                 style={{
@@ -2933,8 +3746,7 @@ const DashboardView = ({ user, appData, loanTypes, onStartApplication }) => {
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.borderColor = "#f0f0f0";
-                  e.currentTarget.style.boxShadow =
-                    "0 2px 8px rgba(0,0,0,0.04)";
+                  e.currentTarget.style.boxShadow = "none";
                 }}
               >
                 <div
@@ -3043,8 +3855,8 @@ const DashboardView = ({ user, appData, loanTypes, onStartApplication }) => {
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
@@ -3052,7 +3864,14 @@ const DashboardView = ({ user, appData, loanTypes, onStartApplication }) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // APPLICATION LIST VIEW
 // ─────────────────────────────────────────────────────────────────────────────
-const ApplicationListView = ({ apps, loading, onReview, onEdit, onNew }) => {
+const ApplicationListView = ({
+  apps,
+  loading,
+  onReview,
+  onEdit,
+  onNew,
+  onChat,
+}) => {
   if (loading)
     return (
       <div style={{ display: "flex", justifyContent: "center", padding: 60 }}>
@@ -3210,22 +4029,20 @@ const ApplicationListView = ({ apps, loading, onReview, onEdit, onNew }) => {
                       : "Not yet submitted"}
                   </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span
-                    style={{
-                      padding: "4px 12px",
-                      borderRadius: 99,
-                      fontSize: 11,
-                      fontWeight: 800,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.08em",
-                      color: status.color,
-                      background: `${status.color}18`,
-                    }}
-                  >
-                    {status.label}
-                  </span>
-                </div>
+                <span
+                  style={{
+                    padding: "4px 12px",
+                    borderRadius: 99,
+                    fontSize: 11,
+                    fontWeight: 800,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    color: status.color,
+                    background: `${status.color}18`,
+                  }}
+                >
+                  {status.label}
+                </span>
               </div>
               <div style={{ marginBottom: 16 }}>
                 <div
@@ -3327,6 +4144,26 @@ const ApplicationListView = ({ apps, loading, onReview, onEdit, onNew }) => {
                     <Icon.Edit width={14} height={14} /> Edit
                   </button>
                 )}
+                <button
+                  onClick={() => onChat(app)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "8px 18px",
+                    background: "none",
+                    border: "1.5px solid #e5e7eb",
+                    color: "#658C58",
+                    borderRadius: 8,
+                    fontWeight: 700,
+                    fontSize: 12,
+                    cursor: "pointer",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  <Icon.Chat width={14} height={14} /> Chat
+                </button>
               </div>
             </div>
           );
@@ -3458,45 +4295,11 @@ const ProfileView = ({ user }) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PLACEHOLDER VIEW
-// ─────────────────────────────────────────────────────────────────────────────
-const PlaceholderView = ({ icon: IconComp, title, desc }) => (
-  <div
-    style={{
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: 60,
-      border: "2px dashed #e5e7eb",
-      borderRadius: 20,
-      color: "#ccc",
-      textAlign: "center",
-      minHeight: 300,
-    }}
-  >
-    <IconComp
-      width={48}
-      height={48}
-      style={{ marginBottom: 16, opacity: 0.4 }}
-    />
-    <div
-      style={{ fontSize: 18, fontWeight: 800, color: "#aaa", marginBottom: 8 }}
-    >
-      {title}
-    </div>
-    <div style={{ fontSize: 13, color: "#bbb" }}>{desc}</div>
-  </div>
-);
-
-// ─────────────────────────────────────────────────────────────────────────────
 // SIDEBAR
 // ─────────────────────────────────────────────────────────────────────────────
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: Icon.Home },
   { id: "application", label: "Applications", icon: Icon.File },
-  { id: "documents", label: "Documents", icon: Icon.Folder },
-  { id: "messages", label: "Messages", icon: Icon.Chat },
   { id: "profile", label: "My Profile", icon: Icon.User },
 ];
 
@@ -3599,15 +4402,17 @@ const Sidebar = ({ activeTab, setActiveTab, user, onClose, isMobile }) => (
                 : "3px solid transparent",
             }}
           >
-            <NavIcon width={18} height={18} />
-            {label}
+            <NavIcon width={18} height={18} /> {label}
           </button>
         );
       })}
     </nav>
     <button
       onClick={() => {
-        localStorage.clear();
+        document.cookie =
+          "kacu_auth_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Strict";
+        document.cookie =
+          "kacu_user=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Strict";
         window.location.href = "/login";
       }}
       style={{
@@ -3638,18 +4443,16 @@ export default function ClientDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [appList, setAppList] = useState([]);
-  const [loanTypes, setLoanTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const [pageView, setPageView] = useState(null);
   const [pageViewData, setPageViewData] = useState(null);
+  const [chatApp, setChatApp] = useState(null);
 
-  // suppress unused warning — ref kept for future use
-  const _bottomRef = useRef(null);
-
-  const fetchAll = useCallback(async (silent = false) => {
+  // Only fetch user /me on load — no bulk API calls
+  const fetchUser = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     else setRefreshing(true);
     setError(null);
@@ -3659,17 +4462,10 @@ export default function ClientDashboard() {
         window.location.href = "/login";
         return;
       }
-      const [userData, apps, ltRes] = await Promise.all([
-        apiGet("/user-profile/me/"),
-        apiGet("/application/"),
-        apiGet("/loan-types/"),
-      ]);
+      const userData = await apiGet("/user-profile/me/");
       setUser(userData);
-      const appArr = Array.isArray(apps) ? apps : apps?.results || [];
-      setAppList(appArr);
-      setLoanTypes(ltRes?.data || []);
     } catch (e) {
-      logError("fetchAll failed", e);
+      logError("fetchUser failed", e);
       setError(e.message);
     } finally {
       setLoading(false);
@@ -3677,10 +4473,20 @@ export default function ClientDashboard() {
     }
   }, []);
 
+  // Fetch application list only when user navigates to that tab
+  const fetchApps = useCallback(async () => {
+    try {
+      const apps = await apiGet("/application/");
+      const appArr = Array.isArray(apps) ? apps : apps?.results || [];
+      setAppList(appArr);
+    } catch (e) {
+      logError("fetchApps failed", e);
+    }
+  }, []);
+
   const fetchAppDetail = async (app) => {
     try {
-      const detail = await apiGet(`/application/${app.loan_application_uuid}/`);
-      return detail;
+      return await apiGet(`/application/${app.loan_application_uuid}/`);
     } catch (e) {
       logError("fetchAppDetail failed", e);
       return app;
@@ -3688,13 +4494,18 @@ export default function ClientDashboard() {
   };
 
   useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
+    fetchUser();
+  }, [fetchUser]);
+
+  // Fetch apps lazily when tab switches to application
+  useEffect(() => {
+    if (activeTab === "application") fetchApps();
+  }, [activeTab, fetchApps]);
 
   useEffect(() => {
     const style = document.createElement("style");
     style.textContent = `
-      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=Dancing+Script:wght@700&family=Great+Vibes&family=Pacifico&display=swap');
       @keyframes kacu-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       * { box-sizing: border-box; }
       body { margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; background: #f5f6f8; }
@@ -3706,88 +4517,19 @@ export default function ClientDashboard() {
     return () => document.head.removeChild(style);
   }, []);
 
-  const handleSubmitApplication = async (formData) => {
-    const token = getToken();
-    const headers = {
-      "Content-Type": "application/json",
-      Authorization: `Token ${token}`,
-    };
-    try {
-      const coreRes = await fetch(`${API_BASE}/application/create/`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ loan_type: formData.loan_type }),
-      });
-      const core = await coreRes.json();
-      if (!coreRes.ok)
-        throw new Error(core?.detail || "Failed to create application");
-      const uuid = core.loan_application_uuid;
-
-      const bizRes = await fetch(
-        `${API_BASE}/application/business-information/create/`,
-        {
-          method: "POST",
-          headers,
-          body: JSON.stringify({ ...formData, loan_application_uuid: uuid }),
-        },
-      );
-      const bizData = await bizRes.json();
-      if (!bizRes.ok) logError("Business info failed", bizData);
-
-      const fundRes = await fetch(
-        `${API_BASE}/application/funding-information/create/`,
-        {
-          method: "POST",
-          headers,
-          body: JSON.stringify({ ...formData, loan_application_uuid: uuid }),
-        },
-      );
-      const fundData = await fundRes.json();
-      if (!fundRes.ok) logError("Funding info failed", fundData);
-
-      const ownerRes = await fetch(
-        `${API_BASE}/application/owner-information/create`,
-        {
-          method: "POST",
-          headers,
-          body: JSON.stringify({ ...formData, loan_application_uuid: uuid }),
-        },
-      );
-      const ownerData = await ownerRes.json();
-      if (!ownerRes.ok) logError("Owner info failed", ownerData);
-
-      const termsRes = await fetch(
-        `${API_BASE}/application/terms-and-conditions/`,
-        {
-          method: "POST",
-          headers,
-          body: JSON.stringify({
-            loan_application_uuid: uuid,
-            signature_name: formData.signature_name,
-            terms_accepted: formData.terms_accepted,
-          }),
-        },
-      );
-      const termsData = await termsRes.json();
-      if (!termsRes.ok) logError("Terms failed", termsData);
-
-      setPageView(null);
-      alert("✅ Application Submitted Successfully!");
-      fetchAll(true);
-    } catch (e) {
-      logError("Submission failed", e);
-      alert("❌ " + e.message);
-    }
-  };
-
   // ── FULL-PAGE VIEWS
   if (pageView === "apply") {
     return (
       <ApplicationWizardPage
         onClose={() => setPageView(null)}
-        onComplete={handleSubmitApplication}
+        onComplete={() => {
+          setPageView(null);
+          setActiveTab("application");
+          fetchUser(true);
+          fetchApps();
+        }}
         prequalData={pageViewData}
-        loanTypes={loanTypes}
+        loanTypes={[]}
       />
     );
   }
@@ -3800,11 +4542,6 @@ export default function ClientDashboard() {
           setPageView(null);
           setActiveTab("application");
         }}
-        onEdit={async () => {
-          const detail = await fetchAppDetail(pageViewData);
-          setPageViewData(detail);
-          setPageView("edit");
-        }}
       />
     );
   }
@@ -3816,12 +4553,12 @@ export default function ClientDashboard() {
         onClose={() => {
           setPageView(null);
           setActiveTab("application");
-          fetchAll(true);
+          fetchApps();
         }}
         onComplete={() => {
           setPageView(null);
           setActiveTab("application");
-          fetchAll(true);
+          fetchApps();
         }}
       />
     );
@@ -3894,7 +4631,7 @@ export default function ClientDashboard() {
           {error}
         </div>
         <button
-          onClick={() => fetchAll()}
+          onClick={() => fetchUser()}
           style={{
             padding: "10px 24px",
             background: "#31694E",
@@ -3909,8 +4646,6 @@ export default function ClientDashboard() {
         </button>
       </div>
     );
-
-  const appData = appList[0] || null;
 
   return (
     <div
@@ -4006,7 +4741,7 @@ export default function ClientDashboard() {
           </button>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <button
-              onClick={() => fetchAll(true)}
+              onClick={() => fetchUser(true)}
               disabled={refreshing}
               style={{
                 display: "flex",
@@ -4054,67 +4789,79 @@ export default function ClientDashboard() {
         </div>
 
         {/* Page Content */}
-        <div style={{ maxWidth: 1100 }}>
-          {activeTab === "dashboard" && (
-            <DashboardView
-              user={user}
-              appData={appData}
-              loanTypes={loanTypes}
-              onStartApplication={(loan) => {
-                setPageViewData(loan);
-                setPageView("apply");
+        <div style={{ maxWidth: 1100, display: "flex", gap: 20 }}>
+          <div style={{ flex: 1 }}>
+            {activeTab === "dashboard" && (
+              <DashboardView
+                user={user}
+                onStartApplication={(loan) => {
+                  setPageViewData(loan);
+                  setPageView("apply");
+                }}
+                onViewApplication={async (app) => {
+                  const detail = await fetchAppDetail(app);
+                  setPageViewData(detail);
+                  setPageView("review");
+                }}
+              />
+            )}
+            {activeTab === "profile" && <ProfileView user={user} />}
+            {activeTab === "application" && (
+              <ApplicationListView
+                apps={appList}
+                loading={false}
+                onReview={async (app) => {
+                  const detail = await fetchAppDetail(app);
+                  setPageViewData(detail);
+                  setPageView("review");
+                }}
+                onEdit={async (app) => {
+                  const detail = await fetchAppDetail(app);
+                  setPageViewData(detail);
+                  setPageView("edit");
+                }}
+                onNew={() => {
+                  setPageViewData(user?.prequalification_loan_type_applied_for);
+                  setPageView("apply");
+                }}
+                onChat={(app) =>
+                  setChatApp(
+                    chatApp?.loan_application_uuid === app.loan_application_uuid
+                      ? null
+                      : app,
+                  )
+                }
+              />
+            )}
+          </div>
+
+          {/* Chat Panel */}
+          {chatApp && (
+            <div
+              style={{
+                width: 380,
+                flexShrink: 0,
+                height: "calc(100vh - 120px)",
+                position: "sticky",
+                top: 24,
               }}
-            />
-          )}
-          {activeTab === "profile" && <ProfileView user={user} />}
-          {activeTab === "application" && (
-            <ApplicationListView
-              apps={appList}
-              loading={false}
-              onReview={async (app) => {
-                const detail = await fetchAppDetail(app);
-                setPageViewData(detail);
-                setPageView("review");
-              }}
-              onEdit={async (app) => {
-                const detail = await fetchAppDetail(app);
-                setPageViewData(detail);
-                setPageView("edit");
-              }}
-              onNew={() => {
-                setPageViewData(user?.prequalification_loan_type_applied_for);
-                setPageView("apply");
-              }}
-            />
-          )}
-          {activeTab === "documents" && (
-            <PlaceholderView
-              icon={Icon.Upload}
-              title="Document Portal"
-              desc="Upload and manage your application documents here. Coming soon."
-            />
-          )}
-          {activeTab === "messages" && (
-            <PlaceholderView
-              icon={Icon.Chat}
-              title="Agent Messaging"
-              desc="Chat directly with your assigned agent. Coming soon."
-            />
+            >
+              <ChatView
+                loanApplicationUuid={chatApp.loan_application_uuid}
+                onClose={() => setChatApp(null)}
+              />
+            </div>
           )}
         </div>
       </main>
 
       <style>{`
         @media (max-width: 900px) {
-          .kacu-sidebar-desktop { display: none !important; }
           .kacu-menu-btn { display: flex !important; }
           main { padding: 16px !important; }
         }
         @media (min-width: 901px) {
           .kacu-menu-btn { display: none !important; }
-        }
-        @media (max-width: 640px) {
-          .kacu-grid-top { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </div>

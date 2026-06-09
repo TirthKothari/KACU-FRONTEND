@@ -21,7 +21,35 @@ import {
   EyeOff,
   ChevronDown,
   Sparkles,
+  Hash,
+  X,
 } from "lucide-react";
+
+// ─── Cookie Utilities ─────────────────────────────────────────────────────────
+
+const CookieManager = {
+  set(name, value, days = 1) {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = [
+      `${encodeURIComponent(name)}=${encodeURIComponent(value)}`,
+      `expires=${expires}`,
+      "path=/",
+      "SameSite=Strict",
+      // "Secure", // Uncomment in production (requires HTTPS)
+    ].join("; ");
+  },
+
+  get(name) {
+    const match = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith(`${encodeURIComponent(name)}=`));
+    return match ? decodeURIComponent(match.split("=")[1]) : null;
+  },
+
+  remove(name) {
+    document.cookie = `${encodeURIComponent(name)}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Strict`;
+  },
+};
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -53,6 +81,20 @@ const STEP_CONFIG = [
   { label: "Security", icon: Lock },
 ];
 
+const EMPTY_FORM = {
+  business_name: "",
+  name: "",
+  email: "",
+  phone: "",
+  loan_amount: "OPTION_1",
+  loan_term: "TERM_1",
+  business_location: "USA",
+  years_in_business: "TERM_1",
+  annual_revenue: "",
+  loan_type: "",
+  reference_code: "", // ✅ Fixed typo: was refernce_code
+};
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export const PreQualificationForm = () => {
@@ -65,22 +107,11 @@ export const PreQualificationForm = () => {
   const [capturedUuid, setCapturedUuid] = useState(null);
   const [regPassword, setRegPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showResumeModal, setShowResumeModal] = useState(false);
 
   const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
-  const [formData, setFormData] = useState({
-    business_name: "",
-    name: "",
-    email: "",
-    phone: "",
-    loan_amount: "OPTION_1",
-    loan_term: "TERM_1",
-    business_location: "USA",
-    years_in_business: "TERM_1",
-    annual_revenue: "",
-    loan_type: "",
-    refernce_code: "",
-  });
+  const [formData, setFormData] = useState(EMPTY_FORM);
 
   useEffect(() => {
     fetch(`${API_BASE}/loan-types/active/`)
@@ -119,6 +150,7 @@ export const PreQualificationForm = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  // ── 1. Pre-Qualification Submission ──────────────────────────────────────────
   const handleSubmitPrequal = async () => {
     setStatus("submitting");
     const rawPhone = formData.phone.replace(/\D/g, "");
@@ -127,17 +159,27 @@ export const PreQualificationForm = () => {
       phone: rawPhone.length <= 10 ? `+1${rawPhone}` : `+${rawPhone}`,
       annual_revenue: parseFloat(formData.annual_revenue) || 0,
     };
+
     try {
       const res = await fetch(
         `${API_BASE}/applicant/prequalification/create/`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          credentials: "include",
           body: JSON.stringify(payload),
         },
       );
       const data = await res.json();
+
       if (res.ok && data.success) {
+        // ✅ Store JWT in a secure cookie — NOT localStorage
+        if (data.token) {
+          CookieManager.set("kacu_auth_token", data.token, 1);
+        }
         setCapturedUuid(data.form_uuid);
         setStep(5);
         setStatus("idle");
@@ -151,13 +193,19 @@ export const PreQualificationForm = () => {
     }
   };
 
+  // ── 2. Registration ───────────────────────────────────────────────────────────
   const handleRegister = async () => {
     if (!regPassword) {
       setErrors({ regPassword: true });
       return;
     }
     setStatus("submitting");
+
     const nameParts = formData.name.trim().split(" ");
+
+    // ✅ Read token from secure cookie — NOT localStorage
+    const tokenFromCookie = CookieManager.get("kacu_auth_token");
+
     const regPayload = {
       first_name: nameParts[0],
       last_name: nameParts.slice(1).join(" ") || "Applicant",
@@ -165,23 +213,45 @@ export const PreQualificationForm = () => {
       password: regPassword,
       phone: formData.phone,
       role: "APPLICANT",
-      prequalification_form_uuid: capturedUuid,
+      // ✅ Send token directly in payload (replaces prequalification_form_uuid)
+      token: tokenFromCookie,
     };
+
     try {
       const res = await fetch(`${API_BASE}/applicant/register/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        credentials: "include",
         body: JSON.stringify(regPayload),
       });
       const data = await res.json();
-      if (res.ok) {
-        if (data.token) localStorage.setItem("token", data.token);
-        if (data.user || data.username)
-          localStorage.setItem(
-            "user",
-            JSON.stringify(data.user || { username: data.username }),
-          );
-        window.location.href = "/clientdashboard";
+
+      // if (res.ok) {
+      //   console.log("FULL REGISTER RESPONSE:", JSON.stringify(data));
+      //   alert(JSON.stringify(data));
+      //   // ✅ Store session
+      //   // token from registration response in cookie (not localStorage)
+      //   if (data.token) {
+      //     CookieManager.set("kacu_auth_token", data.token, 7);
+      //   }
+      //   if (data.user || data.username) {
+      //     // Store non-sensitive user metadata in cookie (session only)
+      //     CookieManager.set(
+      //       "kacu_user",
+      //       JSON.stringify(data.user || { username: data.username }),
+      //       7,
+      //     );
+      //   }
+      //   window.location.href = "/clientdashboard";
+      // }
+      if (res.ok && data.success) {
+        // Clear the prequal token — it's no longer valid
+        CookieManager.remove("kacu_auth_token");
+        // Redirect to login so user authenticates and gets real auth token
+        window.location.href = "/login";
       } else {
         setServerMessage(
           typeof data === "object"
@@ -203,21 +273,12 @@ export const PreQualificationForm = () => {
 
   return (
     <section className="relative py-20 overflow-hidden bg-white">
-      {/* ── 4-corner orbs — bleed into adjacent dark green sections ── */}
+      {/* ── 4-corner orbs ── */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Faint grid — same cadence as FundingOptions */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(49,105,78,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(49,105,78,0.025)_1px,transparent_1px)] bg-[size:50px_50px]" />
-
-        {/* TOP-LEFT — green bleeds down from #1E3F30 section above */}
         <div className="absolute -top-[20%] -left-[10%] w-[500px] h-[500px] bg-[#31694E] rounded-full blur-[130px] opacity-[0.12] mix-blend-multiply" />
-
-        {/* TOP-RIGHT — gold/olive accent top corner */}
         <div className="absolute -top-[15%] -right-[8%] w-[480px] h-[480px] bg-[#BBC863] rounded-full blur-[130px] opacity-[0.18] mix-blend-multiply" />
-
-        {/* BOTTOM-LEFT — gold bleeds up from FundingOptions (#FAFAF8) section below */}
         <div className="absolute -bottom-[15%] -left-[8%] w-[480px] h-[480px] bg-[#F0E491] rounded-full blur-[130px] opacity-[0.22] mix-blend-multiply" />
-
-        {/* BOTTOM-RIGHT — green bleeds up from next section */}
         <div className="absolute -bottom-[20%] -right-[10%] w-[500px] h-[500px] bg-[#658C58] rounded-full blur-[130px] opacity-[0.12] mix-blend-multiply" />
       </div>
 
@@ -354,6 +415,24 @@ export const PreQualificationForm = () => {
                         placeholder="(555) 000-0000"
                       />
                     </div>
+
+                    {/* ── Resume Application CTA ── */}
+                    <div className="mt-8 flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={() => setShowResumeModal(true)}
+                        className="group flex items-center gap-2 text-[11px] font-semibold text-white/30 hover:text-[#BBC863]/70 transition-colors duration-200"
+                      >
+                        <Hash
+                          size={11}
+                          className="group-hover:text-[#BBC863]/70 transition-colors"
+                        />
+                        Already filled prequalification?{" "}
+                        <span className="underline underline-offset-2 decoration-white/20 group-hover:decoration-[#BBC863]/50 transition-all">
+                          Resume your application
+                        </span>
+                      </button>
+                    </div>
                   </StepWrapper>
                 )}
 
@@ -393,11 +472,12 @@ export const PreQualificationForm = () => {
                         value={formData.business_location}
                         onChange={handleInputChange}
                       />
+                      {/* ✅ Fixed field name: reference_code */}
                       <DarkInput
                         label="Reference Code"
-                        name="refernce_code"
+                        name="reference_code"
                         icon={Tag}
-                        value={formData.refernce_code}
+                        value={formData.reference_code}
                         onChange={handleInputChange}
                         placeholder="Optional"
                       />
@@ -426,8 +506,12 @@ export const PreQualificationForm = () => {
                           name="loan_term"
                           icon={Clock}
                           options={[
-                            { key: "TERM_1", label: "3 – 12 Months" },
-                            { key: "TERM_2", label: "12 – 24 Months" },
+                            { key: "TERM_1", label: "3 months" },
+                            { key: "TERM_2", label: "6 months" },
+                            { key: "TERM_3", label: "12 months" },
+                            { key: "TERM_4", label: "18 months" },
+                            { key: "TERM_5", label: "24 months" },
+                            { key: "TERM_6", label: "More than 24 months" },
                           ]}
                           value={formData.loan_term}
                           onChange={handleInputChange}
@@ -517,10 +601,11 @@ export const PreQualificationForm = () => {
                           label="Location"
                           value={formData.business_location}
                         />
-                        {formData.refernce_code && (
+                        {/* ✅ Fixed: reference_code */}
+                        {formData.reference_code && (
                           <DarkReviewRow
                             label="Ref Code"
-                            value={formData.refernce_code}
+                            value={formData.reference_code}
                           />
                         )}
                       </DarkReviewGroup>
@@ -719,7 +804,162 @@ export const PreQualificationForm = () => {
           </div>
         </div>
       </div>
+
+      {/* ── Resume Application Modal ── */}
+      <AnimatePresence>
+        {showResumeModal && (
+          <ResumeModal
+            apiBase={API_BASE}
+            onClose={() => setShowResumeModal(false)}
+            onResume={({ uuid, name, email, phone }) => {
+              setFormData((prev) => ({
+                ...prev,
+                name: name || prev.name,
+                email: email || prev.email,
+                phone: phone || prev.phone,
+              }));
+              setCapturedUuid(uuid);
+              setStep(5);
+              setShowResumeModal(false);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </section>
+  );
+};
+
+// ─── Resume Application Modal ─────────────────────────────────────────────────
+
+const ResumeModal = ({ apiBase, onClose, onResume }) => {
+  const [uuid, setUuid] = useState("");
+  const [modalStatus, setModalStatus] = useState("idle");
+  const [modalError, setModalError] = useState("");
+
+  const handleLookup = async () => {
+    if (!uuid.trim()) {
+      setModalError("Please enter your application reference.");
+      return;
+    }
+    setModalStatus("loading");
+    setModalError("");
+
+    try {
+      const res = await fetch(
+        `${apiBase}/applicant/prequalification/${uuid.trim()}/`,
+        {
+          method: "GET",
+          headers: { Accept: "application/json" },
+          credentials: "include",
+        },
+      );
+      const data = await res.json();
+
+      if (res.ok && data.success !== false) {
+        // ✅ Store refreshed token in secure cookie
+        if (data.token) {
+          CookieManager.set("kacu_auth_token", data.token, 1);
+        }
+
+        // ✅ Hydrate form state and jump to step 5
+        onResume({
+          uuid: data.form_uuid || uuid.trim(),
+          name: data.name || "",
+          email: data.email || "",
+          phone: data.phone || "",
+        });
+      } else {
+        setModalError(
+          data.message || "Application not found. Please check your reference.",
+        );
+        setModalStatus("idle");
+      }
+    } catch {
+      setModalError("Network error. Please try again.");
+      setModalStatus("idle");
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <motion.div
+        initial={{ scale: 0.94, opacity: 0, y: 12 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.94, opacity: 0, y: 12 }}
+        transition={{ duration: 0.22, ease: "easeOut" }}
+        className="relative bg-[#1E3F30] rounded-3xl border border-white/10 shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] w-full max-w-md p-8"
+      >
+        {/* Gold top accent */}
+        <div className="absolute top-0 left-10 right-10 h-[1.5px] rounded-full bg-gradient-to-r from-transparent via-[#F0E491]/50 to-transparent" />
+
+        {/* Close */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/8 flex items-center justify-center text-white/30 hover:text-white/70 hover:bg-white/12 transition-all"
+        >
+          <X size={14} />
+        </button>
+
+        {/* Header */}
+        <div className="mb-7">
+          <div className="w-11 h-11 rounded-xl bg-[#F0E491]/10 border border-[#F0E491]/25 flex items-center justify-center mb-5">
+            <Hash size={18} className="text-[#F0E491]" />
+          </div>
+          <h3 className="text-xl font-bold text-white mb-1.5">
+            Resume Application
+          </h3>
+          <p className="text-sm text-white/40 leading-relaxed">
+            Enter your application reference to pick up where you left off and
+            proceed to account setup.
+          </p>
+        </div>
+
+        {/* Input */}
+        <div className="space-y-4">
+          <DarkInput
+            label="Application Reference"
+            name="resume_uuid"
+            icon={Hash}
+            value={uuid}
+            onChange={(e) => {
+              setUuid(e.target.value);
+              if (modalError) setModalError("");
+            }}
+            placeholder="e.g. a1b2c3d4-e5f6-…"
+            error={!!modalError}
+          />
+          {modalError && (
+            <p className="text-red-400 text-[11px] font-medium">{modalError}</p>
+          )}
+
+          <button
+            type="button"
+            onClick={handleLookup}
+            disabled={modalStatus === "loading"}
+            className="w-full py-3.5 bg-[#F0E491] text-[#1E3F30] rounded-xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-[#BBC863] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_6px_24px_-6px_rgba(240,228,145,0.45)]"
+          >
+            {modalStatus === "loading" ? (
+              <>
+                <Loader2 className="animate-spin" size={15} />
+                <span>Looking up…</span>
+              </>
+            ) : (
+              <>
+                <span>Resume</span>
+                <ArrowRight size={15} />
+              </>
+            )}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 };
 
