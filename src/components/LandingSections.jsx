@@ -40,8 +40,9 @@ const GrainOverlay = () => (
 );
 
 // Placeholder components (assuming you have these defined in your project)
-const Button = ({ children, variant, className }) => (
+const Button = ({ children, variant, className, onClick }) => (
   <button
+    onClick={onClick}
     className={`px-6 py-3 rounded-full font-bold flex items-center gap-2 transition-transform hover:scale-105 ${variant === "primary" ? "bg-[#31694E] text-white" : "bg-white text-[#31694E] border border-[#31694E]/20"} ${className}`}
   >
     {children}
@@ -60,7 +61,7 @@ const GridPattern = () => (
   <div className="absolute inset-0 bg-[linear-gradient(rgba(49,105,78,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(49,105,78,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
 );
 
-export const Hero = () => {
+export const Hero = ({ onGetStarted }) => {
   return (
     <section className="relative flex items-center pt-25 pb-14 min-h-[480px] overflow-hidden bg-[#FAFAF8] selection:bg-[#BBC863] selection:text-white">
       {/* Background */}
@@ -128,7 +129,7 @@ export const Hero = () => {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="flex flex-col sm:flex-row gap-4 mb-8"
             >
-              <Button variant="primary">
+              <Button variant="primary" onClick={onGetStarted}>
                 Get Started <ArrowRight size={18} />
               </Button>
 
@@ -629,7 +630,7 @@ export const CustomerStories = () => {
   );
 };
 
-export const DarkFeatureSection = () => {
+export const DarkFeatureSection = ({ onGetStarted }) => {
   return (
     <section className="relative py-20 overflow-hidden bg-[#1E3F30]">
       {/* --- Static Background --- */}
@@ -711,7 +712,10 @@ export const DarkFeatureSection = () => {
             </div>
 
             {/* CTA Button */}
-            <button className="group relative px-10 py-4 bg-[#F0E491] rounded-full overflow-hidden shadow-[0_0_40px_-10px_rgba(240,228,145,0.3)] hover:scale-105 transition-transform duration-300">
+            <button
+              onClick={onGetStarted}
+              className="group relative px-10 py-4 bg-[#F0E491] rounded-full overflow-hidden shadow-[0_0_40px_-10px_rgba(240,228,145,0.3)] hover:scale-105 transition-transform duration-300"
+            >
               <div className="absolute inset-0 bg-gradient-to-r from-[#F0E491] to-[#BBC863]" />
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay transition-opacity" />
               <span className="relative z-10 flex items-center gap-3 text-[#31694E] font-bold tracking-wide">

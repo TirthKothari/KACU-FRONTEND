@@ -1,15 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // CONFIG
 // ─────────────────────────────────────────────────────────────────────────────
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
-const log = (label, data) =>
-  console.log(
-    `%c[AGENT DEBUG] ${label}`,
-    "color:#31694E;font-weight:bold;",
-    data ?? "",
-  );
+// ESLint fix: prefix unused-but-kept debug helpers with _ or consolidate
 const logError = (label, err) =>
   console.error(
     `%c[AGENT ERROR] ${label}`,
@@ -17,7 +13,12 @@ const logError = (label, err) =>
     err,
   );
 
-const getToken = () => localStorage.getItem("token");
+const getToken = () => {
+  const match = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("kacu_auth_token="));
+  return match ? decodeURIComponent(match.split("=")[1]) : null;
+};
 
 const handle401 = (res) => {
   if (res.status === 401) {
@@ -35,7 +36,7 @@ const apiGet = async (path) => {
       Authorization: `Token ${getToken()}`,
     },
   });
-  if (handle401(res)) return;
+  if (handle401(res)) return null;
   const data = await res.json();
   if (!res.ok) throw new Error(data?.detail || JSON.stringify(data));
   return data;
@@ -50,7 +51,7 @@ const apiPatch = async (path, body) => {
     },
     body: JSON.stringify(body),
   });
-  if (handle401(res)) return;
+  if (handle401(res)) return null;
   const data = await res.json();
   if (!res.ok) throw new Error(data?.detail || JSON.stringify(data));
   return data;
@@ -71,6 +72,8 @@ const STATUS_META = {
   rejected: { label: "Rejected", color: "#ef4444", bg: "rgba(239,68,68,0.10)" },
 };
 
+const normaliseStatus = (s) => (s || "").toLowerCase();
+
 const STEPS_ORDER = [
   "business_information",
   "funding_information",
@@ -90,15 +93,18 @@ const STEP_LABELS = {
   completed: "Complete",
 };
 
-const LOAN_TYPE_COLORS = [
-  "#31694E",
-  "#BBC863",
-  "#3b82f6",
-  "#f59e0b",
-  "#8b5cf6",
-  "#ef4444",
-  "#06b6d4",
-];
+// ─────────────────────────────────────────────────────────────────────────────
+// HOOKS — reusable mobile detection
+// ─────────────────────────────────────────────────────────────────────────────
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+  return isMobile;
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ICONS
@@ -208,28 +214,6 @@ const Icon = {
       <polyline points="9 18 15 12 9 6" />
     </svg>
   ),
-  ChevLeft: (p) => (
-    <svg
-      {...p}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-    >
-      <polyline points="15 18 9 12 15 6" />
-    </svg>
-  ),
-  ChevDown: (p) => (
-    <svg
-      {...p}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-    >
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
-  ),
   Check: (p) => (
     <svg
       {...p}
@@ -263,18 +247,6 @@ const Icon = {
       <circle cx="12" cy="12" r="10" />
       <line x1="15" y1="9" x2="9" y2="15" />
       <line x1="9" y1="9" x2="15" y2="15" />
-    </svg>
-  ),
-  Refresh: (p) => (
-    <svg
-      {...p}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-    >
-      <polyline points="23 4 23 10 17 10" />
-      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
     </svg>
   ),
   Dollar: (p) => (
@@ -364,17 +336,6 @@ const Icon = {
       strokeWidth="2"
     >
       <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-    </svg>
-  ),
-  MessageCircle: (p) => (
-    <svg
-      {...p}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-    >
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
     </svg>
   ),
   Send: (p) => (
@@ -467,7 +428,7 @@ const Icon = {
       <line x1="16" y1="3" x2="14" y2="21" />
     </svg>
   ),
-  Percent: (p) => (
+  MessageCircle: (p) => (
     <svg
       {...p}
       viewBox="0 0 24 24"
@@ -475,9 +436,43 @@ const Icon = {
       stroke="currentColor"
       strokeWidth="2"
     >
-      <line x1="19" y1="5" x2="5" y2="19" />
-      <circle cx="6.5" cy="6.5" r="2.5" />
-      <circle cx="17.5" cy="17.5" r="2.5" />
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  ),
+  Mail: (p) => (
+    <svg
+      {...p}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+      <polyline points="22,6 12,13 2,6" />
+    </svg>
+  ),
+  Phone: (p) => (
+    <svg
+      {...p}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.13 6.13l1.02-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+    </svg>
+  ),
+  ExternalLink: (p) => (
+    <svg
+      {...p}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      <polyline points="15 3 21 3 21 9" />
+      <line x1="10" y1="14" x2="21" y2="3" />
     </svg>
   ),
 };
@@ -511,7 +506,8 @@ const Spinner = ({ size = 24, color = "#31694E" }) => (
 );
 
 const StatusBadge = ({ status }) => {
-  const meta = STATUS_META[status] || STATUS_META.draft;
+  const s = normaliseStatus(status);
+  const meta = STATUS_META[s] || STATUS_META.draft;
   return (
     <span
       style={{
@@ -524,6 +520,7 @@ const StatusBadge = ({ status }) => {
         color: meta.color,
         background: meta.bg,
         display: "inline-block",
+        whiteSpace: "nowrap",
       }}
     >
       {meta.label}
@@ -560,10 +557,17 @@ const FieldRow = ({ label, value, highlight }) => (
       alignItems: "baseline",
       padding: "8px 0",
       borderBottom: "1px solid #f5f5f5",
+      gap: 8,
     }}
   >
     <span
-      style={{ fontSize: 12, color: "#888", fontWeight: 600, minWidth: 140 }}
+      style={{
+        fontSize: 12,
+        color: "#888",
+        fontWeight: 600,
+        minWidth: 120,
+        flexShrink: 0,
+      }}
     >
       {label}
     </span>
@@ -573,6 +577,7 @@ const FieldRow = ({ label, value, highlight }) => (
         fontWeight: 700,
         color: highlight ? "#31694E" : "#1a1a1a",
         textAlign: "right",
+        wordBreak: "break-word",
       }}
     >
       {value || "—"}
@@ -639,216 +644,6 @@ const EmptySection = ({ label }) => (
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CHAT BOX COMPONENT (within application drawer)
-// FIX: Moved initial state computation out of useEffect to avoid
-//      react-hooks/set-state-in-effect and no-empty errors.
-// ─────────────────────────────────────────────────────────────────────────────
-const getInitialMessages = (recipientId) => {
-  const stored = localStorage.getItem(`chat_${recipientId}`);
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch {
-      // Fall through to default
-    }
-  }
-  return [
-    {
-      id: 1,
-      from: recipientId,
-      text: "Hello, I have a question about my application.",
-      time: new Date(Date.now() - 3600000).toISOString(),
-    },
-  ];
-};
-
-const ChatBox = ({ recipientId, recipientName, currentUserId }) => {
-  const [messages, setMessages] = useState(() =>
-    getInitialMessages(recipientId),
-  );
-  const [input, setInput] = useState("");
-  const [sending, setSending] = useState(false);
-  const bottomRef = useRef(null);
-
-  // FIX: Only scroll on message changes — no setState calls here
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  // FIX: Re-initialize messages when recipientId changes without calling
-  //      setState synchronously inside a useEffect body.
-  useEffect(() => {
-    setMessages(getInitialMessages(recipientId));
-  }, [recipientId]);
-
-  const sendMessage = () => {
-    if (!input.trim() || sending) return;
-    setSending(true);
-    const msg = {
-      id: Date.now(),
-      from: currentUserId,
-      text: input.trim(),
-      time: new Date().toISOString(),
-    };
-    setMessages((prev) => {
-      const updated = [...prev, msg];
-      localStorage.setItem(`chat_${recipientId}`, JSON.stringify(updated));
-      return updated;
-    });
-    setInput("");
-    setSending(false);
-  };
-
-  const handleKey = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
-
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: 400,
-        background: "#fff",
-        borderRadius: 16,
-        border: "1.5px solid #f0f0f0",
-        overflow: "hidden",
-      }}
-    >
-      <div
-        style={{
-          padding: "12px 16px",
-          borderBottom: "1.5px solid #f0f0f0",
-          background: "#FAFDF8",
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-        }}
-      >
-        <Icon.MessageCircle
-          width={16}
-          height={16}
-          style={{ color: "#31694E" }}
-        />
-        <span
-          style={{
-            fontSize: 12,
-            fontWeight: 800,
-            color: "#31694E",
-            textTransform: "uppercase",
-            letterSpacing: "0.1em",
-          }}
-        >
-          Chat with {recipientName}
-        </span>
-      </div>
-      <div
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: "12px 16px",
-          display: "flex",
-          flexDirection: "column",
-          gap: 8,
-        }}
-      >
-        {messages.map((msg) => {
-          const isMe = msg.from === currentUserId;
-          return (
-            <div
-              key={msg.id}
-              style={{
-                display: "flex",
-                justifyContent: isMe ? "flex-end" : "flex-start",
-              }}
-            >
-              <div
-                style={{
-                  maxWidth: "75%",
-                  padding: "8px 12px",
-                  borderRadius: isMe
-                    ? "14px 14px 4px 14px"
-                    : "14px 14px 14px 4px",
-                  background: isMe ? "#31694E" : "#f0f0f0",
-                  color: isMe ? "#fff" : "#1a1a1a",
-                  fontSize: 13,
-                  lineHeight: 1.5,
-                }}
-              >
-                {msg.text}
-                <div
-                  style={{
-                    fontSize: 10,
-                    color: isMe ? "rgba(255,255,255,0.6)" : "#aaa",
-                    marginTop: 2,
-                    textAlign: "right",
-                  }}
-                >
-                  {new Date(msg.time).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-        <div ref={bottomRef} />
-      </div>
-      <div
-        style={{
-          padding: "10px 12px",
-          borderTop: "1.5px solid #f0f0f0",
-          display: "flex",
-          gap: 8,
-        }}
-      >
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKey}
-          placeholder="Type a message... (Enter to send)"
-          rows={1}
-          style={{
-            flex: 1,
-            padding: "8px 12px",
-            borderRadius: 10,
-            border: "1.5px solid #e5e7eb",
-            outline: "none",
-            fontSize: 13,
-            resize: "none",
-            fontFamily: "inherit",
-            lineHeight: 1.4,
-          }}
-        />
-        <button
-          onClick={sendMessage}
-          disabled={!input.trim() || sending}
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 10,
-            background: "#31694E",
-            border: "none",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: !input.trim() ? 0.5 : 1,
-            flexShrink: 0,
-          }}
-        >
-          <Icon.Send width={16} height={16} style={{ color: "#fff" }} />
-        </button>
-      </div>
-    </div>
-  );
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
 // DECISION MODAL
 // ─────────────────────────────────────────────────────────────────────────────
 const DecisionModal = ({ app, onClose, onSuccess }) => {
@@ -868,7 +663,7 @@ const DecisionModal = ({ app, onClose, onSuccess }) => {
       return;
     }
     if (decision === "approved" && hasPartner && !partnerCommission) {
-      setError("Partner commission is required for this application.");
+      setError("Partner commission is required.");
       return;
     }
     if (decision === "rejected" && !rejectionReason.trim()) {
@@ -877,7 +672,7 @@ const DecisionModal = ({ app, onClose, onSuccess }) => {
     }
     setSubmitting(true);
     try {
-      const payload = { status: decision.toUpperCase() };
+      const payload = { status: decision };
       if (decision === "approved") {
         payload.approved_funds = parseFloat(approvedFunds);
         if (hasPartner)
@@ -920,16 +715,21 @@ const DecisionModal = ({ app, onClose, onSuccess }) => {
           borderRadius: 24,
           overflow: "hidden",
           boxShadow: "0 32px 80px rgba(0,0,0,0.3)",
+          maxHeight: "90vh",
+          overflowY: "auto",
         }}
       >
         <div
           style={{
-            padding: "20px 24px",
+            padding: "20px 20px",
             background: "#FAFDF8",
             borderBottom: "1.5px solid #f0f0f0",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
+            position: "sticky",
+            top: 0,
+            zIndex: 1,
           }}
         >
           <div>
@@ -938,7 +738,7 @@ const DecisionModal = ({ app, onClose, onSuccess }) => {
             </div>
             <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
               {app?.user?.first_name} {app?.user?.last_name} ·{" "}
-              {app?.loan_type_info?.name || app?.loan_type?.name || "—"}
+              {app?.loan_type_info?.name || "—"}
             </div>
           </div>
           <button
@@ -947,19 +747,20 @@ const DecisionModal = ({ app, onClose, onSuccess }) => {
               background: "#fef2f2",
               border: "none",
               borderRadius: "50%",
-              width: 32,
-              height: 32,
+              width: 36,
+              height: 36,
               cursor: "pointer",
               color: "#ef4444",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              flexShrink: 0,
             }}
           >
             <Icon.X width={16} height={16} />
           </button>
         </div>
-        <div style={{ padding: "24px" }}>
+        <div style={{ padding: "20px" }}>
           <div
             style={{
               display: "flex",
@@ -1063,15 +864,6 @@ const DecisionModal = ({ app, onClose, onSuccess }) => {
                       color: "#888",
                     }}
                   >
-                    <Icon.Partner
-                      width={12}
-                      height={12}
-                      style={{
-                        color: "#BBC863",
-                        marginRight: 6,
-                        verticalAlign: "middle",
-                      }}
-                    />
                     Referred by:{" "}
                     <strong style={{ color: "#1a1a1a" }}>
                       {app?.user?.partner?.first_name}{" "}
@@ -1127,6 +919,7 @@ const DecisionModal = ({ app, onClose, onSuccess }) => {
                   outline: "none",
                   resize: "none",
                   boxSizing: "border-box",
+                  fontFamily: "inherit",
                 }}
                 onFocus={(e) => (e.target.style.borderColor = "#ef4444")}
                 onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
@@ -1157,11 +950,12 @@ const DecisionModal = ({ app, onClose, onSuccess }) => {
         </div>
         <div
           style={{
-            padding: "16px 24px",
+            padding: "16px 20px",
             borderTop: "1.5px solid #f0f0f0",
             display: "flex",
             gap: 10,
             justifyContent: "flex-end",
+            flexWrap: "wrap",
           }}
         >
           <button
@@ -1183,7 +977,7 @@ const DecisionModal = ({ app, onClose, onSuccess }) => {
             onClick={handleSubmit}
             disabled={submitting}
             style={{
-              padding: "10px 28px",
+              padding: "10px 24px",
               borderRadius: 10,
               border: "none",
               cursor: submitting ? "not-allowed" : "pointer",
@@ -1209,8 +1003,8 @@ const DecisionModal = ({ app, onClose, onSuccess }) => {
             {submitting
               ? "Processing..."
               : decision === "approved"
-                ? "Approve Application"
-                : "Reject Application"}
+                ? "Approve"
+                : "Reject"}
           </button>
         </div>
       </div>
@@ -1220,10 +1014,8 @@ const DecisionModal = ({ app, onClose, onSuccess }) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // APPLICATION DETAIL DRAWER
-// FIX: Replaced synchronous setState calls inside useEffect with a single
-//      startTransition-compatible pattern using functional updates.
 // ─────────────────────────────────────────────────────────────────────────────
-const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
+const AppDetailDrawer = ({ uuid, onClose, onDecisionMade }) => {
   const [app, setApp] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -1232,13 +1024,7 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
 
   useEffect(() => {
     if (!uuid) return;
-
-    // FIX: batch all resets into a single state object update pattern —
-    //      each setter is called, but React batches them in React 18.
-    //      The real lint issue was calling them outside async boundaries;
-    //      wrapping in a local async IIFE is the idiomatic fix.
     let cancelled = false;
-
     const load = async () => {
       setLoading(true);
       setError(null);
@@ -1252,22 +1038,21 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
         if (!cancelled) setLoading(false);
       }
     };
-
     load();
     return () => {
       cancelled = true;
     };
   }, [uuid]);
 
-  const canDecide = app?.status === "submitted" || app?.status === "pending";
+  const normStatus = normaliseStatus(app?.status);
+  const canDecide = normStatus === "submitted" || normStatus === "pending";
 
   const tabs = [
     { id: "overview", label: "Overview" },
     { id: "business", label: "Business" },
     { id: "funding", label: "Funding" },
     { id: "owner", label: "Owner" },
-    { id: "documents", label: "Documents" },
-    { id: "chat", label: "💬 Chat" },
+    { id: "documents", label: "Docs" },
   ];
 
   return (
@@ -1298,7 +1083,7 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
         {/* Header */}
         <div
           style={{
-            padding: "20px 24px",
+            padding: "16px 16px",
             borderBottom: "1.5px solid #f0f0f0",
             background: "#FAFDF8",
             flexShrink: 0,
@@ -1311,7 +1096,7 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
               alignItems: "flex-start",
             }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
               <div
                 style={{
                   fontSize: 11,
@@ -1327,12 +1112,28 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
               {app && (
                 <>
                   <div
-                    style={{ fontSize: 17, fontWeight: 800, color: "#1a1a1a" }}
+                    style={{
+                      fontSize: 16,
+                      fontWeight: 800,
+                      color: "#1a1a1a",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
                   >
                     {app.user?.first_name} {app.user?.last_name}
                   </div>
-                  <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
-                    {app.loan_type_info?.name || app.loan_type?.name || "—"} ·{" "}
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: "#888",
+                      marginTop: 2,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {app.loan_type_info?.name || "—"} ·{" "}
                     {app.loan_application_uuid?.slice(0, 8)}…
                     {app.user?.partner && (
                       <span
@@ -1353,7 +1154,14 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
                 </>
               )}
             </div>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: 6,
+                alignItems: "center",
+                flexShrink: 0,
+              }}
+            >
               {app && <StatusBadge status={app.status} />}
               <button
                 onClick={onClose}
@@ -1378,7 +1186,7 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
             <button
               onClick={() => setShowDecision(true)}
               style={{
-                marginTop: 14,
+                marginTop: 12,
                 width: "100%",
                 padding: "10px",
                 borderRadius: 10,
@@ -1401,7 +1209,7 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
           )}
         </div>
 
-        {/* Tabs */}
+        {/* Tabs — scrollable on mobile */}
         <div
           style={{
             display: "flex",
@@ -1409,6 +1217,8 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
             borderBottom: "1.5px solid #f0f0f0",
             flexShrink: 0,
             overflowX: "auto",
+            WebkitOverflowScrolling: "touch",
+            scrollbarWidth: "none",
           }}
         >
           {tabs.map((t) => (
@@ -1416,7 +1226,7 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
               key={t.id}
               onClick={() => setActiveTab(t.id)}
               style={{
-                padding: "12px 16px",
+                padding: "12px 14px",
                 border: "none",
                 background: "none",
                 cursor: "pointer",
@@ -1428,6 +1238,7 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
                     ? "2.5px solid #31694E"
                     : "2.5px solid transparent",
                 whiteSpace: "nowrap",
+                flexShrink: 0,
               }}
             >
               {t.label}
@@ -1436,7 +1247,7 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
         </div>
 
         {/* Body */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: "16px 16px" }}>
           {loading && (
             <div
               style={{ display: "flex", justifyContent: "center", padding: 40 }}
@@ -1532,24 +1343,21 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
                     style={{
                       display: "grid",
                       gridTemplateColumns: "1fr 1fr",
-                      gap: 12,
+                      gap: 10,
                       marginBottom: 16,
                     }}
                   >
                     {[
                       {
                         label: "Loan Type",
-                        value:
-                          app.loan_type_info?.name ||
-                          app.loan_type?.name ||
-                          "—",
+                        value: app.loan_type_info?.name || "—",
                       },
                       {
                         label: "Status",
                         value: <StatusBadge status={app.status} />,
                       },
                       {
-                        label: "Submitted At",
+                        label: "Submitted",
                         value: app.submitted_at
                           ? new Date(app.submitted_at).toLocaleDateString()
                           : "Not yet",
@@ -1566,7 +1374,7 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
                         style={{
                           background: "#FAFDF8",
                           borderRadius: 12,
-                          padding: "14px",
+                          padding: "12px",
                           border: "1px solid #f0f0f0",
                         }}
                       >
@@ -1584,7 +1392,7 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
                         </div>
                         <div
                           style={{
-                            fontSize: 14,
+                            fontSize: 13,
                             fontWeight: 700,
                             color: "#1a1a1a",
                           }}
@@ -1595,18 +1403,18 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
                     ))}
                   </div>
 
-                  {/* Partner badge */}
                   {app.user?.partner && (
                     <div
                       style={{
                         background: "rgba(187,200,99,0.08)",
                         border: "1.5px solid rgba(187,200,99,0.3)",
                         borderRadius: 12,
-                        padding: "12px 16px",
+                        padding: "12px 14px",
                         marginBottom: 16,
                         display: "flex",
                         alignItems: "center",
                         gap: 12,
+                        flexWrap: "wrap",
                       }}
                     >
                       <div
@@ -1627,7 +1435,7 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
                         {app.user.partner.first_name?.[0]}
                         {app.user.partner.last_name?.[0]}
                       </div>
-                      <div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
                         <div
                           style={{
                             fontSize: 10,
@@ -1654,7 +1462,7 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
                         </div>
                       </div>
                       {app.partner_commision && (
-                        <div style={{ marginLeft: "auto", textAlign: "right" }}>
+                        <div style={{ textAlign: "right" }}>
                           <div
                             style={{
                               fontSize: 10,
@@ -1710,35 +1518,40 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
                     />
                   </SectionCard>
 
-                  {app.status === "rejected" && app.rejection_reason && (
-                    <div
-                      style={{
-                        background: "#fef2f2",
-                        border: "1.5px solid #fecaca",
-                        borderRadius: 12,
-                        padding: 16,
-                      }}
-                    >
+                  {normaliseStatus(app.status) === "rejected" &&
+                    app.rejection_reason && (
                       <div
                         style={{
-                          fontSize: 11,
-                          fontWeight: 800,
-                          color: "#ef4444",
-                          textTransform: "uppercase",
-                          letterSpacing: "0.1em",
-                          marginBottom: 6,
+                          background: "#fef2f2",
+                          border: "1.5px solid #fecaca",
+                          borderRadius: 12,
+                          padding: 16,
                         }}
                       >
-                        Rejection Reason
+                        <div
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 800,
+                            color: "#ef4444",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.1em",
+                            marginBottom: 6,
+                          }}
+                        >
+                          Rejection Reason
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 13,
+                            color: "#666",
+                            lineHeight: 1.6,
+                          }}
+                        >
+                          {app.rejection_reason}
+                        </div>
                       </div>
-                      <div
-                        style={{ fontSize: 13, color: "#666", lineHeight: 1.6 }}
-                      >
-                        {app.rejection_reason}
-                      </div>
-                    </div>
-                  )}
-                  {app.status === "approved" && (
+                    )}
+                  {normaliseStatus(app.status) === "approved" && (
                     <div
                       style={{
                         background: "#f0fdf4",
@@ -2019,6 +1832,7 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
                           borderRadius: 10,
                           marginBottom: 8,
                           border: "1px solid #f0f0f0",
+                          gap: 8,
                         }}
                       >
                         <div
@@ -2026,6 +1840,8 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
                             display: "flex",
                             alignItems: "center",
                             gap: 10,
+                            flex: 1,
+                            minWidth: 0,
                           }}
                         >
                           <div
@@ -2037,6 +1853,7 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
+                              flexShrink: 0,
                             }}
                           >
                             <Icon.File
@@ -2045,12 +1862,15 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
                               style={{ color: "#31694E" }}
                             />
                           </div>
-                          <div>
+                          <div style={{ minWidth: 0 }}>
                             <div
                               style={{
                                 fontSize: 13,
                                 fontWeight: 700,
                                 color: "#1a1a1a",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
                               }}
                             >
                               {doc.document_name}
@@ -2074,9 +1894,13 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
                               fontWeight: 700,
                               textDecoration: "none",
                               textTransform: "uppercase",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 4,
+                              flexShrink: 0,
                             }}
                           >
-                            View
+                            <Icon.ExternalLink width={12} height={12} /> View
                           </a>
                         )}
                       </div>
@@ -2085,19 +1909,10 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
                 ) : (
                   <EmptySection label="No documents uploaded yet." />
                 ))}
-
-              {activeTab === "chat" && (
-                <ChatBox
-                  recipientId={app.user?.id}
-                  recipientName={`${app.user?.first_name} ${app.user?.last_name}`}
-                  currentUserId={currentUser?.id}
-                />
-              )}
             </>
           )}
         </div>
       </div>
-
       {showDecision && (
         <DecisionModal
           app={app}
@@ -2114,9 +1929,9 @@ const AppDetailDrawer = ({ uuid, onClose, onDecisionMade, currentUser }) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// APPLICATION LIST ROW
+// APPLICATION ROW — mobile-responsive card/row layout
 // ─────────────────────────────────────────────────────────────────────────────
-const AppRow = ({ app, onClick }) => {
+const AppRow = ({ app, onClick, isMobile }) => {
   const stepIdx = STEPS_ORDER.indexOf(
     app.current_step ?? "business_information",
   );
@@ -2124,13 +1939,137 @@ const AppRow = ({ app, onClick }) => {
     app.completion_percentage ??
     Math.round(((stepIdx + 1) / STEPS_ORDER.length) * 100);
 
+  if (isMobile) {
+    // Mobile: card layout
+    return (
+      <div
+        onClick={onClick}
+        style={{
+          background: "#fff",
+          borderRadius: 14,
+          padding: "14px 16px",
+          border: "1.5px solid #f0f0f0",
+          cursor: "pointer",
+          marginBottom: 10,
+          activeOpacity: 0.7,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            marginBottom: 10,
+          }}
+        >
+          <Avatar
+            first={app.user?.first_name}
+            last={app.user?.last_name}
+            size={40}
+            radius={10}
+          />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                fontWeight: 800,
+                fontSize: 14,
+                color: "#1a1a1a",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {app.user?.first_name} {app.user?.last_name}
+            </div>
+            <div
+              style={{
+                fontSize: 11,
+                color: "#888",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {app.user?.email}
+            </div>
+          </div>
+          <StatusBadge status={app.status} />
+        </div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 8,
+          }}
+        >
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 12, color: "#31694E" }}>
+              {app.loan_type_info?.name || "—"}
+            </div>
+            {app.business_information?.business_legal_name && (
+              <div style={{ fontSize: 11, color: "#aaa" }}>
+                {app.business_information.business_legal_name}
+              </div>
+            )}
+          </div>
+          {app.user?.partner ? (
+            <span
+              style={{
+                background: "rgba(187,200,99,0.15)",
+                color: "#868a30",
+                padding: "3px 8px",
+                borderRadius: 99,
+                fontSize: 10,
+                fontWeight: 700,
+              }}
+            >
+              Referred
+            </span>
+          ) : null}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div
+            style={{
+              flex: 1,
+              height: 5,
+              background: "#f0f0f0",
+              borderRadius: 99,
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                height: "100%",
+                width: `${progress}%`,
+                background: "linear-gradient(90deg,#31694E,#658C58)",
+                borderRadius: 99,
+              }}
+            />
+          </div>
+          <span
+            style={{
+              fontSize: 10,
+              color: "#888",
+              fontWeight: 600,
+              flexShrink: 0,
+            }}
+          >
+            {progress}%
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop: row layout
   return (
     <div
       onClick={onClick}
       style={{
         background: "#fff",
         borderRadius: 14,
-        padding: "16px 20px",
+        padding: "14px 20px",
         border: "1.5px solid #f0f0f0",
         cursor: "pointer",
         transition: "all 0.18s",
@@ -2192,7 +2131,7 @@ const AppRow = ({ app, onClick }) => {
             textOverflow: "ellipsis",
           }}
         >
-          {app.loan_type_info?.name || app.loan_type?.name || "—"}
+          {app.loan_type_info?.name || "—"}
         </div>
         {app.business_information?.business_legal_name && (
           <div
@@ -2260,28 +2199,48 @@ const AppRow = ({ app, onClick }) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // APPLICATIONS VIEW
 // ─────────────────────────────────────────────────────────────────────────────
-const ApplicationsView = ({ applications, onSelect, loanTypes }) => {
+const ApplicationsView = ({ onSelect, loanTypes }) => {
+  const isMobile = useIsMobile();
+  const [apps, setApps] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterLoanType, setFilterLoanType] = useState("all");
   const [filterPartner, setFilterPartner] = useState("all");
   const [sortBy, setSortBy] = useState("created_desc");
   const [showFilters, setShowFilters] = useState(false);
+  const searchTimer = useRef(null);
 
-  const filtered = applications
+  useEffect(() => {
+    clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => clearTimeout(searchTimer.current);
+  }, [search]);
+
+  useEffect(() => {
+    const fetchApps = async () => {
+      setLoading(true);
+      try {
+        const query = debouncedSearch
+          ? `?search=${encodeURIComponent(debouncedSearch)}`
+          : "";
+        const data = await apiGet(`/application/${query}`);
+        setApps(Array.isArray(data) ? data : data?.results || []);
+      } catch (e) {
+        logError("Applications fetch failed", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchApps();
+  }, [debouncedSearch]);
+
+  const filtered = apps
     .filter((app) => {
-      const name =
-        `${app.user?.first_name} ${app.user?.last_name}`.toLowerCase();
-      const biz = (
-        app.business_information?.business_legal_name || ""
-      ).toLowerCase();
-      const matchSearch =
-        !search ||
-        name.includes(search.toLowerCase()) ||
-        biz.includes(search.toLowerCase()) ||
-        app.loan_application_uuid?.includes(search);
-      const matchStatus = filterStatus === "all" || app.status === filterStatus;
-      const appLoanType = app.loan_type_info?.name || app.loan_type?.name || "";
+      const matchStatus =
+        filterStatus === "all" || normaliseStatus(app.status) === filterStatus;
+      const appLoanType = app.loan_type_info?.name || "";
       const matchLoanType =
         filterLoanType === "all" || appLoanType === filterLoanType;
       const matchPartner =
@@ -2289,7 +2248,7 @@ const ApplicationsView = ({ applications, onSelect, loanTypes }) => {
         (filterPartner === "referred"
           ? !!app.user?.partner
           : !app.user?.partner);
-      return matchSearch && matchStatus && matchLoanType && matchPartner;
+      return matchStatus && matchLoanType && matchPartner;
     })
     .sort((a, b) => {
       if (sortBy === "created_desc")
@@ -2321,10 +2280,10 @@ const ApplicationsView = ({ applications, onSelect, loanTypes }) => {
 
   return (
     <div>
-      <div style={{ marginBottom: 24 }}>
+      <div style={{ marginBottom: 20 }}>
         <div
           style={{
-            fontSize: 22,
+            fontSize: isMobile ? 18 : 22,
             fontWeight: 800,
             color: "#1a1a1a",
             marginBottom: 4,
@@ -2333,31 +2292,31 @@ const ApplicationsView = ({ applications, onSelect, loanTypes }) => {
           All Applications
         </div>
         <div style={{ fontSize: 13, color: "#888" }}>
-          {applications.length} total · {filtered.length} shown
+          {apps.length} total · {filtered.length} shown
         </div>
       </div>
 
       <div
-        style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}
+        style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}
       >
         <div
           style={{
             flex: 1,
-            minWidth: 220,
+            minWidth: 200,
             display: "flex",
             alignItems: "center",
             gap: 8,
             background: "#fff",
             border: "1.5px solid #e5e7eb",
             borderRadius: 10,
-            padding: "8px 14px",
+            padding: "9px 14px",
           }}
         >
           <Icon.Search width={16} height={16} style={{ color: "#aaa" }} />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, business name or UUID..."
+            placeholder="Search by name, business..."
             style={{
               border: "none",
               outline: "none",
@@ -2365,52 +2324,54 @@ const ApplicationsView = ({ applications, onSelect, loanTypes }) => {
               background: "transparent",
               flex: 1,
               color: "#1a1a1a",
+              minWidth: 0,
             }}
           />
+          {loading && search && <Spinner size={14} />}
         </div>
-
-        <div style={{ position: "relative" }}>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            style={{
-              padding: "8px 36px 8px 14px",
-              borderRadius: 10,
-              border: "1.5px solid #e5e7eb",
-              background: "#fff",
-              fontSize: 12,
-              fontWeight: 700,
-              color: "#31694E",
-              cursor: "pointer",
-              outline: "none",
-              appearance: "none",
-            }}
-          >
-            <option value="created_desc">Newest First</option>
-            <option value="created_asc">Oldest First</option>
-            <option value="name_asc">Name A→Z</option>
-            <option value="name_desc">Name Z→A</option>
-            <option value="loan_type">By Loan Type</option>
-            <option value="progress_desc">By Progress</option>
-          </select>
-          <Icon.Sort
-            width={14}
-            height={14}
-            style={{
-              position: "absolute",
-              right: 10,
-              top: "50%",
-              transform: "translateY(-50%)",
-              color: "#31694E",
-              pointerEvents: "none",
-            }}
-          />
-        </div>
-
+        {!isMobile && (
+          <div style={{ position: "relative" }}>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              style={{
+                padding: "9px 36px 9px 14px",
+                borderRadius: 10,
+                border: "1.5px solid #e5e7eb",
+                background: "#fff",
+                fontSize: 12,
+                fontWeight: 700,
+                color: "#31694E",
+                cursor: "pointer",
+                outline: "none",
+                appearance: "none",
+              }}
+            >
+              <option value="created_desc">Newest First</option>
+              <option value="created_asc">Oldest First</option>
+              <option value="name_asc">Name A→Z</option>
+              <option value="name_desc">Name Z→A</option>
+              <option value="loan_type">By Loan Type</option>
+              <option value="progress_desc">By Progress</option>
+            </select>
+            <Icon.Sort
+              width={14}
+              height={14}
+              style={{
+                position: "absolute",
+                right: 10,
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: "#31694E",
+                pointerEvents: "none",
+              }}
+            />
+          </div>
+        )}
         <button
           onClick={() => setShowFilters(!showFilters)}
           style={{
-            padding: "8px 14px",
+            padding: "9px 14px",
             borderRadius: 10,
             border: `1.5px solid ${activeFilterCount > 0 ? "#31694E" : "#e5e7eb"}`,
             background: activeFilterCount > 0 ? "rgba(49,105,78,0.08)" : "#fff",
@@ -2424,9 +2385,37 @@ const ApplicationsView = ({ applications, onSelect, loanTypes }) => {
           }}
         >
           <Icon.Filter width={14} height={14} />
-          Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
+          {activeFilterCount > 0 ? `Filters (${activeFilterCount})` : "Filters"}
         </button>
       </div>
+
+      {/* Mobile sort */}
+      {isMobile && (
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "9px 14px",
+            borderRadius: 10,
+            border: "1.5px solid #e5e7eb",
+            background: "#fff",
+            fontSize: 13,
+            fontWeight: 600,
+            color: "#31694E",
+            cursor: "pointer",
+            outline: "none",
+            marginBottom: 10,
+          }}
+        >
+          <option value="created_desc">Newest First</option>
+          <option value="created_asc">Oldest First</option>
+          <option value="name_asc">Name A→Z</option>
+          <option value="name_desc">Name Z→A</option>
+          <option value="loan_type">By Loan Type</option>
+          <option value="progress_desc">By Progress</option>
+        </select>
+      )}
 
       {showFilters && (
         <div
@@ -2434,14 +2423,14 @@ const ApplicationsView = ({ applications, onSelect, loanTypes }) => {
             background: "#fff",
             border: "1.5px solid #f0f0f0",
             borderRadius: 12,
-            padding: "16px 20px",
-            marginBottom: 16,
+            padding: "14px 16px",
+            marginBottom: 14,
             display: "flex",
-            gap: 20,
+            gap: 16,
             flexWrap: "wrap",
           }}
         >
-          <div>
+          <div style={{ width: "100%" }}>
             <div
               style={{
                 fontSize: 10,
@@ -2484,7 +2473,7 @@ const ApplicationsView = ({ applications, onSelect, loanTypes }) => {
               ))}
             </div>
           </div>
-          <div>
+          <div style={{ width: "100%" }}>
             <div
               style={{
                 fontSize: 10,
@@ -2576,8 +2565,6 @@ const ApplicationsView = ({ applications, onSelect, loanTypes }) => {
                 fontWeight: 700,
                 fontSize: 11,
                 cursor: "pointer",
-                alignSelf: "flex-end",
-                marginTop: "auto",
               }}
             >
               Clear All
@@ -2586,12 +2573,17 @@ const ApplicationsView = ({ applications, onSelect, loanTypes }) => {
         </div>
       )}
 
-      {filtered.length > 0 ? (
+      {loading && !search ? (
+        <div style={{ display: "flex", justifyContent: "center", padding: 60 }}>
+          <Spinner size={32} />
+        </div>
+      ) : filtered.length > 0 ? (
         filtered.map((app) => (
           <AppRow
             key={app.loan_application_uuid}
             app={app}
             onClick={() => onSelect(app.loan_application_uuid)}
+            isMobile={isMobile}
           />
         ))
       ) : (
@@ -2605,7 +2597,9 @@ const ApplicationsView = ({ applications, onSelect, loanTypes }) => {
             fontSize: 14,
           }}
         >
-          No applications match your filters.
+          {search
+            ? `No applications found for "${search}".`
+            : "No applications match your filters."}
         </div>
       )}
     </div>
@@ -2615,15 +2609,32 @@ const ApplicationsView = ({ applications, onSelect, loanTypes }) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // CLIENT DETAIL DRAWER
 // ─────────────────────────────────────────────────────────────────────────────
-const ClientDetailDrawer = ({
-  client,
-  applications,
-  onClose,
-  onSelectApp,
-  currentUser,
-}) => {
+const ClientDetailDrawer = ({ clientId, onClose, onSelectApp }) => {
+  const [client, setClient] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("details");
-  const clientApps = applications.filter((a) => a.user?.id === client?.id);
+
+  useEffect(() => {
+    if (!clientId) return;
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const data = await apiGet(`/agent/users/${clientId}/`);
+        if (!cancelled) setClient(data);
+      } catch (e) {
+        logError("Client detail fetch failed", e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [clientId]);
+
+  const clientApps = client?.applications || [];
 
   return (
     <>
@@ -2652,7 +2663,7 @@ const ClientDetailDrawer = ({
       >
         <div
           style={{
-            padding: "20px 24px",
+            padding: "16px 16px",
             borderBottom: "1.5px solid #f0f0f0",
             background: "#FAFDF8",
             flexShrink: 0,
@@ -2665,7 +2676,7 @@ const ClientDetailDrawer = ({
               alignItems: "flex-start",
             }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
               <div
                 style={{
                   fontSize: 11,
@@ -2678,27 +2689,58 @@ const ClientDetailDrawer = ({
               >
                 Client Profile
               </div>
-              <div style={{ fontSize: 17, fontWeight: 800, color: "#1a1a1a" }}>
-                {client?.first_name} {client?.last_name}
-              </div>
-              <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
-                {client?.email}
-              </div>
+              {client && (
+                <>
+                  <div
+                    style={{
+                      fontSize: 17,
+                      fontWeight: 800,
+                      color: "#1a1a1a",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {client.first_name} {client.last_name}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: "#888",
+                      marginTop: 2,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {client.email}
+                  </div>
+                </>
+              )}
             </div>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <span
-                style={{
-                  padding: "3px 10px",
-                  borderRadius: 99,
-                  fontSize: 10,
-                  fontWeight: 800,
-                  textTransform: "uppercase",
-                  background: "rgba(49,105,78,0.1)",
-                  color: "#31694E",
-                }}
-              >
-                {client?.role || "applicant"}
-              </span>
+            <div
+              style={{
+                display: "flex",
+                gap: 6,
+                alignItems: "center",
+                flexShrink: 0,
+              }}
+            >
+              {client && (
+                <span
+                  style={{
+                    padding: "3px 10px",
+                    borderRadius: 99,
+                    fontSize: 10,
+                    fontWeight: 800,
+                    textTransform: "uppercase",
+                    background: "rgba(49,105,78,0.1)",
+                    color: "#31694E",
+                  }}
+                >
+                  {client.role || "applicant"}
+                </span>
+              )}
               <button
                 onClick={onClose}
                 style={{
@@ -2733,7 +2775,6 @@ const ClientDetailDrawer = ({
               id: "applications",
               label: `Applications (${clientApps.length})`,
             },
-            { id: "chat", label: "💬 Chat" },
           ].map((t) => (
             <button
               key={t.id}
@@ -2758,219 +2799,248 @@ const ClientDetailDrawer = ({
           ))}
         </div>
 
-        <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}>
-          {activeTab === "details" && (
-            <div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 16,
-                  marginBottom: 20,
-                }}
-              >
-                <Avatar
-                  first={client?.first_name}
-                  last={client?.last_name}
-                  size={64}
-                  radius={18}
-                />
-                <div>
-                  <div
-                    style={{ fontSize: 18, fontWeight: 800, color: "#1a1a1a" }}
-                  >
-                    {client?.first_name} {client?.last_name}
-                  </div>
-                  <div style={{ fontSize: 13, color: "#888", marginTop: 2 }}>
-                    {client?.email}
-                  </div>
-                  <div style={{ marginTop: 6 }}>
-                    <span
-                      style={{
-                        padding: "2px 10px",
-                        borderRadius: 99,
-                        fontSize: 10,
-                        fontWeight: 800,
-                        background: client?.is_qualified
-                          ? "rgba(34,197,94,0.1)"
-                          : "rgba(239,68,68,0.1)",
-                        color: client?.is_qualified ? "#22c55e" : "#ef4444",
-                      }}
-                    >
-                      {client?.is_qualified
-                        ? "✅ Qualified"
-                        : "❌ Not Qualified"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <SectionCard title="Contact Information" icon={Icon.User}>
-                <FieldRow label="Phone" value={client?.phone} />
-                <FieldRow label="Username" value={client?.username} />
-                <FieldRow label="Role" value={client?.role} />
-                <FieldRow label="User ID" value={`#${client?.id}`} />
-                {client?.partner && (
-                  <FieldRow
-                    label="Partner"
-                    value={`${client.partner.first_name} ${client.partner.last_name}`}
-                    highlight
-                  />
-                )}
-              </SectionCard>
-              <SectionCard title="Application Summary" icon={Icon.File}>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(2, 1fr)",
-                    gap: 12,
-                  }}
-                >
-                  {[
-                    {
-                      label: "Total Apps",
-                      value: clientApps.length,
-                      color: "#31694E",
-                    },
-                    {
-                      label: "Approved",
-                      value: clientApps.filter((a) => a.status === "approved")
-                        .length,
-                      color: "#22c55e",
-                    },
-                    {
-                      label: "Pending",
-                      value: clientApps.filter(
-                        (a) =>
-                          a.status === "pending" || a.status === "submitted",
-                      ).length,
-                      color: "#f59e0b",
-                    },
-                    {
-                      label: "Rejected",
-                      value: clientApps.filter((a) => a.status === "rejected")
-                        .length,
-                      color: "#ef4444",
-                    },
-                  ].map(({ label, value, color }) => (
-                    <div
-                      key={label}
-                      style={{
-                        background: "#FAFDF8",
-                        borderRadius: 10,
-                        padding: "12px",
-                        textAlign: "center",
-                      }}
-                    >
-                      <div style={{ fontSize: 22, fontWeight: 800, color }}>
-                        {value}
-                      </div>
-                      <div
-                        style={{ fontSize: 11, color: "#888", fontWeight: 600 }}
-                      >
-                        {label}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </SectionCard>
+        <div style={{ flex: 1, overflowY: "auto", padding: "16px 16px" }}>
+          {loading && (
+            <div
+              style={{ display: "flex", justifyContent: "center", padding: 40 }}
+            >
+              <Spinner size={32} />
             </div>
           )}
-
-          {activeTab === "applications" && (
-            <div>
-              {clientApps.length > 0 ? (
-                clientApps.map((app) => (
+          {client && !loading && (
+            <>
+              {activeTab === "details" && (
+                <div>
                   <div
-                    key={app.loan_application_uuid}
-                    onClick={() => {
-                      onClose();
-                      onSelectApp(app.loan_application_uuid);
-                    }}
                     style={{
-                      background: "#fff",
-                      borderRadius: 12,
-                      padding: "14px 18px",
-                      border: "1.5px solid #f0f0f0",
-                      marginBottom: 10,
-                      cursor: "pointer",
                       display: "flex",
                       alignItems: "center",
                       gap: 14,
-                      transition: "all 0.18s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = "#31694E";
-                      e.currentTarget.style.boxShadow =
-                        "0 2px 12px rgba(49,105,78,0.10)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = "#f0f0f0";
-                      e.currentTarget.style.boxShadow = "none";
+                      marginBottom: 20,
+                      flexWrap: "wrap",
                     }}
                   >
-                    <div style={{ flex: 1 }}>
+                    <Avatar
+                      first={client.first_name}
+                      last={client.last_name}
+                      size={60}
+                      radius={16}
+                    />
+                    <div>
                       <div
                         style={{
-                          fontWeight: 700,
-                          fontSize: 14,
+                          fontSize: 17,
+                          fontWeight: 800,
                           color: "#1a1a1a",
                         }}
                       >
-                        {app.loan_type_info?.name || app.loan_type?.name || "—"}
+                        {client.first_name} {client.last_name}
                       </div>
                       <div
-                        style={{ fontSize: 11, color: "#aaa", marginTop: 2 }}
+                        style={{ fontSize: 13, color: "#888", marginTop: 2 }}
                       >
-                        {app.loan_application_uuid?.slice(0, 8)}…
+                        {client.email}
                       </div>
-                      {app.business_information?.business_legal_name && (
-                        <div
-                          style={{ fontSize: 12, color: "#888", marginTop: 2 }}
-                        >
-                          {app.business_information.business_legal_name}
-                        </div>
-                      )}
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "flex-end",
-                        gap: 6,
-                      }}
-                    >
-                      <StatusBadge status={app.status} />
-                      {app.approved_funds && (
-                        <div
+                      <div style={{ marginTop: 6 }}>
+                        <span
                           style={{
-                            fontSize: 12,
+                            padding: "2px 10px",
+                            borderRadius: 99,
+                            fontSize: 10,
                             fontWeight: 800,
-                            color: "#22c55e",
+                            background: client.is_qualified
+                              ? "rgba(34,197,94,0.1)"
+                              : "rgba(239,68,68,0.1)",
+                            color: client.is_qualified ? "#22c55e" : "#ef4444",
                           }}
                         >
-                          ${Number(app.approved_funds).toLocaleString()}
-                        </div>
-                      )}
+                          {client.is_qualified
+                            ? "✅ Qualified"
+                            : "❌ Not Qualified"}
+                        </span>
+                      </div>
                     </div>
-                    <Icon.ChevRight
-                      width={16}
-                      height={16}
-                      style={{ color: "#ccc", flexShrink: 0 }}
-                    />
                   </div>
-                ))
-              ) : (
-                <EmptySection label="No applications found for this client." />
+                  <SectionCard title="Contact Information" icon={Icon.User}>
+                    <FieldRow label="Phone" value={client.phone} />
+                    <FieldRow label="Username" value={client.username} />
+                    <FieldRow label="Role" value={client.role} />
+                    {client.partner_details && (
+                      <FieldRow
+                        label="Partner"
+                        value={`${client.partner_details.first_name} ${client.partner_details.last_name}`}
+                        highlight
+                      />
+                    )}
+                    {client.assigned_agent_details && (
+                      <FieldRow
+                        label="Assigned Agent"
+                        value={`${client.assigned_agent_details.first_name} ${client.assigned_agent_details.last_name}`}
+                      />
+                    )}
+                  </SectionCard>
+                  <SectionCard title="Application Summary" icon={Icon.File}>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(2, 1fr)",
+                        gap: 10,
+                      }}
+                    >
+                      {[
+                        {
+                          label: "Total Apps",
+                          value: clientApps.length,
+                          color: "#31694E",
+                        },
+                        {
+                          label: "Approved",
+                          value: clientApps.filter(
+                            (a) => normaliseStatus(a.status) === "approved",
+                          ).length,
+                          color: "#22c55e",
+                        },
+                        {
+                          label: "Pending",
+                          value: clientApps.filter((a) =>
+                            ["pending", "submitted"].includes(
+                              normaliseStatus(a.status),
+                            ),
+                          ).length,
+                          color: "#f59e0b",
+                        },
+                        {
+                          label: "Rejected",
+                          value: clientApps.filter(
+                            (a) => normaliseStatus(a.status) === "rejected",
+                          ).length,
+                          color: "#ef4444",
+                        },
+                      ].map(({ label, value, color }) => (
+                        <div
+                          key={label}
+                          style={{
+                            background: "#FAFDF8",
+                            borderRadius: 10,
+                            padding: "10px",
+                            textAlign: "center",
+                          }}
+                        >
+                          <div style={{ fontSize: 20, fontWeight: 800, color }}>
+                            {value}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 11,
+                              color: "#888",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {label}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </SectionCard>
+                </div>
               )}
-            </div>
-          )}
-
-          {activeTab === "chat" && (
-            <ChatBox
-              recipientId={client?.id}
-              recipientName={`${client?.first_name} ${client?.last_name}`}
-              currentUserId={currentUser?.id}
-            />
+              {activeTab === "applications" && (
+                <div>
+                  {clientApps.length > 0 ? (
+                    clientApps.map((app) => (
+                      <div
+                        key={app.loan_application_uuid}
+                        onClick={() => {
+                          onClose();
+                          onSelectApp(app.loan_application_uuid);
+                        }}
+                        style={{
+                          background: "#fff",
+                          borderRadius: 12,
+                          padding: "14px 16px",
+                          border: "1.5px solid #f0f0f0",
+                          marginBottom: 10,
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 12,
+                          transition: "all 0.18s",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = "#31694E";
+                          e.currentTarget.style.boxShadow =
+                            "0 2px 12px rgba(49,105,78,0.10)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = "#f0f0f0";
+                          e.currentTarget.style.boxShadow = "none";
+                        }}
+                      >
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div
+                            style={{
+                              fontWeight: 700,
+                              fontSize: 14,
+                              color: "#1a1a1a",
+                            }}
+                          >
+                            {app.loan_type_info?.name || "—"}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 11,
+                              color: "#aaa",
+                              marginTop: 2,
+                            }}
+                          >
+                            {app.loan_application_uuid?.slice(0, 8)}…
+                          </div>
+                          {app.business_information?.business_legal_name && (
+                            <div
+                              style={{
+                                fontSize: 12,
+                                color: "#888",
+                                marginTop: 2,
+                              }}
+                            >
+                              {app.business_information.business_legal_name}
+                            </div>
+                          )}
+                        </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "flex-end",
+                            gap: 6,
+                          }}
+                        >
+                          <StatusBadge status={app.status} />
+                          {app.approved_funds && (
+                            <div
+                              style={{
+                                fontSize: 12,
+                                fontWeight: 800,
+                                color: "#22c55e",
+                              }}
+                            >
+                              ${Number(app.approved_funds).toLocaleString()}
+                            </div>
+                          )}
+                        </div>
+                        <Icon.ChevRight
+                          width={16}
+                          height={16}
+                          style={{ color: "#ccc", flexShrink: 0 }}
+                        />
+                      </div>
+                    ))
+                  ) : (
+                    <EmptySection label="No applications found for this client." />
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -2981,33 +3051,45 @@ const ClientDetailDrawer = ({
 // ─────────────────────────────────────────────────────────────────────────────
 // CLIENTS VIEW
 // ─────────────────────────────────────────────────────────────────────────────
-const ClientsView = ({ applications, onSelectApp, currentUser }) => {
+const ClientsView = ({ onSelectApp }) => {
+  const isMobile = useIsMobile();
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [selectedClient, setSelectedClient] = useState(null);
-  const [filterRole, setFilterRole] = useState("all");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [selectedClientId, setSelectedClientId] = useState(null);
+  const searchTimer = useRef(null);
 
-  const clientMap = {};
-  applications.forEach((app) => {
-    if (app.user && !clientMap[app.user.id]) clientMap[app.user.id] = app.user;
-  });
-  const clients = Object.values(clientMap);
+  useEffect(() => {
+    clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => clearTimeout(searchTimer.current);
+  }, [search]);
 
-  const filtered = clients.filter((c) => {
-    const name = `${c.first_name} ${c.last_name}`.toLowerCase();
-    const matchSearch =
-      !search ||
-      name.includes(search.toLowerCase()) ||
-      c.email?.toLowerCase().includes(search.toLowerCase());
-    const matchRole = filterRole === "all" || c.role === filterRole;
-    return matchSearch && matchRole;
-  });
+  useEffect(() => {
+    const fetchClients = async () => {
+      setLoading(true);
+      try {
+        const query = debouncedSearch
+          ? `?search=${encodeURIComponent(debouncedSearch)}`
+          : "";
+        const data = await apiGet(`/agent/users/${query}`);
+        setClients(Array.isArray(data) ? data : data?.results || []);
+      } catch (e) {
+        logError("Clients fetch failed", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchClients();
+  }, [debouncedSearch]);
 
   return (
     <div>
-      <div style={{ marginBottom: 24 }}>
+      <div style={{ marginBottom: 20 }}>
         <div
           style={{
-            fontSize: 22,
+            fontSize: isMobile ? 18 : 22,
             fontWeight: 800,
             color: "#1a1a1a",
             marginBottom: 4,
@@ -3016,31 +3098,28 @@ const ClientsView = ({ applications, onSelectApp, currentUser }) => {
           Clients
         </div>
         <div style={{ fontSize: 13, color: "#888" }}>
-          {clients.length} total clients assigned to you
+          {clients.length} clients assigned to you
         </div>
       </div>
 
-      <div
-        style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}
-      >
+      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
         <div
           style={{
             flex: 1,
-            minWidth: 220,
             display: "flex",
             alignItems: "center",
             gap: 8,
             background: "#fff",
             border: "1.5px solid #e5e7eb",
             borderRadius: 10,
-            padding: "8px 14px",
+            padding: "9px 14px",
           }}
         >
           <Icon.Search width={16} height={16} style={{ color: "#aaa" }} />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name or email..."
+            placeholder="Search clients by name or email..."
             style={{
               border: "none",
               outline: "none",
@@ -3050,57 +3129,34 @@ const ClientsView = ({ applications, onSelectApp, currentUser }) => {
               color: "#1a1a1a",
             }}
           />
-        </div>
-        <div style={{ display: "flex", gap: 6 }}>
-          {[
-            { val: "all", label: "All" },
-            { val: "APPLICANT", label: "Applicants" },
-            { val: "PARTNER", label: "Partners" },
-          ].map(({ val, label }) => (
-            <button
-              key={val}
-              onClick={() => setFilterRole(val)}
-              style={{
-                padding: "8px 14px",
-                borderRadius: 10,
-                border: "1.5px solid",
-                borderColor: filterRole === val ? "#31694E" : "#e5e7eb",
-                background:
-                  filterRole === val ? "rgba(49,105,78,0.08)" : "#fff",
-                color: filterRole === val ? "#31694E" : "#888",
-                fontWeight: 700,
-                fontSize: 11,
-                cursor: "pointer",
-              }}
-            >
-              {label}
-            </button>
-          ))}
+          {loading && search && <Spinner size={14} />}
         </div>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-          gap: 14,
-        }}
-      >
-        {filtered.length > 0 ? (
-          filtered.map((client) => {
-            const clientApps = applications.filter(
-              (a) => a.user?.id === client.id,
-            );
-            const hasPartner = !!client.partner;
-            return (
+      {loading && !search ? (
+        <div style={{ display: "flex", justifyContent: "center", padding: 60 }}>
+          <Spinner size={32} />
+        </div>
+      ) : (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMobile
+              ? "1fr"
+              : "repeat(auto-fill, minmax(280px, 1fr))",
+            gap: 12,
+          }}
+        >
+          {clients.length > 0 ? (
+            clients.map((client) => (
               <div
                 key={client.id}
-                onClick={() => setSelectedClient(client)}
+                onClick={() => setSelectedClientId(client.id)}
                 style={{
                   background: "#fff",
                   borderRadius: 16,
                   border: "1.5px solid #f0f0f0",
-                  padding: 18,
+                  padding: 16,
                   cursor: "pointer",
                   transition: "all 0.18s",
                 }}
@@ -3119,7 +3175,7 @@ const ClientsView = ({ applications, onSelectApp, currentUser }) => {
                     display: "flex",
                     alignItems: "center",
                     gap: 12,
-                    marginBottom: 14,
+                    marginBottom: 12,
                   }}
                 >
                   <Avatar
@@ -3153,7 +3209,7 @@ const ClientsView = ({ applications, onSelectApp, currentUser }) => {
                       {client.email}
                     </div>
                   </div>
-                  {hasPartner && (
+                  {client.partner && (
                     <span
                       style={{
                         background: "rgba(187,200,99,0.15)",
@@ -3162,13 +3218,14 @@ const ClientsView = ({ applications, onSelectApp, currentUser }) => {
                         borderRadius: 99,
                         fontSize: 10,
                         fontWeight: 700,
+                        flexShrink: 0,
                       }}
                     >
                       Referred
                     </span>
                   )}
                 </div>
-                <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
                   <div
                     style={{
                       flex: 1,
@@ -3180,60 +3237,12 @@ const ClientsView = ({ applications, onSelectApp, currentUser }) => {
                   >
                     <div
                       style={{
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: 800,
-                        color: "#31694E",
+                        color: client.is_qualified ? "#22c55e" : "#ef4444",
                       }}
                     >
-                      {clientApps.length}
-                    </div>
-                    <div
-                      style={{ fontSize: 10, color: "#888", fontWeight: 600 }}
-                    >
-                      Applications
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      flex: 1,
-                      background: "#FAFDF8",
-                      borderRadius: 8,
-                      padding: "8px",
-                      textAlign: "center",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 16,
-                        fontWeight: 800,
-                        color: "#22c55e",
-                      }}
-                    >
-                      {clientApps.filter((a) => a.status === "approved").length}
-                    </div>
-                    <div
-                      style={{ fontSize: 10, color: "#888", fontWeight: 600 }}
-                    >
-                      Approved
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      flex: 1,
-                      background: "#FAFDF8",
-                      borderRadius: 8,
-                      padding: "8px",
-                      textAlign: "center",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 16,
-                        fontWeight: 800,
-                        color: client?.is_qualified ? "#22c55e" : "#ef4444",
-                      }}
-                    >
-                      {client?.is_qualified ? "✓" : "✗"}
+                      {client.is_qualified ? "✓" : "✗"}
                     </div>
                     <div
                       style={{ fontSize: 10, color: "#888", fontWeight: 600 }}
@@ -3241,51 +3250,97 @@ const ClientsView = ({ applications, onSelectApp, currentUser }) => {
                       Qualified
                     </div>
                   </div>
+                  <div
+                    style={{
+                      flex: 1,
+                      background: "#FAFDF8",
+                      borderRadius: 8,
+                      padding: "8px",
+                      textAlign: "center",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 800,
+                        color: "#31694E",
+                      }}
+                    >
+                      {client.reference_code || "—"}
+                    </div>
+                    <div
+                      style={{ fontSize: 10, color: "#888", fontWeight: 600 }}
+                    >
+                      Ref Code
+                    </div>
+                  </div>
                 </div>
-                {clientApps.length > 0 && (
-                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                    {clientApps.slice(0, 3).map((a) => (
-                      <StatusBadge
-                        key={a.loan_application_uuid}
-                        status={a.status}
-                      />
-                    ))}
-                    {clientApps.length > 3 && (
-                      <span
-                        style={{ fontSize: 10, color: "#aaa", fontWeight: 600 }}
-                      >
-                        +{clientApps.length - 3} more
-                      </span>
-                    )}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    fontSize: 11,
+                    color: "#aaa",
+                  }}
+                >
+                  <Icon.Mail width={12} height={12} style={{ flexShrink: 0 }} />
+                  <span
+                    style={{
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {client.email}
+                  </span>
+                </div>
+                {client.phone && (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontSize: 11,
+                      color: "#aaa",
+                      marginTop: 4,
+                    }}
+                  >
+                    <Icon.Phone
+                      width={12}
+                      height={12}
+                      style={{ flexShrink: 0 }}
+                    />{" "}
+                    {client.phone}
                   </div>
                 )}
               </div>
-            );
-          })
-        ) : (
-          <div
-            style={{
-              gridColumn: "1/-1",
-              padding: 60,
-              textAlign: "center",
-              color: "#bbb",
-              border: "2px dashed #f0f0f0",
-              borderRadius: 16,
-              fontSize: 14,
-            }}
-          >
-            No clients found.
-          </div>
-        )}
-      </div>
+            ))
+          ) : (
+            <div
+              style={{
+                gridColumn: "1/-1",
+                padding: 60,
+                textAlign: "center",
+                color: "#bbb",
+                border: "2px dashed #f0f0f0",
+                borderRadius: 16,
+                fontSize: 14,
+              }}
+            >
+              {search
+                ? `No clients found for "${search}".`
+                : "No clients assigned to you."}
+            </div>
+          )}
+        </div>
+      )}
 
-      {selectedClient && (
+      {selectedClientId && (
         <ClientDetailDrawer
-          client={selectedClient}
-          applications={applications}
-          onClose={() => setSelectedClient(null)}
+          clientId={selectedClientId}
+          onClose={() => setSelectedClientId(null)}
           onSelectApp={onSelectApp}
-          currentUser={currentUser}
         />
       )}
     </div>
@@ -3293,41 +3348,77 @@ const ClientsView = ({ applications, onSelectApp, currentUser }) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GROUP CHAT VIEW
-// FIX: Moved initial state computation out of useEffect using lazy initializer
-//      to avoid react-hooks/set-state-in-effect and no-empty errors.
+// TEAM CHANNEL — mobile-friendly redesign
 // ─────────────────────────────────────────────────────────────────────────────
-const getInitialGroupMessages = () => {
-  const stored = localStorage.getItem("group_chat_messages");
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch {
-      // Fall through to defaults
-    }
-  }
-  return [
+const TeamChannelView = ({ currentUser }) => {
+  const isMobile = useIsMobile();
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [activeChannel, setActiveChannel] = useState("general");
+  const [showChannelList, setShowChannelList] = useState(false);
+  const bottomRef = useRef(null);
+
+  const CHANNELS = [
+    { id: "general", label: "# general", desc: "Team-wide updates" },
+    { id: "applications", label: "# applications", desc: "Application alerts" },
     {
-      id: 1,
-      from: { id: 0, name: "Admin", role: "ADMIN" },
-      text: "Welcome to the Kacu agent channel! Use this space for announcements and team updates.",
-      time: new Date(Date.now() - 86400000).toISOString(),
-      isAnnouncement: true,
-    },
-    {
-      id: 2,
-      from: { id: 0, name: "Admin", role: "ADMIN" },
-      text: "New loan type 'Equipment Financing' is now available. Minimum revenue threshold: $25,000/year.",
-      time: new Date(Date.now() - 3600000 * 4).toISOString(),
-      isAnnouncement: true,
+      id: "announcements",
+      label: "📣 announcements",
+      desc: "Admin announcements",
     },
   ];
-};
 
-const GroupChatView = ({ currentUser }) => {
-  const [messages, setMessages] = useState(getInitialGroupMessages);
-  const [input, setInput] = useState("");
-  const bottomRef = useRef(null);
+  useEffect(() => {
+    const seeds = {
+      general: [
+        {
+          id: 1,
+          from: { name: "Admin", role: "ADMIN" },
+          text: "Welcome to the Kacu team channel! Use this space for coordination.",
+          time: new Date(Date.now() - 86400000).toISOString(),
+          pinned: true,
+        },
+        {
+          id: 2,
+          from: { name: "System", role: "SYSTEM" },
+          text: "New loan type 'Equipment Financing' is now available. Minimum revenue threshold: $25,000/year.",
+          time: new Date(Date.now() - 3600000 * 4).toISOString(),
+          pinned: false,
+        },
+      ],
+      applications: [
+        {
+          id: 1,
+          from: { name: "System", role: "SYSTEM" },
+          text: "Application alerts and updates will appear here.",
+          time: new Date(Date.now() - 7200000).toISOString(),
+          pinned: false,
+        },
+      ],
+      announcements: [
+        {
+          id: 1,
+          from: { name: "Admin", role: "ADMIN" },
+          text: "Q2 performance reviews are due by end of month. Please submit your metrics.",
+          time: new Date(Date.now() - 172800000).toISOString(),
+          pinned: true,
+        },
+      ],
+    };
+
+    let next = seeds[activeChannel] || [];
+    const stored = localStorage.getItem(`channel_${activeChannel}`);
+    if (stored) {
+      try {
+        next = JSON.parse(stored);
+      } catch {
+        /* fall through */
+      }
+    }
+
+    const id = setTimeout(() => setMessages(next), 0);
+    return () => clearTimeout(id);
+  }, [activeChannel]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -3344,11 +3435,11 @@ const GroupChatView = ({ currentUser }) => {
       },
       text: input.trim(),
       time: new Date().toISOString(),
-      isAnnouncement: false,
+      pinned: false,
     };
     setMessages((prev) => {
       const updated = [...prev, msg];
-      localStorage.setItem("group_chat_messages", JSON.stringify(updated));
+      localStorage.setItem(`channel_${activeChannel}`, JSON.stringify(updated));
       return updated;
     });
     setInput("");
@@ -3361,7 +3452,7 @@ const GroupChatView = ({ currentUser }) => {
     }
   };
 
-  const formatDate = (iso) => {
+  const formatTime = (iso) => {
     const d = new Date(iso);
     const now = new Date();
     const diff = now - d;
@@ -3374,66 +3465,288 @@ const GroupChatView = ({ currentUser }) => {
     );
   };
 
+  const currentChannelInfo = CHANNELS.find((c) => c.id === activeChannel);
+
   return (
     <div
       style={{
         display: "flex",
-        flexDirection: "column",
-        height: "calc(100vh - 120px)",
-        maxHeight: 700,
+        height: isMobile ? "calc(100vh - 100px)" : "calc(100vh - 120px)",
+        maxHeight: isMobile ? "none" : 720,
+        background: "#fff",
+        borderRadius: isMobile ? 16 : 20,
+        border: "1.5px solid #f0f0f0",
+        overflow: "hidden",
+        position: "relative",
       }}
     >
-      <div style={{ marginBottom: 16 }}>
+      {/* Desktop Sidebar / Mobile Channel Sheet */}
+      {!isMobile && (
         <div
           style={{
-            fontSize: 22,
-            fontWeight: 800,
-            color: "#1a1a1a",
-            marginBottom: 4,
-          }}
-        >
-          Team Channel
-        </div>
-        <div
-          style={{
-            fontSize: 13,
-            color: "#888",
+            width: 200,
+            background: "#1c3e2c",
             display: "flex",
-            alignItems: "center",
-            gap: 6,
+            flexDirection: "column",
+            flexShrink: 0,
           }}
         >
-          <Icon.Hash width={14} height={14} /> kacu-agents · Announcements &amp;
-          team chat
+          <div
+            style={{
+              padding: "20px 14px 14px",
+              borderBottom: "1px solid rgba(255,255,255,0.08)",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 800,
+                color: "rgba(255,255,255,0.4)",
+                textTransform: "uppercase",
+                letterSpacing: "0.12em",
+                marginBottom: 2,
+              }}
+            >
+              Team
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: "#F0E491" }}>
+              Kacu Agents
+            </div>
+          </div>
+          <div style={{ padding: "10px 6px", flex: 1 }}>
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 800,
+                color: "rgba(255,255,255,0.3)",
+                textTransform: "uppercase",
+                letterSpacing: "0.12em",
+                padding: "4px 10px",
+                marginBottom: 4,
+              }}
+            >
+              Channels
+            </div>
+            {CHANNELS.map((ch) => (
+              <button
+                key={ch.id}
+                onClick={() => setActiveChannel(ch.id)}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  padding: "8px 12px",
+                  borderRadius: 8,
+                  border: "none",
+                  background:
+                    activeChannel === ch.id
+                      ? "rgba(240,228,145,0.15)"
+                      : "transparent",
+                  color:
+                    activeChannel === ch.id
+                      ? "#F0E491"
+                      : "rgba(255,255,255,0.55)",
+                  fontWeight: activeChannel === ch.id ? 700 : 500,
+                  fontSize: 13,
+                  cursor: "pointer",
+                  textAlign: "left",
+                  marginBottom: 2,
+                  transition: "all 0.15s",
+                }}
+              >
+                {ch.label}
+              </button>
+            ))}
+          </div>
+          <div
+            style={{
+              padding: "12px 14px",
+              borderTop: "1px solid rgba(255,255,255,0.08)",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Avatar
+                first={currentUser?.first_name}
+                last={currentUser?.last_name}
+                size={28}
+                radius={8}
+              />
+              <div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "white",
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {currentUser?.first_name}
+                </div>
+                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)" }}>
+                  {currentUser?.role}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
+      {/* Mobile Channel Picker Overlay */}
+      {isMobile && showChannelList && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "#1c3e2c",
+            zIndex: 10,
+            display: "flex",
+            flexDirection: "column",
+            padding: "20px 16px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 24,
+            }}
+          >
+            <div style={{ fontSize: 16, fontWeight: 800, color: "#F0E491" }}>
+              Channels
+            </div>
+            <button
+              onClick={() => setShowChannelList(false)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "rgba(255,255,255,0.6)",
+                cursor: "pointer",
+              }}
+            >
+              <Icon.X width={20} height={20} />
+            </button>
+          </div>
+          {CHANNELS.map((ch) => (
+            <button
+              key={ch.id}
+              onClick={() => {
+                setActiveChannel(ch.id);
+                setShowChannelList(false);
+              }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                padding: "14px 16px",
+                borderRadius: 12,
+                border: "none",
+                background:
+                  activeChannel === ch.id
+                    ? "rgba(240,228,145,0.15)"
+                    : "rgba(255,255,255,0.05)",
+                color:
+                  activeChannel === ch.id ? "#F0E491" : "rgba(255,255,255,0.7)",
+                fontWeight: activeChannel === ch.id ? 700 : 500,
+                fontSize: 15,
+                cursor: "pointer",
+                textAlign: "left",
+                marginBottom: 8,
+                width: "100%",
+              }}
+            >
+              <div style={{ flex: 1 }}>{ch.label}</div>
+              {activeChannel === ch.id && <Icon.Check width={16} height={16} />}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Message Area */}
       <div
         style={{
           flex: 1,
-          background: "#fff",
-          borderRadius: 16,
-          border: "1.5px solid #f0f0f0",
           display: "flex",
           flexDirection: "column",
-          overflow: "hidden",
+          minWidth: 0,
         }}
       >
-        <div style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
-          {messages.map((msg) => {
-            const isMe = msg.from.id === currentUser?.id;
+        {/* Channel Header */}
+        <div
+          style={{
+            padding: "12px 14px",
+            borderBottom: "1.5px solid #f0f0f0",
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            background: "#FAFDF8",
+          }}
+        >
+          {isMobile && (
+            <button
+              onClick={() => setShowChannelList(true)}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 4,
+                color: "#31694E",
+              }}
+            >
+              <Icon.Hash width={18} height={18} />
+            </button>
+          )}
+          {!isMobile && (
+            <Icon.Hash width={16} height={16} style={{ color: "#31694E" }} />
+          )}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                fontSize: 14,
+                fontWeight: 800,
+                color: "#1a1a1a",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {currentChannelInfo?.label.replace("# ", "").replace("📣 ", "")}
+            </div>
+            <div style={{ fontSize: 11, color: "#888" }}>
+              {currentChannelInfo?.desc}
+            </div>
+          </div>
+        </div>
 
-            if (msg.isAnnouncement) {
+        {/* Messages */}
+        <div
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: "12px 14px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+            WebkitOverflowScrolling: "touch",
+          }}
+        >
+          {messages.map((msg, i) => {
+            const isMe = msg.from?.id === currentUser?.id;
+            const isSystem =
+              msg.from?.role === "SYSTEM" || msg.from?.role === "ADMIN";
+            const showAvatar =
+              !isMe && (i === 0 || messages[i - 1]?.from?.id !== msg.from?.id);
+
+            if (msg.pinned && isSystem) {
               return (
                 <div
                   key={msg.id}
                   style={{
-                    margin: "12px 0",
+                    margin: "8px 0",
                     background:
-                      "linear-gradient(135deg, rgba(187,200,99,0.1), rgba(49,105,78,0.08))",
-                    border: "1.5px solid rgba(187,200,99,0.3)",
+                      "linear-gradient(135deg, rgba(187,200,99,0.1), rgba(49,105,78,0.06))",
+                    border: "1px solid rgba(187,200,99,0.25)",
                     borderRadius: 12,
-                    padding: "12px 16px",
+                    padding: "12px 14px",
                   }}
                 >
                   <div
@@ -3442,22 +3755,24 @@ const GroupChatView = ({ currentUser }) => {
                       alignItems: "center",
                       gap: 8,
                       marginBottom: 6,
+                      flexWrap: "wrap",
                     }}
                   >
                     <div
                       style={{
-                        width: 24,
-                        height: 24,
+                        width: 22,
+                        height: 22,
                         borderRadius: 6,
                         background: "#31694E",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
+                        flexShrink: 0,
                       }}
                     >
                       <Icon.Megaphone
-                        width={12}
-                        height={12}
+                        width={11}
+                        height={11}
                         style={{ color: "#F0E491" }}
                       />
                     </div>
@@ -3470,16 +3785,19 @@ const GroupChatView = ({ currentUser }) => {
                         letterSpacing: "0.1em",
                       }}
                     >
-                      Announcement · {msg.from.name}
+                      {msg.from?.name} · {formatTime(msg.time)}
                     </span>
                     <span
                       style={{
                         fontSize: 10,
-                        color: "#aaa",
-                        marginLeft: "auto",
+                        background: "rgba(187,200,99,0.2)",
+                        color: "#868a30",
+                        padding: "1px 8px",
+                        borderRadius: 99,
+                        fontWeight: 700,
                       }}
                     >
-                      {formatDate(msg.time)}
+                      Pinned
                     </span>
                   </div>
                   <div
@@ -3496,63 +3814,62 @@ const GroupChatView = ({ currentUser }) => {
                 key={msg.id}
                 style={{
                   display: "flex",
-                  alignItems: "flex-end",
                   gap: 8,
-                  marginBottom: 12,
+                  padding: "3px 0",
+                  alignItems: "flex-end",
                   justifyContent: isMe ? "flex-end" : "flex-start",
                 }}
               >
                 {!isMe && (
                   <div
                     style={{
-                      width: 30,
-                      height: 30,
-                      borderRadius: 8,
-                      background:
-                        msg.from.role === "ADMIN"
-                          ? "#31694E"
-                          : "linear-gradient(135deg,#BBC863,#9aaa3a)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 11,
-                      fontWeight: 800,
-                      color: "#fff",
+                      width: 28,
                       flexShrink: 0,
+                      display: "flex",
+                      alignItems: "flex-end",
                     }}
                   >
-                    {msg.from.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .slice(0, 2)
-                      .toUpperCase()}
+                    {showAvatar ? (
+                      <Avatar
+                        first={msg.from?.name?.split(" ")[0]}
+                        last={msg.from?.name?.split(" ")[1]}
+                        size={28}
+                        radius={8}
+                        color={
+                          msg.from?.role === "ADMIN" ? "#31694E" : undefined
+                        }
+                      />
+                    ) : null}
                   </div>
                 )}
-                <div style={{ maxWidth: "70%" }}>
-                  {!isMe && (
+                <div style={{ maxWidth: isMobile ? "82%" : "70%" }}>
+                  {showAvatar && !isMe && (
                     <div
                       style={{
-                        fontSize: 10,
+                        fontSize: 11,
                         fontWeight: 700,
                         color: "#888",
-                        marginBottom: 4,
+                        marginBottom: 3,
                         paddingLeft: 2,
                       }}
                     >
-                      {msg.from.name} · {msg.from.role}
+                      {msg.from?.name}{" "}
+                      <span style={{ fontWeight: 500, color: "#bbb" }}>
+                        · {msg.from?.role}
+                      </span>
                     </div>
                   )}
                   <div
                     style={{
-                      padding: "10px 14px",
+                      padding: "9px 12px",
                       borderRadius: isMe
-                        ? "14px 14px 4px 14px"
-                        : "14px 14px 14px 4px",
-                      background: isMe ? "#31694E" : "#f5f5f5",
+                        ? "16px 16px 4px 16px"
+                        : "4px 16px 16px 16px",
+                      background: isMe ? "#31694E" : "#f0f0f0",
                       color: isMe ? "#fff" : "#1a1a1a",
                       fontSize: 13,
                       lineHeight: 1.5,
+                      wordBreak: "break-word",
                     }}
                   >
                     {msg.text}
@@ -3560,13 +3877,13 @@ const GroupChatView = ({ currentUser }) => {
                   <div
                     style={{
                       fontSize: 10,
-                      color: "#aaa",
+                      color: "#bbb",
                       marginTop: 3,
                       textAlign: isMe ? "right" : "left",
-                      paddingLeft: isMe ? 0 : 4,
+                      paddingLeft: isMe ? 0 : 2,
                     }}
                   >
-                    {formatDate(msg.time)}
+                    {formatTime(msg.time)}
                   </div>
                 </div>
               </div>
@@ -3575,54 +3892,79 @@ const GroupChatView = ({ currentUser }) => {
           <div ref={bottomRef} />
         </div>
 
+        {/* Input */}
         <div
           style={{
-            padding: "12px 16px",
+            padding: "10px 12px",
             borderTop: "1.5px solid #f0f0f0",
-            display: "flex",
-            gap: 10,
-            alignItems: "flex-end",
+            background: "#fff",
           }}
         >
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKey}
-            placeholder="Message the team... (Enter to send, Shift+Enter for new line)"
-            rows={2}
+          <div
             style={{
-              flex: 1,
-              padding: "10px 14px",
-              borderRadius: 12,
-              border: "1.5px solid #e5e7eb",
-              outline: "none",
-              fontSize: 13,
-              resize: "none",
-              fontFamily: "inherit",
-              lineHeight: 1.4,
-            }}
-            onFocus={(e) => (e.target.style.borderColor = "#31694E")}
-            onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
-          />
-          <button
-            onClick={sendMessage}
-            disabled={!input.trim()}
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 12,
-              background: "#31694E",
-              border: "none",
-              cursor: !input.trim() ? "not-allowed" : "pointer",
               display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              opacity: !input.trim() ? 0.5 : 1,
-              flexShrink: 0,
+              gap: 8,
+              alignItems: "flex-end",
+              background: "#f5f6f8",
+              borderRadius: 12,
+              padding: "6px 6px 6px 12px",
+              border: "1.5px solid #e5e7eb",
             }}
           >
-            <Icon.Send width={18} height={18} style={{ color: "#fff" }} />
-          </button>
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKey}
+              placeholder={`Message ${currentChannelInfo?.label.replace("# ", "#").replace("📣 ", "")}…`}
+              rows={1}
+              style={{
+                flex: 1,
+                border: "none",
+                background: "transparent",
+                outline: "none",
+                fontSize: 14,
+                resize: "none",
+                fontFamily: "inherit",
+                lineHeight: 1.5,
+                paddingTop: 5,
+                paddingBottom: 5,
+              }}
+            />
+            <button
+              onClick={sendMessage}
+              disabled={!input.trim()}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 9,
+                background: input.trim() ? "#31694E" : "#e5e7eb",
+                border: "none",
+                cursor: input.trim() ? "pointer" : "not-allowed",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <Icon.Send
+                width={16}
+                height={16}
+                style={{ color: input.trim() ? "#F0E491" : "#aaa" }}
+              />
+            </button>
+          </div>
+          {!isMobile && (
+            <div
+              style={{
+                fontSize: 10,
+                color: "#aaa",
+                marginTop: 4,
+                paddingLeft: 2,
+              }}
+            >
+              Enter to send · Shift+Enter for new line
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -3630,107 +3972,73 @@ const GroupChatView = ({ currentUser }) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MINI BAR CHART
-// FIX: removed unused `label` destructure from props
-// ─────────────────────────────────────────────────────────────────────────────
-const MiniBarChart = ({ data }) => {
-  const max = Math.max(...data.map((d) => d.value), 1);
-  return (
-    <div
-      style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 60 }}
-    >
-      {data.map((d, i) => (
-        <div
-          key={i}
-          style={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 4,
-          }}
-        >
-          <div
-            style={{
-              width: "100%",
-              height: Math.max(4, (d.value / max) * 48),
-              background: d.color || "#31694E",
-              borderRadius: "4px 4px 0 0",
-              opacity: 0.85,
-              minHeight: 4,
-            }}
-          />
-          <div
-            style={{
-              fontSize: 9,
-              color: "#aaa",
-              fontWeight: 600,
-              textAlign: "center",
-            }}
-          >
-            {d.label}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
 // DASHBOARD VIEW
-// FIX: removed unused `IconComp` from the stats map destructure
 // ─────────────────────────────────────────────────────────────────────────────
-const DashboardView = ({ applications, user, loanTypes }) => {
-  const stats = {
-    total: applications.length,
-    pending: applications.filter(
-      (a) => a.status === "pending" || a.status === "submitted",
-    ).length,
-    approved: applications.filter((a) => a.status === "approved").length,
-    rejected: applications.filter((a) => a.status === "rejected").length,
-    draft: applications.filter((a) => a.status === "draft").length,
-    referred: applications.filter((a) => !!a.user?.partner).length,
-    totalApproved: applications
-      .filter((a) => a.status === "approved")
-      .reduce((sum, a) => sum + Number(a.approved_funds || 0), 0),
-  };
+const DashboardView = ({ onSelectApp }) => {
+  const isMobile = useIsMobile();
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const uniqueClients = new Set(
-    applications.map((a) => a.user?.id).filter(Boolean),
-  ).size;
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      setLoading(true);
+      try {
+        const data = await apiGet("/agent/dashboard/");
+        setStats(data);
+      } catch (e) {
+        logError("Dashboard fetch failed", e);
+        setError(e.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboard();
+  }, []);
 
-  const loanTypeData = (loanTypes || []).slice(0, 6).map((lt, i) => ({
-    label: lt.name?.split(" ")[0] || lt.name,
-    value: applications.filter(
-      (a) => (a.loan_type_info?.name || a.loan_type?.name) === lt.name,
-    ).length,
-    color: LOAN_TYPE_COLORS[i % LOAN_TYPE_COLORS.length],
-  }));
+  if (loading)
+    return (
+      <div style={{ display: "flex", justifyContent: "center", padding: 80 }}>
+        <Spinner size={36} />
+      </div>
+    );
+  if (error)
+    return (
+      <div
+        style={{
+          padding: 32,
+          background: "#fef2f2",
+          borderRadius: 16,
+          color: "#ef4444",
+          fontSize: 13,
+        }}
+      >
+        {error}
+      </div>
+    );
+  if (!stats) return null;
 
-  const recent = [...applications]
-    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-    .slice(0, 6);
-  const conversionRate =
-    stats.total > 0 ? Math.round((stats.approved / stats.total) * 100) : 0;
+  const conversionRate = stats.conversion_rate_percent || 0;
+  const recentApps = stats.recent_applications || [];
 
   const statCards = [
     {
-      label: "Total Applications",
-      value: stats.total,
+      label: "Total Apps",
+      value: stats.total_applications,
       color: "#31694E",
       bg: "rgba(49,105,78,0.08)",
       icon: Icon.File,
     },
     {
-      label: "Clients Assigned",
-      value: uniqueClients,
+      label: "Clients",
+      value: stats.clients_assigned,
       color: "#3b82f6",
       bg: "rgba(59,130,246,0.08)",
       icon: Icon.Users,
     },
     {
       label: "Needs Review",
-      value: stats.pending,
+      value: stats.needs_review,
       color: "#f59e0b",
       bg: "rgba(245,158,11,0.08)",
       icon: Icon.Clock,
@@ -3760,28 +4068,29 @@ const DashboardView = ({ applications, user, loanTypes }) => {
 
   return (
     <div>
-      <div style={{ marginBottom: 28 }}>
+      <div style={{ marginBottom: 24 }}>
         <div
           style={{
-            fontSize: 28,
+            fontSize: isMobile ? 20 : 28,
             fontWeight: 800,
             color: "#1a1a1a",
             marginBottom: 4,
           }}
         >
-          Welcome back, {user?.first_name}! 👋
+          Dashboard Overview
         </div>
-        <div style={{ fontSize: 14, color: "#888" }}>
-          Here&apos;s your performance overview.
+        <div style={{ fontSize: 13, color: "#888" }}>
+          Your performance at a glance.
         </div>
       </div>
 
+      {/* Stat Cards — 3 col on mobile, 6 col on desktop */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
-          gap: 14,
-          marginBottom: 24,
+          gridTemplateColumns: isMobile ? "repeat(3, 1fr)" : "repeat(6, 1fr)",
+          gap: isMobile ? 8 : 14,
+          marginBottom: 20,
         }}
       >
         {statCards.map(({ label, value, color, bg, icon: StatIcon }) => (
@@ -3789,37 +4098,47 @@ const DashboardView = ({ applications, user, loanTypes }) => {
             key={label}
             style={{
               background: "#fff",
-              borderRadius: 16,
-              padding: 18,
+              borderRadius: isMobile ? 12 : 16,
+              padding: isMobile ? "12px 10px" : 18,
               border: "1.5px solid #f0f0f0",
             }}
           >
             <div
               style={{
-                width: 38,
-                height: 38,
-                borderRadius: 10,
+                width: isMobile ? 30 : 38,
+                height: isMobile ? 30 : 38,
+                borderRadius: isMobile ? 8 : 10,
                 background: bg,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                marginBottom: 10,
+                marginBottom: isMobile ? 6 : 10,
               }}
             >
-              <StatIcon width={18} height={18} style={{ color }} />
-            </div>
-            <div
-              style={{ fontSize: 26, fontWeight: 800, color, marginBottom: 4 }}
-            >
-              {value}
+              <StatIcon
+                width={isMobile ? 14 : 18}
+                height={isMobile ? 14 : 18}
+                style={{ color }}
+              />
             </div>
             <div
               style={{
-                fontSize: 11,
+                fontSize: isMobile ? 20 : 26,
+                fontWeight: 800,
+                color,
+                marginBottom: 2,
+              }}
+            >
+              {value ?? 0}
+            </div>
+            <div
+              style={{
+                fontSize: isMobile ? 9 : 11,
                 fontWeight: 700,
                 color: "#888",
                 textTransform: "uppercase",
-                letterSpacing: "0.08em",
+                letterSpacing: "0.06em",
+                lineHeight: 1.3,
               }}
             >
               {label}
@@ -3828,12 +4147,13 @@ const DashboardView = ({ applications, user, loanTypes }) => {
         ))}
       </div>
 
+      {/* Metrics row */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 16,
-          marginBottom: 24,
+          gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+          gap: 14,
+          marginBottom: 20,
         }}
       >
         <div
@@ -3841,7 +4161,7 @@ const DashboardView = ({ applications, user, loanTypes }) => {
             background: "#fff",
             borderRadius: 16,
             border: "1.5px solid #f0f0f0",
-            padding: 20,
+            padding: 18,
           }}
         >
           <div
@@ -3851,14 +4171,14 @@ const DashboardView = ({ applications, user, loanTypes }) => {
               color: "#BBC863",
               textTransform: "uppercase",
               letterSpacing: "0.1em",
-              marginBottom: 12,
+              marginBottom: 10,
             }}
           >
             Conversion Rate
           </div>
           <div
             style={{
-              fontSize: 36,
+              fontSize: isMobile ? 30 : 36,
               fontWeight: 900,
               color: "#31694E",
               marginBottom: 6,
@@ -3878,23 +4198,22 @@ const DashboardView = ({ applications, user, loanTypes }) => {
             <div
               style={{
                 height: "100%",
-                width: `${conversionRate}%`,
+                width: `${Math.min(conversionRate, 100)}%`,
                 background: "linear-gradient(90deg,#31694E,#658C58)",
                 borderRadius: 99,
               }}
             />
           </div>
           <div style={{ fontSize: 12, color: "#888" }}>
-            {stats.approved} approved out of {stats.total} total
+            {stats.approved} approved out of {stats.total_applications} total
           </div>
         </div>
-
         <div
           style={{
             background: "#fff",
             borderRadius: 16,
             border: "1.5px solid #f0f0f0",
-            padding: 20,
+            padding: 18,
           }}
         >
           <div
@@ -3904,38 +4223,22 @@ const DashboardView = ({ applications, user, loanTypes }) => {
               color: "#BBC863",
               textTransform: "uppercase",
               letterSpacing: "0.1em",
-              marginBottom: 12,
+              marginBottom: 10,
             }}
           >
             Total Funds Approved
           </div>
           <div
             style={{
-              fontSize: 28,
+              fontSize: isMobile ? 22 : 28,
               fontWeight: 900,
               color: "#22c55e",
-              marginBottom: 6,
+              marginBottom: 8,
             }}
           >
-            ${stats.totalApproved.toLocaleString()}
+            ${Number(stats.total_funds_approved || 0).toLocaleString()}
           </div>
-          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-            <div
-              style={{
-                flex: 1,
-                background: "#FAFDF8",
-                borderRadius: 8,
-                padding: "8px",
-                textAlign: "center",
-              }}
-            >
-              <div style={{ fontSize: 13, fontWeight: 800, color: "#31694E" }}>
-                {stats.draft}
-              </div>
-              <div style={{ fontSize: 10, color: "#aaa", fontWeight: 600 }}>
-                Draft
-              </div>
-            </div>
+          <div style={{ display: "flex", gap: 8 }}>
             <div
               style={{
                 flex: 1,
@@ -3946,63 +4249,31 @@ const DashboardView = ({ applications, user, loanTypes }) => {
               }}
             >
               <div style={{ fontSize: 13, fontWeight: 800, color: "#f59e0b" }}>
-                {stats.pending}
+                {stats.needs_review}
               </div>
               <div style={{ fontSize: 10, color: "#aaa", fontWeight: 600 }}>
-                Pending
+                Pending Review
+              </div>
+            </div>
+            <div
+              style={{
+                flex: 1,
+                background: "#FAFDF8",
+                borderRadius: 8,
+                padding: "8px",
+                textAlign: "center",
+              }}
+            >
+              <div style={{ fontSize: 13, fontWeight: 800, color: "#BBC863" }}>
+                {stats.referred}
+              </div>
+              <div style={{ fontSize: 10, color: "#aaa", fontWeight: 600 }}>
+                Referred
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      {loanTypeData.length > 0 && (
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: 16,
-            border: "1.5px solid #f0f0f0",
-            padding: 20,
-            marginBottom: 24,
-          }}
-        >
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 800,
-              color: "#BBC863",
-              textTransform: "uppercase",
-              letterSpacing: "0.1em",
-              marginBottom: 16,
-            }}
-          >
-            Applications by Loan Type
-          </div>
-          <MiniBarChart data={loanTypeData} />
-          <div
-            style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}
-          >
-            {loanTypeData.map((d) => (
-              <div
-                key={d.label}
-                style={{ display: "flex", alignItems: "center", gap: 5 }}
-              >
-                <div
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: 2,
-                    background: d.color,
-                  }}
-                />
-                <span style={{ fontSize: 11, color: "#888", fontWeight: 600 }}>
-                  {d.label}: {d.value}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       <div>
         <div
@@ -4010,44 +4281,66 @@ const DashboardView = ({ applications, user, loanTypes }) => {
             fontSize: 15,
             fontWeight: 800,
             color: "#1a1a1a",
-            marginBottom: 14,
+            marginBottom: 12,
           }}
         >
-          Recent Activity
+          Recent Activity{" "}
+          <span style={{ fontSize: 12, color: "#aaa", fontWeight: 600 }}>
+            (submitted / pending)
+          </span>
         </div>
-        {recent.length > 0 ? (
-          recent.map((app) => (
+        {recentApps.length > 0 ? (
+          recentApps.map((app) => (
             <div
               key={app.loan_application_uuid}
+              onClick={() => onSelectApp(app.loan_application_uuid)}
               style={{
                 background: "#fff",
                 borderRadius: 12,
-                padding: "14px 18px",
+                padding: "12px 14px",
                 border: "1.5px solid #f0f0f0",
                 marginBottom: 8,
                 display: "flex",
                 alignItems: "center",
-                gap: 14,
+                gap: 12,
+                cursor: "pointer",
+                transition: "all 0.18s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "#31694E";
+                e.currentTarget.style.boxShadow =
+                  "0 2px 12px rgba(49,105,78,0.08)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "#f0f0f0";
+                e.currentTarget.style.boxShadow = "none";
               }}
             >
               <Avatar
                 first={app.user?.first_name}
                 last={app.user?.last_name}
-                size={38}
+                size={36}
                 radius={10}
               />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div
-                  style={{ fontWeight: 700, fontSize: 13, color: "#1a1a1a" }}
+                  style={{
+                    fontWeight: 700,
+                    fontSize: 13,
+                    color: "#1a1a1a",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
                 >
                   {app.user?.first_name} {app.user?.last_name}
                 </div>
                 <div style={{ fontSize: 11, color: "#888" }}>
-                  {app.loan_type_info?.name || app.loan_type?.name || "—"} ·{" "}
+                  {app.loan_type_info?.name || "—"} ·{" "}
                   {new Date(app.created_at).toLocaleDateString()}
                 </div>
               </div>
-              {app.user?.partner && (
+              {app.user?.partner && !isMobile && (
                 <span
                   style={{
                     background: "rgba(187,200,99,0.15)",
@@ -4056,12 +4349,18 @@ const DashboardView = ({ applications, user, loanTypes }) => {
                     borderRadius: 99,
                     fontSize: 10,
                     fontWeight: 700,
+                    flexShrink: 0,
                   }}
                 >
                   Referred
                 </span>
               )}
               <StatusBadge status={app.status} />
+              <Icon.ChevRight
+                width={14}
+                height={14}
+                style={{ color: "#ccc", flexShrink: 0 }}
+              />
             </div>
           ))
         ) : (
@@ -4075,7 +4374,7 @@ const DashboardView = ({ applications, user, loanTypes }) => {
               fontSize: 13,
             }}
           >
-            No applications yet.
+            No pending applications.
           </div>
         )}
       </div>
@@ -4088,11 +4387,9 @@ const DashboardView = ({ applications, user, loanTypes }) => {
 // ─────────────────────────────────────────────────────────────────────────────
 const ProfileView = ({ user }) => {
   const fields = [
-    { label: "Email", value: user?.email },
-    { label: "Phone", value: user?.phone || "—" },
+    { label: "Email Address", value: user?.email },
+    { label: "Phone Number", value: user?.phone || "—" },
     { label: "Username", value: user?.username },
-    { label: "Role", value: user?.role },
-    { label: "User ID", value: `#${user?.id}` },
   ];
   return (
     <div>
@@ -4117,10 +4414,10 @@ const ProfileView = ({ user }) => {
         <div
           style={{
             height: 80,
-            background: "linear-gradient(135deg,#31694E,#658C58)",
+            background: "linear-gradient(135deg, #31694E 0%, #658C58 100%)",
           }}
         />
-        <div style={{ padding: "0 28px 28px", marginTop: -40 }}>
+        <div style={{ padding: "0 24px 24px", marginTop: -40 }}>
           <div
             style={{
               width: 80,
@@ -4134,7 +4431,8 @@ const ProfileView = ({ user }) => {
               fontWeight: 800,
               color: "#31694E",
               border: "4px solid #fff",
-              marginBottom: 16,
+              boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
+              marginBottom: 14,
             }}
           >
             {user?.first_name?.[0]}
@@ -4142,41 +4440,44 @@ const ProfileView = ({ user }) => {
           </div>
           <div
             style={{
-              fontSize: 22,
+              fontSize: 20,
               fontWeight: 800,
               color: "#1a1a1a",
-              marginBottom: 4,
+              marginBottom: 8,
             }}
           >
             {user?.first_name} {user?.last_name}
           </div>
-          <div style={{ marginBottom: 24 }}>
+          {user?.role && (
             <span
               style={{
-                background: "rgba(49,105,78,0.1)",
                 color: "#31694E",
-                padding: "3px 12px",
+                backgroundColor: "rgba(49, 105, 78, 0.1)",
+                padding: "4px 12px",
                 borderRadius: 99,
-                fontSize: 11,
-                fontWeight: 800,
+                fontSize: 12,
+                fontWeight: 700,
                 textTransform: "uppercase",
+                letterSpacing: "0.04em",
+                display: "inline-block",
+                marginBottom: 24,
               }}
             >
-              {user?.role}
+              {user.role}
             </span>
-          </div>
+          )}
           <div
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-              gap: 14,
+              gap: 16,
             }}
           >
             {fields.map(({ label, value }) => (
               <div
                 key={label}
                 style={{
-                  padding: 16,
+                  padding: "14px",
                   background: "#FAFDF8",
                   borderRadius: 12,
                   border: "1px solid #f0f0f0",
@@ -4195,7 +4496,12 @@ const ProfileView = ({ user }) => {
                   {label}
                 </div>
                 <div
-                  style={{ fontSize: 14, fontWeight: 700, color: "#1a1a1a" }}
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: "#1a1a1a",
+                    wordBreak: "break-word",
+                  }}
                 >
                   {value}
                 </div>
@@ -4209,25 +4515,17 @@ const ProfileView = ({ user }) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SIDEBAR
+// BOTTOM NAV (mobile) + SIDEBAR (desktop)
 // ─────────────────────────────────────────────────────────────────────────────
 const NAV = [
   { id: "dashboard", label: "Dashboard", icon: Icon.Home },
   { id: "applications", label: "Applications", icon: Icon.File },
   { id: "clients", label: "Clients", icon: Icon.Users },
-  { id: "group-chat", label: "Team Channel", icon: Icon.MessageCircle },
-  { id: "profile", label: "My Profile", icon: Icon.User },
+  { id: "team-channel", label: "Team", icon: Icon.MessageCircle },
+  { id: "profile", label: "Profile", icon: Icon.User },
 ];
 
-const Sidebar = ({
-  active,
-  setActive,
-  user,
-  onClose,
-  isMobile,
-  appCount,
-  clientCount,
-}) => (
+const Sidebar = ({ active, setActive, user, onClose, isMobile }) => (
   <aside
     style={{
       width: 240,
@@ -4248,7 +4546,7 @@ const Sidebar = ({
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        marginBottom: 32,
+        marginBottom: 28,
         paddingLeft: 8,
       }}
     >
@@ -4279,7 +4577,6 @@ const Sidebar = ({
         </button>
       )}
     </div>
-
     <div
       style={{
         padding: "10px 12px",
@@ -4310,12 +4607,9 @@ const Sidebar = ({
         {user?.email}
       </div>
     </div>
-
     <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: 3 }}>
       {NAV.map(({ id, label, icon: NavIcon }) => {
         const isActive = active === id;
-        const badge =
-          id === "applications" ? appCount : id === "clients" ? clientCount : 0;
         return (
           <button
             key={id}
@@ -4345,25 +4639,10 @@ const Sidebar = ({
           >
             <NavIcon width={18} height={18} />
             <span style={{ flex: 1 }}>{label}</span>
-            {badge > 0 && (
-              <span
-                style={{
-                  background: "#BBC863",
-                  color: "#1c3e2c",
-                  borderRadius: 99,
-                  fontSize: 10,
-                  fontWeight: 800,
-                  padding: "1px 7px",
-                }}
-              >
-                {badge}
-              </span>
-            )}
           </button>
         );
       })}
     </nav>
-
     <button
       onClick={() => {
         localStorage.clear();
@@ -4389,23 +4668,89 @@ const Sidebar = ({
   </aside>
 );
 
+// Mobile Bottom Navigation Bar
+const BottomNav = ({ active, setActive }) => (
+  <nav
+    style={{
+      position: "fixed",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: 64,
+      background: "#fff",
+      borderTop: "1.5px solid #f0f0f0",
+      display: "flex",
+      alignItems: "center",
+      zIndex: 90,
+      paddingBottom: "env(safe-area-inset-bottom)",
+      boxShadow: "0 -4px 20px rgba(0,0,0,0.06)",
+    }}
+  >
+    {NAV.map(({ id, label, icon: NavIcon }) => {
+      const isActive = active === id;
+      return (
+        <button
+          key={id}
+          onClick={() => setActive(id)}
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 3,
+            border: "none",
+            background: "none",
+            cursor: "pointer",
+            padding: "8px 4px",
+            color: isActive ? "#31694E" : "#aaa",
+          }}
+        >
+          <NavIcon width={20} height={20} />
+          <span
+            style={{
+              fontSize: 9,
+              fontWeight: isActive ? 800 : 600,
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              lineHeight: 1,
+            }}
+          >
+            {label === "Applications" ? "Apps" : label}
+          </span>
+          {isActive && (
+            <div
+              style={{
+                position: "absolute",
+                bottom: 58,
+                width: 4,
+                height: 4,
+                borderRadius: "50%",
+                background: "#31694E",
+              }}
+            />
+          )}
+        </button>
+      );
+    })}
+  </nav>
+);
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 export default function AgentDashboard() {
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
-  const [applications, setApplications] = useState([]);
   const [loanTypes, setLoanTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
   const [selectedAppUuid, setSelectedAppUuid] = useState(null);
 
-  const fetchAll = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    else setRefreshing(true);
+  const fetchUser = useCallback(async () => {
+    setLoading(true);
     setError(null);
     try {
       const token = getToken();
@@ -4413,35 +4758,30 @@ export default function AgentDashboard() {
         window.location.href = "/login";
         return;
       }
-
-      const [userData, appsData, loanTypesData] = await Promise.all([
-        apiGet("/user-profile/me/"),
-        apiGet("/application/"),
-        apiGet("/loan-types/").catch(() => []),
-      ]);
-
+      const userData = await apiGet("/user-profile/me/");
       setUser(userData);
-      setApplications(
-        Array.isArray(appsData) ? appsData : appsData?.results || [],
-      );
-      setLoanTypes(
-        Array.isArray(loanTypesData)
-          ? loanTypesData
-          : loanTypesData?.results || [],
-      );
-      log("Data loaded", { user: userData });
     } catch (e) {
-      logError("fetchAll failed", e);
+      logError("fetchUser failed", e);
       setError(e.message);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
+    if (activeTab === "applications" && loanTypes.length === 0) {
+      apiGet("/loan-types/")
+        .then((data) => {
+          if (data)
+            setLoanTypes(Array.isArray(data) ? data : data?.results || []);
+        })
+        .catch(() => {});
+    }
+  }, [activeTab, loanTypes.length]);
+
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
 
   useEffect(() => {
     const style = document.createElement("style");
@@ -4454,14 +4794,15 @@ export default function AgentDashboard() {
       ::-webkit-scrollbar-track { background: transparent; }
       ::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 99px; }
       select { font-family: 'Plus Jakarta Sans', sans-serif; }
+      input, textarea, button { font-family: 'Plus Jakarta Sans', sans-serif; }
+      /* Prevent iOS zoom on input focus */
+      @media (max-width: 768px) {
+        input, textarea, select { font-size: 16px !important; }
+      }
     `;
     document.head.appendChild(style);
     return () => document.head.removeChild(style);
   }, []);
-
-  const uniqueClientCount = new Set(
-    applications.map((a) => a.user?.id).filter(Boolean),
-  ).size;
 
   if (loading)
     return (
@@ -4505,6 +4846,7 @@ export default function AgentDashboard() {
           justifyContent: "center",
           background: "#f5f6f8",
           gap: 12,
+          padding: 24,
         }}
       >
         <div style={{ fontSize: 16, fontWeight: 700, color: "#ef4444" }}>
@@ -4521,7 +4863,7 @@ export default function AgentDashboard() {
           {error}
         </div>
         <button
-          onClick={() => fetchAll()}
+          onClick={() => fetchUser()}
           style={{
             padding: "10px 24px",
             background: "#31694E",
@@ -4530,6 +4872,7 @@ export default function AgentDashboard() {
             border: "none",
             fontWeight: 700,
             cursor: "pointer",
+            fontSize: 14,
           }}
         >
           Try Again
@@ -4547,33 +4890,30 @@ export default function AgentDashboard() {
       }}
     >
       {/* Desktop Sidebar */}
-      <div
-        style={{ width: 240, flexShrink: 0 }}
-        className="agent-sidebar-desktop"
-      >
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: 240,
-            height: "100vh",
-          }}
-        >
-          <Sidebar
-            active={activeTab}
-            setActive={setActiveTab}
-            user={user}
-            onClose={() => {}}
-            isMobile={false}
-            appCount={applications.length}
-            clientCount={uniqueClientCount}
-          />
+      {!isMobile && (
+        <div style={{ width: 240, flexShrink: 0 }}>
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: 240,
+              height: "100vh",
+            }}
+          >
+            <Sidebar
+              active={activeTab}
+              setActive={setActiveTab}
+              user={user}
+              onClose={() => {}}
+              isMobile={false}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Mobile Sidebar */}
-      {sidebarOpen && (
+      {/* Mobile Sidebar (slide-in) */}
+      {isMobile && sidebarOpen && (
         <div style={{ position: "fixed", inset: 0, zIndex: 100 }}>
           <div
             onClick={() => setSidebarOpen(false)}
@@ -4598,138 +4938,89 @@ export default function AgentDashboard() {
               user={user}
               onClose={() => setSidebarOpen(false)}
               isMobile
-              appCount={applications.length}
-              clientCount={uniqueClientCount}
             />
           </div>
         </div>
       )}
 
-      {/* Main */}
-      <main style={{ flex: 1, minWidth: 0, padding: 24, overflowX: "hidden" }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 28,
-          }}
-        >
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="agent-menu-btn"
+      {/* Main Content */}
+      <main
+        style={{
+          flex: 1,
+          minWidth: 0,
+          padding: isMobile ? "16px 14px" : "24px",
+          overflowX: "hidden",
+          // On mobile, add bottom padding for the bottom nav bar
+          paddingBottom: isMobile ? 80 : 24,
+        }}
+      >
+        {/* Mobile top bar */}
+        {isMobile && (
+          <div
             style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
-              width: 40,
-              height: 40,
-              border: "1.5px solid #e5e7eb",
-              background: "#fff",
-              borderRadius: 10,
-              cursor: "pointer",
-              color: "#31694E",
+              justifyContent: "space-between",
+              marginBottom: 20,
+              padding: "8px 0",
             }}
           >
-            <Icon.Menu width={20} height={20} />
-          </button>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <button
-              onClick={() => fetchAll(true)}
-              disabled={refreshing}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "8px 16px",
-                border: "1.5px solid #e5e7eb",
-                background: "#fff",
-                borderRadius: 10,
-                fontSize: 12,
-                fontWeight: 700,
-                color: "#31694E",
-                cursor: "pointer",
-              }}
-            >
-              <Icon.Refresh
-                width={14}
-                height={14}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Icon.Leaf width={22} height={22} style={{ color: "#31694E" }} />
+              <span
                 style={{
-                  animation: refreshing
-                    ? "kacu-spin 0.8s linear infinite"
-                    : "none",
+                  fontSize: 20,
+                  fontWeight: 900,
+                  color: "#31694E",
+                  letterSpacing: "-0.04em",
                 }}
+              >
+                Kacu
+              </span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <Avatar
+                first={user?.first_name}
+                last={user?.last_name}
+                size={34}
+                radius={10}
               />
-              Refresh
-            </button>
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                background: "#BBC863",
-                borderRadius: 10,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 13,
-                fontWeight: 800,
-                color: "#31694E",
-              }}
-            >
-              {user?.first_name?.[0]}
-              {user?.last_name?.[0]}
             </div>
           </div>
-        </div>
+        )}
 
         <div style={{ maxWidth: 1200 }}>
           {activeTab === "dashboard" && (
-            <DashboardView
-              applications={applications}
-              user={user}
-              loanTypes={loanTypes}
-            />
+            <DashboardView onSelectApp={(uuid) => setSelectedAppUuid(uuid)} />
           )}
           {activeTab === "applications" && (
             <ApplicationsView
-              applications={applications}
               onSelect={(uuid) => setSelectedAppUuid(uuid)}
               loanTypes={loanTypes}
             />
           )}
           {activeTab === "clients" && (
-            <ClientsView
-              applications={applications}
-              onSelectApp={(uuid) => {
-                setSelectedAppUuid(uuid);
-              }}
-              currentUser={user}
-            />
+            <ClientsView onSelectApp={(uuid) => setSelectedAppUuid(uuid)} />
           )}
-          {activeTab === "group-chat" && <GroupChatView currentUser={user} />}
+          {activeTab === "team-channel" && (
+            <TeamChannelView currentUser={user} />
+          )}
           {activeTab === "profile" && <ProfileView user={user} />}
         </div>
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      {isMobile && <BottomNav active={activeTab} setActive={setActiveTab} />}
 
       {selectedAppUuid && (
         <AppDetailDrawer
           uuid={selectedAppUuid}
           onClose={() => setSelectedAppUuid(null)}
-          onDecisionMade={() => fetchAll(true)}
-          currentUser={user}
+          onDecisionMade={() => {
+            /* dashboard re-fetches on next visit */
+          }}
         />
       )}
-
-      <style>{`
-        @media (max-width: 900px) {
-          .agent-sidebar-desktop { display: none !important; }
-          .agent-menu-btn { display: flex !important; }
-          main { padding: 16px !important; }
-        }
-        @media (min-width: 901px) {
-          .agent-menu-btn { display: none !important; }
-        }
-      `}</style>
     </div>
   );
 }

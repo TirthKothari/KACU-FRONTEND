@@ -178,13 +178,23 @@ const LoginPage = () => {
         body: JSON.stringify(formData),
       });
       const data = await response.json();
+      // if (response.ok) {
+      //   if (data.token) localStorage.setItem("token", data.token);
+      //   if (data.user || data.username)
+      //     localStorage.setItem(
+      //       "user",
+      //       JSON.stringify(data.user || { username: data.username }),
+      //     );
+      //   if (data.role === "AGENT" || data.user?.role === "AGENT")
+      //     window.location.href = "/agentdashboard";
+      //   else if (data.role === "ADMIN" || data.user?.role === "ADMIN")
+      //     window.location.href = "/admindashboard";
+      //   else window.location.href = "/clientdashboard";
+      // }
       if (response.ok) {
-        if (data.token) localStorage.setItem("token", data.token);
-        if (data.user || data.username)
-          localStorage.setItem(
-            "user",
-            JSON.stringify(data.user || { username: data.username }),
-          );
+        if (data.token) {
+          document.cookie = `kacu_auth_token=${encodeURIComponent(data.token)}; path=/; SameSite=Strict; max-age=${7 * 24 * 60 * 60}`;
+        }
         if (data.role === "AGENT" || data.user?.role === "AGENT")
           window.location.href = "/agentdashboard";
         else if (data.role === "ADMIN" || data.user?.role === "ADMIN")
@@ -549,30 +559,6 @@ const LoginPage = () => {
               {!isLoading && <ArrowRight size={13} />}
             </button>
           </form>
-
-          <div style={{ marginTop: 14 }}>
-            <div className="divider-line" style={{ marginBottom: 12 }}>
-              <span className="divider-label">Or continue with</span>
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button className="social-btn">
-                <img
-                  src="https://www.svgrepo.com/show/475656/google-color.svg"
-                  style={{ width: 13, height: 13 }}
-                  alt="G"
-                />
-                Google
-              </button>
-              <button className="social-btn">
-                <img
-                  src="https://www.svgrepo.com/show/442910/apple-logo.svg"
-                  style={{ width: 13, height: 13 }}
-                  alt="A"
-                />
-                Apple
-              </button>
-            </div>
-          </div>
 
           <p
             style={{

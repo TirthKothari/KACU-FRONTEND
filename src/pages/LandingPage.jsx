@@ -29,7 +29,7 @@ const LandingPage = () => {
       <Navbar onStartClick={handleShowForm} />
 
       <main>
-        <Hero />
+        <Hero onGetStarted={handleShowForm} />
         <TrustStrip />
         <FundingOptions />
 
@@ -45,7 +45,7 @@ const LandingPage = () => {
 
         <CreditScoreSelector />
         <CustomerStories />
-        <DarkFeatureSection />
+        <DarkFeatureSection onGetStarted={handleShowForm} />
       </main>
       <Footer />
     </div>
