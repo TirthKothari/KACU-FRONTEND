@@ -19,11 +19,12 @@ const logError = (label, err) =>
   );
 
 const STATUS_META = {
-  draft: { label: "Draft", color: "#BBC863", bg: "#F0E491" },
-  submitted: { label: "Submitted", color: "#3b82f6", bg: "#dbeafe" },
-  pending: { label: "Pending", color: "#f59e0b", bg: "#fef3c7" },
-  approved: { label: "Approved", color: "#22c55e", bg: "#dcfce7" },
-  rejected: { label: "Rejected", color: "#ef4444", bg: "#fee2e2" },
+  draft: { label: "Draft", color: "#92400e", bg: "#fef3c7" },
+  submitted: { label: "Submitted", color: "#1d4ed8", bg: "#dbeafe" },
+  pending: { label: "Pending", color: "#92400e", bg: "#fef3c7" },
+  under_review: { label: "Under Review", color: "#6d28d9", bg: "#ede9fe" },
+  approved: { label: "Approved", color: "#166534", bg: "#dcfce7" },
+  rejected: { label: "Rejected", color: "#991b1b", bg: "#fee2e2" },
 };
 
 const LOAN_STEP_LABELS = {
@@ -46,7 +47,6 @@ const STEPS_ORDER = [
   "completed",
 ];
 
-// Signature font options
 const SIG_FONTS = [
   { label: "Cursive", value: "'Dancing Script', cursive" },
   { label: "Elegant", value: "'Great Vibes', cursive" },
@@ -55,9 +55,107 @@ const SIG_FONTS = [
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
+// SIGNATURE CANVAS HELPER
+// Renders the typed name in the chosen font onto a canvas and returns a Blob
+// ─────────────────────────────────────────────────────────────────────────────
+const generateSignatureBlob = (name, fontFamily) =>
+  new Promise((resolve) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 600;
+    canvas.height = 160;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#FAFDF8";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.font = `italic 56px ${fontFamily}`;
+    ctx.fillStyle = "#1c3e2c";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(name, canvas.width / 2, canvas.height / 2);
+    canvas.toBlob((blob) => resolve(blob), "image/png");
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// API LAYER
+// ─────────────────────────────────────────────────────────────────────────────
+const getToken = () => {
+  const match = document.cookie
+    .split("; ")
+    .find((r) => r.startsWith("kacu_auth_token="));
+  return match ? decodeURIComponent(match.split("=")[1]) : null;
+};
+
+const authHeaders = () => ({ Authorization: `Token ${getToken()}` });
+const jsonHeaders = () => ({
+  "Content-Type": "application/json",
+  ...authHeaders(),
+});
+
+const safeJson = async (res) => {
+  const ct = res.headers.get("content-type") || "";
+  if (!ct.includes("application/json")) {
+    const t = await res.text();
+    log("Non-JSON response", t.slice(0, 300));
+    return null;
+  }
+  return res.json();
+};
+
+const apiGet = async (path) => {
+  const res = await fetch(`${API_BASE}${path}`, { headers: authHeaders() });
+  const data = await safeJson(res);
+  if (!res.ok)
+    throw new Error(
+      data?.detail || JSON.stringify(data) || `HTTP ${res.status}`,
+    );
+  return data;
+};
+
+const apiPost = async (path, body) => {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: jsonHeaders(),
+    body: JSON.stringify(body),
+  });
+  const data = await safeJson(res);
+  if (!res.ok)
+    throw new Error(
+      data?.detail || JSON.stringify(data) || `HTTP ${res.status}`,
+    );
+  return data;
+};
+
+const apiPatch = async (path, body) => {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "PATCH",
+    headers: jsonHeaders(),
+    body: JSON.stringify(body),
+  });
+  const data = await safeJson(res);
+  if (!res.ok)
+    throw new Error(
+      data?.detail || JSON.stringify(data) || `HTTP ${res.status}`,
+    );
+  return data;
+};
+
+const apiMultipart = async (path, formData, method = "POST") => {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method,
+    headers: authHeaders(),
+    body: formData,
+  });
+  const data = await safeJson(res);
+  if (!res.ok)
+    throw new Error(
+      data?.detail || JSON.stringify(data) || `HTTP ${res.status}`,
+    );
+  return data;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // SHARED UI PRIMITIVES
 // ─────────────────────────────────────────────────────────────────────────────
-const Badge = ({ children, color = "#31694E", bg = "#F0E491" }) => (
+const Badge = ({ children, color = "#166534", bg = "#dcfce7" }) => (
   <span
     style={{
       background: bg,
@@ -405,108 +503,47 @@ const Icon = {
       <polygon points="22 2 15 22 11 13 2 9 22 2" />
     </svg>
   ),
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// API LAYER
-// ─────────────────────────────────────────────────────────────────────────────
-const getToken = () => {
-  const match = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith("kacu_auth_token="));
-  return match ? decodeURIComponent(match.split("=")[1]) : null;
-};
-
-const authHeaders = () => ({ Authorization: `Token ${getToken()}` });
-const jsonHeaders = () => ({
-  "Content-Type": "application/json",
-  ...authHeaders(),
-});
-
-const safeJson = async (res) => {
-  const ct = res.headers.get("content-type") || "";
-  if (!ct.includes("application/json")) {
-    const t = await res.text();
-    log("Non-JSON", t.slice(0, 200));
-    return null;
-  }
-  return res.json();
-};
-
-const apiGet = async (path) => {
-  const res = await fetch(`${API_BASE}${path}`, { headers: authHeaders() });
-  const data = await safeJson(res);
-  if (!res.ok)
-    throw new Error(data?.detail || `HTTP ${res.status} on GET ${path}`);
-  return data;
-};
-
-const apiPost = async (path, body) => {
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: "POST",
-    headers: jsonHeaders(),
-    body: JSON.stringify(body),
-  });
-  const data = await safeJson(res);
-  if (!res.ok)
-    throw new Error(
-      data?.detail || JSON.stringify(data) || `HTTP ${res.status}`,
-    );
-  return data;
-};
-
-const apiPatch = async (path, body) => {
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: "PATCH",
-    headers: jsonHeaders(),
-    body: JSON.stringify(body),
-  });
-  const data = await safeJson(res);
-  if (!res.ok)
-    throw new Error(
-      data?.detail || JSON.stringify(data) || `HTTP ${res.status}`,
-    );
-  return data;
-};
-
-const apiMultipart = async (path, formData, method = "POST") => {
-  const res = await fetch(`${API_BASE}${path}`, {
-    method,
-    headers: authHeaders(),
-    body: formData,
-  });
-  const data = await safeJson(res);
-  if (!res.ok)
-    throw new Error(
-      data?.detail || JSON.stringify(data) || `HTTP ${res.status}`,
-    );
-  return data;
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// WIZARD FORM PRIMITIVES
-// ─────────────────────────────────────────────────────────────────────────────
-const TOTAL_STEPS = 6; // added Document Upload step
-
-const WizardField = ({ label, children, span = 1 }) => (
-  <div style={{ gridColumn: `span ${span}` }}>
-    <label
-      style={{
-        display: "block",
-        fontSize: 10,
-        fontWeight: 800,
-        color: "#888",
-        textTransform: "uppercase",
-        letterSpacing: "0.12em",
-        marginBottom: 6,
-      }}
+  Paperclip: (p) => (
+    <svg
+      {...p}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
     >
-      {label}
-    </label>
-    {children}
-  </div>
-);
+      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+    </svg>
+  ),
+  CheckCircle: (p) => (
+    <svg
+      {...p}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+      <polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
+  ),
+  AlertCircle: (p) => (
+    <svg
+      {...p}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+    </svg>
+  ),
+};
 
+// ─────────────────────────────────────────────────────────────────────────────
+// WIZARD FIELD PRIMITIVES
+// ─────────────────────────────────────────────────────────────────────────────
 const inputBase = {
   width: "100%",
   padding: "10px 14px",
@@ -520,19 +557,50 @@ const inputBase = {
   boxSizing: "border-box",
 };
 
+const WizardField = ({ label, children, span = 1, required = false }) => (
+  <div style={{ gridColumn: `span ${span}` }}>
+    <label
+      style={{
+        display: "block",
+        fontSize: 10,
+        fontWeight: 800,
+        color: "#888",
+        textTransform: "uppercase",
+        letterSpacing: "0.12em",
+        marginBottom: 6,
+      }}
+    >
+      {label}
+      {required && <span style={{ color: "#ef4444", marginLeft: 3 }}>*</span>}
+    </label>
+    {children}
+  </div>
+);
+
 const WizardInput = (props) => (
   <input
     {...props}
     style={{ ...inputBase, ...props.style }}
-    onFocus={(e) => (e.target.style.borderColor = "#31694E")}
-    onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
+    onFocus={(e) => {
+      e.target.style.borderColor = "#31694E";
+      props.onFocus?.(e);
+    }}
+    onBlur={(e) => {
+      e.target.style.borderColor = "#e5e7eb";
+      props.onBlur?.(e);
+    }}
   />
 );
 
 const WizardSelect = ({ children, ...props }) => (
   <select
     {...props}
-    style={{ ...inputBase, appearance: "none", cursor: "pointer" }}
+    style={{
+      ...inputBase,
+      appearance: "none",
+      cursor: "pointer",
+      ...props.style,
+    }}
   >
     {children}
   </select>
@@ -604,8 +672,106 @@ const ReviewField = ({ label, value }) => (
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
-// APPLICATION WIZARD — FULL PAGE (step-by-step API calls)
+// APPLICATION WIZARD — FULL PAGE
 // ─────────────────────────────────────────────────────────────────────────────
+const TOTAL_STEPS = 6;
+
+const emptyForm = (prequalData, loanTypes) => ({
+  loan_type: prequalData?.id || loanTypes?.[0]?.id || 1,
+  is_dba: false,
+  business_legal_name: "",
+  business_dba_name: "",
+  business_email: "",
+  business_phone_number: "",
+  business_website: "",
+  business_country: "USA",
+  business_state: "",
+  business_address: "",
+  business_city: "",
+  business_zip_code: "",
+  business_industry_type: "",
+  business_legal_entity_type: "llc",
+  business_length_of_ownership: "",
+  business_number: "",
+  business_estimated_start_date: "",
+  business_province_of_incorporation: "",
+  business_average_gross_monthly_sales: "",
+  loan_amount_requested:
+    prequalData?.amount?.toString().replace(/[^0-9.]/g, "") || "",
+  loan_purpose: prequalData?.description || "",
+  loan_term_requested: "",
+  overdraft_protection: false,
+  overdraft_protection_limit: "",
+  business_existing_loan: false,
+  business_lender_details: [],
+  owner_first_name: "",
+  owner_last_name: "",
+  owner_email: "",
+  owner_phone_number: "",
+  owner_date_of_birth: "",
+  owner_ssn: "",
+  owner_address: "",
+  owner_city: "",
+  owner_state: "",
+  owner_zip_code: "",
+  owner_country: "USA",
+  owner_percentage_of_ownership: "",
+  owner_credit_score: "",
+  signature_name: "",
+  signature_font: SIG_FONTS[0].value,
+  terms_accepted: false,
+  documents: [],
+});
+
+const validateStep = (step, form) => {
+  const errs = [];
+  if (step === 1) {
+    if (!form.business_legal_name.trim())
+      errs.push("Legal Business Name is required");
+    if (!form.business_email.trim()) errs.push("Business Email is required");
+    if (!form.business_phone_number.trim())
+      errs.push("Phone Number is required");
+    if (!form.business_address.trim())
+      errs.push("Business Address is required");
+    if (!form.business_city.trim()) errs.push("City is required");
+    if (!form.business_state.trim()) errs.push("State is required");
+    if (!form.business_zip_code.trim()) errs.push("Zip Code is required");
+    if (!form.business_industry_type.trim())
+      errs.push("Industry Type is required");
+    if (!form.business_average_gross_monthly_sales)
+      errs.push("Average Monthly Sales is required");
+    if (form.is_dba && !form.business_dba_name.trim())
+      errs.push("DBA Name is required when DBA is checked");
+  }
+  if (step === 2) {
+    if (!form.loan_amount_requested)
+      errs.push("Requested Loan Amount is required");
+    if (!form.loan_purpose.trim()) errs.push("Loan Purpose is required");
+    if (!form.loan_term_requested.trim()) errs.push("Loan Term is required");
+  }
+  if (step === 3) {
+    if (!form.owner_first_name.trim())
+      errs.push("Owner First Name is required");
+    if (!form.owner_last_name.trim()) errs.push("Owner Last Name is required");
+    if (!form.owner_email.trim()) errs.push("Owner Email is required");
+    if (!form.owner_phone_number.trim()) errs.push("Owner Phone is required");
+    if (!form.owner_date_of_birth) errs.push("Date of Birth is required");
+    if (!form.owner_ssn.trim()) errs.push("SSN is required");
+    if (!form.owner_address.trim()) errs.push("Owner Address is required");
+    if (!form.owner_city.trim()) errs.push("Owner City is required");
+    if (!form.owner_state.trim()) errs.push("Owner State is required");
+    if (!form.owner_zip_code.trim()) errs.push("Owner Zip Code is required");
+    if (!form.owner_percentage_of_ownership)
+      errs.push("Ownership % is required");
+    if (!form.owner_credit_score) errs.push("Credit Score is required");
+  }
+  if (step === 5) {
+    if (!form.terms_accepted) errs.push("You must accept the terms");
+    if (!form.signature_name.trim()) errs.push("Signature name is required");
+  }
+  return errs;
+};
+
 const ApplicationWizardPage = ({
   onClose,
   onComplete,
@@ -616,53 +782,10 @@ const ApplicationWizardPage = ({
   const [submitting, setSubmitting] = useState(false);
   const [appUuid, setAppUuid] = useState(null);
   const [stepError, setStepError] = useState(null);
-
-  const [formData, setFormData] = useState({
-    loan_type: prequalData?.id || loanTypes?.[0]?.id || 1,
-    is_dba: false,
-    business_legal_name: "",
-    business_dba_name: "",
-    business_email: "",
-    business_phone_number: "",
-    business_website: "",
-    business_country: "USA",
-    business_state: "",
-    business_address: "",
-    business_city: "",
-    business_zip_code: "",
-    business_industry_type: "",
-    business_legal_entity_type: "llc",
-    business_length_of_ownership: "",
-    business_number: "",
-    business_estimated_start_date: "",
-    business_province_of_incorporation: "",
-    business_average_gross_monthly_sales: "",
-    loan_amount_requested: prequalData?.amount?.replace(/[^0-9]/g, "") || "",
-    loan_purpose: prequalData?.description || "",
-    loan_term_requested: "",
-    overdraft_protection: false,
-    overdraft_protection_limit: "",
-    business_existing_loan: false,
-    business_lender_details: [],
-    owner_first_name: "",
-    owner_last_name: "",
-    owner_email: "",
-    owner_phone_number: "",
-    owner_date_of_birth: "",
-    owner_ssn: "",
-    owner_address: "",
-    owner_city: "",
-    owner_state: "",
-    owner_zip_code: "",
-    owner_country: "USA",
-    owner_percentage_of_ownership: "",
-    owner_credit_score: "",
-    signature_name: "",
-    signature_font: SIG_FONTS[0].value,
-    terms_accepted: false,
-    // documents
-    documents: [], // array of {document_name, document_file}
-  });
+  const [validationErrors, setValidationErrors] = useState([]);
+  const [formData, setFormData] = useState(() =>
+    emptyForm(prequalData, loanTypes),
+  );
 
   const set = (e) => {
     const { name, value, type, checked } = e.target;
@@ -670,6 +793,8 @@ const ApplicationWizardPage = ({
       ...p,
       [name]: type === "checkbox" ? checked : value,
     }));
+    setValidationErrors([]);
+    setStepError(null);
   };
 
   const addLender = () =>
@@ -709,94 +834,116 @@ const ApplicationWizardPage = ({
       documents: p.documents.filter((_, idx) => idx !== i),
     }));
 
-  // Step-by-step API submission
   const handleStepContinue = async () => {
+    const errs = validateStep(step, formData);
+    if (errs.length > 0) {
+      setValidationErrors(errs);
+      return;
+    }
     setStepError(null);
+    setValidationErrors([]);
     setSubmitting(true);
     try {
       if (step === 1) {
-        // Create application shell
         const core = await apiPost("/application/create/", {
-          loan_type: formData.loan_type,
+          loan_type: Number(formData.loan_type),
         });
         const uuid = core.loan_application_uuid;
+        if (!uuid) throw new Error("No UUID returned from application create");
         setAppUuid(uuid);
-        // Submit business info
         await apiPost("/application/business-information/create/", {
           loan_application_uuid: uuid,
           is_dba: formData.is_dba,
-          business_legal_name: formData.business_legal_name,
-          business_dba_name: formData.business_dba_name,
-          business_email: formData.business_email,
-          business_phone_number: formData.business_phone_number,
-          business_website: formData.business_website,
-          business_country: formData.business_country,
-          business_state: formData.business_state,
-          business_address: formData.business_address,
-          business_city: formData.business_city,
-          business_zip_code: formData.business_zip_code,
-          business_industry_type: formData.business_industry_type,
+          business_legal_name: formData.business_legal_name.trim(),
+          business_dba_name: formData.business_dba_name.trim() || null,
+          business_email: formData.business_email.trim(),
+          business_phone_number: formData.business_phone_number.trim(),
+          business_website: formData.business_website.trim() || null,
+          business_country: formData.business_country.trim() || "USA",
+          business_state: formData.business_state.trim(),
+          business_address: formData.business_address.trim(),
+          business_city: formData.business_city.trim(),
+          business_zip_code: formData.business_zip_code.trim(),
+          business_industry_type: formData.business_industry_type.trim(),
           business_legal_entity_type: formData.business_legal_entity_type,
-          business_length_of_ownership: formData.business_length_of_ownership,
-          business_number: formData.business_number,
-          business_estimated_start_date: formData.business_estimated_start_date,
+          business_length_of_ownership:
+            formData.business_length_of_ownership.trim() || null,
+          business_number: formData.business_number.trim() || null,
+          business_estimated_start_date:
+            formData.business_estimated_start_date || null,
           business_province_of_incorporation:
-            formData.business_province_of_incorporation,
+            formData.business_province_of_incorporation.trim() || null,
           business_average_gross_monthly_sales:
-            formData.business_average_gross_monthly_sales,
+            formData.business_average_gross_monthly_sales
+              ? parseFloat(
+                  formData.business_average_gross_monthly_sales,
+                ).toFixed(2)
+              : null,
         });
         setStep(2);
       } else if (step === 2) {
-        // Submit funding info
         await apiPost("/application/funding-information/create/", {
           loan_application_uuid: appUuid,
-          loan_amount_requested: formData.loan_amount_requested,
-          loan_purpose: formData.loan_purpose,
-          loan_term_requested: formData.loan_term_requested,
+          loan_amount_requested: parseFloat(
+            formData.loan_amount_requested,
+          ).toFixed(2),
+          loan_purpose: formData.loan_purpose.trim(),
+          loan_term_requested: formData.loan_term_requested.trim(),
           overdraft_protection: formData.overdraft_protection,
           overdraft_protection_limit:
-            formData.overdraft_protection_limit || null,
+            formData.overdraft_protection && formData.overdraft_protection_limit
+              ? parseFloat(formData.overdraft_protection_limit).toFixed(2)
+              : null,
           business_existing_loan: formData.business_existing_loan,
-          business_lender_details: formData.business_lender_details,
+          business_lender_details: formData.business_existing_loan
+            ? formData.business_lender_details.filter((l) =>
+                l.lender_name.trim(),
+              )
+            : [],
         });
         setStep(3);
       } else if (step === 3) {
-        // Submit owner info
         await apiPost("/application/owner-information/create/", {
           loan_application_uuid: appUuid,
-          owner_first_name: formData.owner_first_name,
-          owner_last_name: formData.owner_last_name,
-          owner_email: formData.owner_email,
-          owner_phone_number: formData.owner_phone_number,
+          owner_first_name: formData.owner_first_name.trim(),
+          owner_last_name: formData.owner_last_name.trim(),
+          owner_email: formData.owner_email.trim(),
+          owner_phone_number: formData.owner_phone_number.trim(),
           owner_date_of_birth: formData.owner_date_of_birth,
-          owner_ssn: formData.owner_ssn,
-          owner_address: formData.owner_address,
-          owner_city: formData.owner_city,
-          owner_state: formData.owner_state,
-          owner_zip_code: formData.owner_zip_code,
-          owner_country: formData.owner_country,
-          owner_percentage_of_ownership: formData.owner_percentage_of_ownership,
-          owner_credit_score: formData.owner_credit_score,
+          owner_ssn: formData.owner_ssn.trim(),
+          owner_address: formData.owner_address.trim(),
+          owner_city: formData.owner_city.trim(),
+          owner_state: formData.owner_state.trim(),
+          owner_zip_code: formData.owner_zip_code.trim(),
+          owner_country: formData.owner_country.trim() || "USA",
+          owner_percentage_of_ownership: parseFloat(
+            formData.owner_percentage_of_ownership,
+          ).toFixed(2),
+          owner_credit_score: parseInt(formData.owner_credit_score, 10),
         });
         setStep(4);
       } else if (step === 4) {
-        // Upload documents (optional, can skip)
         for (const doc of formData.documents) {
-          if (doc.document_file && doc.document_name) {
+          if (doc.document_file && doc.document_name.trim()) {
             const fd = new FormData();
             fd.append("loan_application_uuid", appUuid);
-            fd.append("document_name", doc.document_name);
+            fd.append("document_name", doc.document_name.trim());
             fd.append("document_file", doc.document_file);
             await apiMultipart("/application/documents/create/", fd);
           }
         }
         setStep(5);
       } else if (step === 5) {
-        // Submit terms — multipart because signature_image may be included
+        // ── FIX 1: Generate canvas signature image and send as signature_image ──
+        const sigBlob = await generateSignatureBlob(
+          formData.signature_name.trim(),
+          formData.signature_font,
+        );
         const fd = new FormData();
         fd.append("loan_application_uuid", appUuid);
-        fd.append("signature_name", formData.signature_name);
-        fd.append("terms_accepted", formData.terms_accepted);
+        fd.append("signature_name", formData.signature_name.trim());
+        fd.append("terms_accepted", "true");
+        fd.append("signature_image", sigBlob, "signature.png");
         await apiMultipart("/application/terms-and-conditions/create/", fd);
         setStep(6);
       }
@@ -808,13 +955,9 @@ const ApplicationWizardPage = ({
     }
   };
 
-  const handleFinish = () => {
-    onComplete && onComplete();
-  };
-
   const grid2 = {
     display: "grid",
-    gridTemplateColumns: "repeat(2, 1fr)",
+    gridTemplateColumns: "repeat(2,1fr)",
     gap: 16,
   };
 
@@ -890,7 +1033,6 @@ const ApplicationWizardPage = ({
               fontWeight: 700,
               fontSize: 13,
               cursor: "pointer",
-              padding: "6px 0",
             }}
           >
             <Icon.Back width={18} height={18} /> Back
@@ -900,29 +1042,25 @@ const ApplicationWizardPage = ({
             Loan Application
           </div>
         </div>
-        {/* Step Progress */}
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <React.Fragment key={i}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <div
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: "50%",
-                    background:
-                      i < step ? "#31694E" : i === step ? "#31694E" : "#f0f0f0",
-                    color: i <= step ? "#F0E491" : "#bbb",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 11,
-                    fontWeight: 800,
-                    transition: "all 0.2s",
-                  }}
-                >
-                  {i < step ? <Icon.Check width={14} height={14} /> : i}
-                </div>
+              <div
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: "50%",
+                  background: i <= step ? "#31694E" : "#f0f0f0",
+                  color: i <= step ? "#F0E491" : "#bbb",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 11,
+                  fontWeight: 800,
+                  transition: "all 0.2s",
+                }}
+              >
+                {i < step ? <Icon.Check width={14} height={14} /> : i}
               </div>
               {i < 6 && (
                 <div
@@ -931,7 +1069,6 @@ const ApplicationWizardPage = ({
                     height: 2,
                     background: i < step ? "#31694E" : "#f0f0f0",
                     borderRadius: 99,
-                    transition: "background 0.3s",
                   }}
                 />
               )}
@@ -958,7 +1095,7 @@ const ApplicationWizardPage = ({
               border: "1px solid #f0f0f0",
             }}
           >
-            {/* STEP 1 — Business Identity + Operational Data */}
+            {/* STEP 1 — Business Identity */}
             {step === 1 && (
               <div>
                 {sectionHeader(
@@ -967,7 +1104,7 @@ const ApplicationWizardPage = ({
                   "Legal information as registered with the government.",
                 )}
                 <div style={grid2}>
-                  <WizardField label="Legal Business Name">
+                  <WizardField label="Legal Business Name" required>
                     <WizardInput
                       name="business_legal_name"
                       value={formData.business_legal_name}
@@ -975,7 +1112,7 @@ const ApplicationWizardPage = ({
                       placeholder="Acme Corp LLC"
                     />
                   </WizardField>
-                  <WizardField label="Business Email">
+                  <WizardField label="Business Email" required>
                     <WizardInput
                       name="business_email"
                       type="email"
@@ -984,7 +1121,7 @@ const ApplicationWizardPage = ({
                       placeholder="contact@business.com"
                     />
                   </WizardField>
-                  <WizardField label="Phone Number">
+                  <WizardField label="Phone Number" required>
                     <WizardInput
                       name="business_phone_number"
                       value={formData.business_phone_number}
@@ -1000,7 +1137,7 @@ const ApplicationWizardPage = ({
                       placeholder="https://..."
                     />
                   </WizardField>
-                  <WizardField label="Street Address" span={2}>
+                  <WizardField label="Street Address" span={2} required>
                     <WizardInput
                       name="business_address"
                       value={formData.business_address}
@@ -1008,21 +1145,21 @@ const ApplicationWizardPage = ({
                       placeholder="123 Main St"
                     />
                   </WizardField>
-                  <WizardField label="City">
+                  <WizardField label="City" required>
                     <WizardInput
                       name="business_city"
                       value={formData.business_city}
                       onChange={set}
                     />
                   </WizardField>
-                  <WizardField label="State / Province">
+                  <WizardField label="State / Province" required>
                     <WizardInput
                       name="business_state"
                       value={formData.business_state}
                       onChange={set}
                     />
                   </WizardField>
-                  <WizardField label="Zip Code">
+                  <WizardField label="Zip Code" required>
                     <WizardInput
                       name="business_zip_code"
                       value={formData.business_zip_code}
@@ -1037,7 +1174,7 @@ const ApplicationWizardPage = ({
                       placeholder="USA"
                     />
                   </WizardField>
-                  <WizardField label="Industry Type">
+                  <WizardField label="Industry Type" required>
                     <WizardInput
                       name="business_industry_type"
                       value={formData.business_industry_type}
@@ -1093,7 +1230,11 @@ const ApplicationWizardPage = ({
                       placeholder="e.g. 3 years"
                     />
                   </WizardField>
-                  <WizardField label="Avg. Gross Monthly Sales ($)" span={2}>
+                  <WizardField
+                    label="Avg. Gross Monthly Sales ($)"
+                    span={2}
+                    required
+                  >
                     <WizardInput
                       name="business_average_gross_monthly_sales"
                       type="number"
@@ -1135,7 +1276,7 @@ const ApplicationWizardPage = ({
                 </div>
                 {formData.is_dba && (
                   <div style={{ marginTop: 16 }}>
-                    <WizardField label="DBA Name">
+                    <WizardField label="DBA Name" required>
                       <WizardInput
                         name="business_dba_name"
                         value={formData.business_dba_name}
@@ -1157,7 +1298,7 @@ const ApplicationWizardPage = ({
                   "Tell us how much you need and current debt obligations.",
                 )}
                 <div style={grid2}>
-                  <WizardField label="Requested Amount ($)">
+                  <WizardField label="Requested Amount ($)" required>
                     <WizardInput
                       name="loan_amount_requested"
                       type="number"
@@ -1166,7 +1307,7 @@ const ApplicationWizardPage = ({
                       style={{ fontWeight: 700 }}
                     />
                   </WizardField>
-                  <WizardField label="Requested Term">
+                  <WizardField label="Requested Term" required>
                     <WizardInput
                       name="loan_term_requested"
                       value={formData.loan_term_requested}
@@ -1174,7 +1315,7 @@ const ApplicationWizardPage = ({
                       placeholder="e.g. 24 Months"
                     />
                   </WizardField>
-                  <WizardField label="Purpose of Loan" span={2}>
+                  <WizardField label="Purpose of Loan" span={2} required>
                     <textarea
                       name="loan_purpose"
                       value={formData.loan_purpose}
@@ -1373,21 +1514,21 @@ const ApplicationWizardPage = ({
                   "Personal information required for credit assessment.",
                 )}
                 <div style={grid2}>
-                  <WizardField label="First Name">
+                  <WizardField label="First Name" required>
                     <WizardInput
                       name="owner_first_name"
                       value={formData.owner_first_name}
                       onChange={set}
                     />
                   </WizardField>
-                  <WizardField label="Last Name">
+                  <WizardField label="Last Name" required>
                     <WizardInput
                       name="owner_last_name"
                       value={formData.owner_last_name}
                       onChange={set}
                     />
                   </WizardField>
-                  <WizardField label="Email">
+                  <WizardField label="Email" required>
                     <WizardInput
                       name="owner_email"
                       type="email"
@@ -1395,7 +1536,7 @@ const ApplicationWizardPage = ({
                       onChange={set}
                     />
                   </WizardField>
-                  <WizardField label="Phone">
+                  <WizardField label="Phone" required>
                     <WizardInput
                       name="owner_phone_number"
                       value={formData.owner_phone_number}
@@ -1403,7 +1544,7 @@ const ApplicationWizardPage = ({
                       placeholder="+1 234 567 8900"
                     />
                   </WizardField>
-                  <WizardField label="SSN">
+                  <WizardField label="SSN" required>
                     <WizardInput
                       name="owner_ssn"
                       value={formData.owner_ssn}
@@ -1411,7 +1552,7 @@ const ApplicationWizardPage = ({
                       placeholder="XXX-XX-XXXX"
                     />
                   </WizardField>
-                  <WizardField label="Date of Birth">
+                  <WizardField label="Date of Birth" required>
                     <WizardInput
                       name="owner_date_of_birth"
                       type="date"
@@ -1419,7 +1560,7 @@ const ApplicationWizardPage = ({
                       onChange={set}
                     />
                   </WizardField>
-                  <WizardField label="Ownership %">
+                  <WizardField label="Ownership %" required>
                     <WizardInput
                       name="owner_percentage_of_ownership"
                       type="number"
@@ -1428,7 +1569,7 @@ const ApplicationWizardPage = ({
                       placeholder="51"
                     />
                   </WizardField>
-                  <WizardField label="Credit Score (Est.)">
+                  <WizardField label="Credit Score (Est.)" required>
                     <WizardInput
                       name="owner_credit_score"
                       type="number"
@@ -1437,28 +1578,28 @@ const ApplicationWizardPage = ({
                       placeholder="700"
                     />
                   </WizardField>
-                  <WizardField label="Home Address" span={2}>
+                  <WizardField label="Home Address" span={2} required>
                     <WizardInput
                       name="owner_address"
                       value={formData.owner_address}
                       onChange={set}
                     />
                   </WizardField>
-                  <WizardField label="City">
+                  <WizardField label="City" required>
                     <WizardInput
                       name="owner_city"
                       value={formData.owner_city}
                       onChange={set}
                     />
                   </WizardField>
-                  <WizardField label="State">
+                  <WizardField label="State" required>
                     <WizardInput
                       name="owner_state"
                       value={formData.owner_state}
                       onChange={set}
                     />
                   </WizardField>
-                  <WizardField label="Zip Code">
+                  <WizardField label="Zip Code" required>
                     <WizardInput
                       name="owner_zip_code"
                       value={formData.owner_zip_code}
@@ -1483,7 +1624,7 @@ const ApplicationWizardPage = ({
                 {sectionHeader(
                   4,
                   "Document Upload",
-                  "Upload supporting documents (bank statements, IDs, etc). Optional — you can skip.",
+                  "Upload supporting documents. Optional — you can skip.",
                 )}
                 {formData.documents.map((doc, i) => (
                   <div
@@ -1608,7 +1749,6 @@ const ApplicationWizardPage = ({
                 >
                   Please agree to our terms and sign below.
                 </div>
-
                 <div
                   style={{
                     display: "flex",
@@ -1637,8 +1777,6 @@ const ApplicationWizardPage = ({
                     I certify all provided information is accurate
                   </label>
                 </div>
-
-                {/* Signature font selector */}
                 <div
                   style={{
                     maxWidth: 480,
@@ -1688,7 +1826,6 @@ const ApplicationWizardPage = ({
                     ))}
                   </div>
                 </div>
-
                 <div style={{ maxWidth: 480, margin: "0 auto" }}>
                   <label
                     style={{
@@ -1734,7 +1871,8 @@ const ApplicationWizardPage = ({
                     />
                   </div>
                   <div style={{ fontSize: 11, color: "#aaa", marginTop: 8 }}>
-                    This constitutes your digital signature
+                    This constitutes your digital signature — an image will be
+                    generated automatically
                   </div>
                 </div>
               </div>
@@ -1755,7 +1893,7 @@ const ApplicationWizardPage = ({
                     margin: "0 auto 20px",
                   }}
                 >
-                  <Icon.Check
+                  <Icon.CheckCircle
                     width={40}
                     height={40}
                     style={{ color: "#22c55e" }}
@@ -1778,7 +1916,7 @@ const ApplicationWizardPage = ({
                   agent will review it shortly.
                 </div>
                 <button
-                  onClick={handleFinish}
+                  onClick={() => onComplete && onComplete()}
                   style={{
                     background: "#31694E",
                     color: "#F0E491",
@@ -1794,6 +1932,33 @@ const ApplicationWizardPage = ({
                 >
                   Go to Dashboard
                 </button>
+              </div>
+            )}
+
+            {/* Validation errors */}
+            {validationErrors.length > 0 && (
+              <div
+                style={{
+                  marginTop: 16,
+                  padding: "14px 16px",
+                  background: "#fef2f2",
+                  border: "1px solid #fecaca",
+                  borderRadius: 10,
+                }}
+              >
+                {validationErrors.map((e, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      color: "#ef4444",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      marginBottom: i < validationErrors.length - 1 ? 4 : 0,
+                    }}
+                  >
+                    • {e}
+                  </div>
+                ))}
               </div>
             )}
 
@@ -1829,6 +1994,7 @@ const ApplicationWizardPage = ({
               <button
                 onClick={() => {
                   setStepError(null);
+                  setValidationErrors([]);
                   setStep((s) => s - 1);
                 }}
                 disabled={step === 1}
@@ -1846,82 +2012,41 @@ const ApplicationWizardPage = ({
               >
                 <Icon.ChevLeft width={18} height={18} /> Previous
               </button>
-
-              {step === 5 ? (
-                <button
-                  onClick={handleStepContinue}
-                  disabled={
-                    !formData.terms_accepted ||
-                    !formData.signature_name ||
-                    submitting
-                  }
-                  style={{
-                    background:
-                      !formData.terms_accepted || !formData.signature_name
-                        ? "#ccc"
-                        : "#22c55e",
-                    color: "white",
-                    padding: "14px 44px",
-                    borderRadius: 12,
-                    border: "none",
-                    fontWeight: 800,
-                    fontSize: 13,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.1em",
-                    cursor:
-                      !formData.terms_accepted || !formData.signature_name
-                        ? "not-allowed"
-                        : "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
-                >
-                  {submitting ? (
-                    <>
-                      <Spinner size={16} color="#fff" /> Submitting…
-                    </>
-                  ) : (
-                    <>
-                      <Icon.Check width={16} height={16} /> Submit Application
-                    </>
-                  )}
-                </button>
-              ) : (
-                <button
-                  onClick={
-                    step < 4 || step === 4
-                      ? handleStepContinue
-                      : () => setStep((s) => s + 1)
-                  }
-                  disabled={submitting}
-                  style={{
-                    background: "#31694E",
-                    color: "#F0E491",
-                    padding: "14px 40px",
-                    borderRadius: 12,
-                    border: "none",
-                    fontWeight: 800,
-                    fontSize: 13,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.12em",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
-                >
-                  {submitting ? (
-                    <>
-                      <Spinner size={16} color="#F0E491" /> Saving…
-                    </>
-                  ) : (
-                    <>
-                      Continue <Icon.ChevRight width={16} height={16} />
-                    </>
-                  )}
-                </button>
-              )}
+              <button
+                onClick={handleStepContinue}
+                disabled={submitting}
+                style={{
+                  background: "#31694E",
+                  color: "#F0E491",
+                  padding: "14px 40px",
+                  borderRadius: 12,
+                  border: "none",
+                  fontWeight: 800,
+                  fontSize: 13,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.12em",
+                  cursor: submitting ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  opacity: submitting ? 0.7 : 1,
+                }}
+              >
+                {submitting ? (
+                  <>
+                    <Spinner size={16} color="#F0E491" />{" "}
+                    {step === 5 ? "Submitting…" : "Saving…"}
+                  </>
+                ) : step === 5 ? (
+                  <>
+                    <Icon.Check width={16} height={16} /> Submit Application
+                  </>
+                ) : (
+                  <>
+                    Continue <Icon.ChevRight width={16} height={16} />
+                  </>
+                )}
+              </button>
             </div>
           )}
         </div>
@@ -1931,17 +2056,21 @@ const ApplicationWizardPage = ({
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// EDIT WIZARD — PATCH with correct payload format
+// EDIT APPLICATION PAGE
+// FIX 2: Added Signature and Documents sections
 // ─────────────────────────────────────────────────────────────────────────────
 const EditApplicationPage = ({ app, onClose, onComplete }) => {
   const uuid = app?.loan_application_uuid;
   const [activeSection, setActiveSection] = useState("business");
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState(null);
+  const [errors, setErrors] = useState([]);
 
   const biz = app?.business_information || {};
   const fund = app?.funding_information || {};
   const owner = app?.owner_information?.[0] || {};
+  const terms = app?.terms_and_conditions || {};
+  const existingDocs = app?.documents || [];
 
   const [bizData, setBizData] = useState({
     business_legal_name: biz.business_legal_name || "",
@@ -1992,24 +2121,43 @@ const EditApplicationPage = ({ app, onClose, onComplete }) => {
     owner_credit_score: owner.owner_credit_score || "",
   });
 
+  // Signature section state
+  const [sigData, setSigData] = useState({
+    signature_name: terms.signature_name || "",
+    signature_font: SIG_FONTS[0].value,
+    terms_accepted: terms.terms_accepted || false,
+  });
+
+  // Documents section state — new uploads only
+  const [newDocs, setNewDocs] = useState([]);
+
   const setField = (setter) => (e) => {
     const { name, value, type, checked } = e.target;
     setter((p) => ({ ...p, [name]: type === "checkbox" ? checked : value }));
+    setErrors([]);
   };
 
   const flash = (msg, type = "success") => {
     setSaveMsg({ msg, type });
-    setTimeout(() => setSaveMsg(null), 3000);
+    setTimeout(() => setSaveMsg(null), 3500);
   };
 
-  // Fixed: correct URL patterns from backend urls.py
   const saveBiz = async () => {
+    if (!bizData.business_legal_name.trim()) {
+      setErrors(["Legal Business Name is required"]);
+      return;
+    }
     setSaving(true);
     try {
-      await apiPatch(
-        `/application/business-information/${uuid}/update/`,
-        bizData,
-      );
+      await apiPatch(`/application/business-information/${uuid}/update/`, {
+        ...bizData,
+        business_average_gross_monthly_sales:
+          bizData.business_average_gross_monthly_sales
+            ? parseFloat(bizData.business_average_gross_monthly_sales).toFixed(
+                2,
+              )
+            : null,
+      });
       flash("Business information updated");
     } catch (e) {
       flash(e.message, "error");
@@ -2019,12 +2167,18 @@ const EditApplicationPage = ({ app, onClose, onComplete }) => {
   };
 
   const saveFund = async () => {
+    if (!fundData.loan_amount_requested) {
+      setErrors(["Requested amount is required"]);
+      return;
+    }
     setSaving(true);
     try {
-      await apiPatch(
-        `/application/funding-information/${uuid}/update/`,
-        fundData,
-      );
+      await apiPatch(`/application/funding-information/${uuid}/update/`, {
+        ...fundData,
+        loan_amount_requested: parseFloat(
+          fundData.loan_amount_requested,
+        ).toFixed(2),
+      });
       flash("Funding information updated");
     } catch (e) {
       flash(e.message, "error");
@@ -2041,11 +2195,23 @@ const EditApplicationPage = ({ app, onClose, onComplete }) => {
         await apiPatch(`/application/owner-information/${ownerUuid}/update/`, {
           ...ownerData,
           loan_application_uuid: uuid,
+          owner_percentage_of_ownership: ownerData.owner_percentage_of_ownership
+            ? parseFloat(ownerData.owner_percentage_of_ownership).toFixed(2)
+            : null,
+          owner_credit_score: ownerData.owner_credit_score
+            ? parseInt(ownerData.owner_credit_score, 10)
+            : null,
         });
       } else {
         await apiPost(`/application/owner-information/create/`, {
           ...ownerData,
           loan_application_uuid: uuid,
+          owner_percentage_of_ownership: ownerData.owner_percentage_of_ownership
+            ? parseFloat(ownerData.owner_percentage_of_ownership).toFixed(2)
+            : null,
+          owner_credit_score: ownerData.owner_credit_score
+            ? parseInt(ownerData.owner_credit_score, 10)
+            : null,
         });
       }
       flash("Owner information updated");
@@ -2056,16 +2222,114 @@ const EditApplicationPage = ({ app, onClose, onComplete }) => {
     }
   };
 
+  // FIX 2a: Save signature — generate canvas image and POST/PATCH terms
+  const saveSignature = async () => {
+    if (!sigData.signature_name.trim()) {
+      setErrors(["Signature name is required"]);
+      return;
+    }
+    if (!sigData.terms_accepted) {
+      setErrors(["You must accept the terms"]);
+      return;
+    }
+    setSaving(true);
+    try {
+      const sigBlob = await generateSignatureBlob(
+        sigData.signature_name.trim(),
+        sigData.signature_font,
+      );
+      const fd = new FormData();
+      fd.append("loan_application_uuid", uuid);
+      fd.append("signature_name", sigData.signature_name.trim());
+      fd.append("terms_accepted", "true");
+      fd.append("signature_image", sigBlob, "signature.png");
+      // Use PATCH if terms already exist, POST if new
+      if (terms.signature_name) {
+        await apiMultipart(
+          `/application/terms-and-conditions/${uuid}/update/`,
+          fd,
+          "PATCH",
+        );
+      } else {
+        await apiMultipart(
+          `/application/terms-and-conditions/create/`,
+          fd,
+          "POST",
+        );
+      }
+      flash("Signature & terms saved");
+    } catch (e) {
+      flash(e.message, "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // FIX 2b: Upload new documents
+  const saveDocs = async () => {
+    const valid = newDocs.filter(
+      (d) => d.document_file && d.document_name.trim(),
+    );
+    if (valid.length === 0) {
+      setErrors(["Add at least one document with a name and file"]);
+      return;
+    }
+    setSaving(true);
+    try {
+      for (const doc of valid) {
+        const fd = new FormData();
+        fd.append("loan_application_uuid", uuid);
+        fd.append("document_name", doc.document_name.trim());
+        fd.append("document_file", doc.document_file);
+        await apiMultipart("/application/documents/create/", fd);
+      }
+      setNewDocs([]);
+      flash(`${valid.length} document(s) uploaded`);
+    } catch (e) {
+      flash(e.message, "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const addNewDoc = () =>
+    setNewDocs((p) => [...p, { document_name: "", document_file: null }]);
+  const updateNewDoc = (i, f, v) => {
+    const list = [...newDocs];
+    list[i][f] = v;
+    setNewDocs(list);
+  };
+  const removeNewDoc = (i) =>
+    setNewDocs((p) => p.filter((_, idx) => idx !== i));
+
   const grid2 = {
     display: "grid",
-    gridTemplateColumns: "repeat(2, 1fr)",
+    gridTemplateColumns: "repeat(2,1fr)",
     gap: 16,
   };
+
   const SECTIONS = [
-    { id: "business", label: "Business Info" },
-    { id: "funding", label: "Funding" },
-    { id: "owner", label: "Owner Details" },
+    { id: "business", label: "Business Info", save: saveBiz },
+    { id: "funding", label: "Funding", save: saveFund },
+    { id: "owner", label: "Owner Details", save: saveOwner },
+    { id: "signature", label: "Signature & Terms", save: saveSignature },
+    { id: "documents", label: "Documents", save: saveDocs },
   ];
+
+  const sectionTitle = (title) => (
+    <div
+      style={{
+        fontSize: 18,
+        fontWeight: 800,
+        color: "#31694E",
+        marginBottom: 24,
+        borderLeft: "4px solid #31694E",
+        paddingLeft: 12,
+      }}
+    >
+      {title}
+    </div>
+  );
 
   return (
     <div
@@ -2140,6 +2404,7 @@ const EditApplicationPage = ({ app, onClose, onComplete }) => {
           width: "100%",
         }}
       >
+        {/* Section Nav */}
         <div style={{ width: 200, flexShrink: 0 }}>
           <div
             style={{
@@ -2152,7 +2417,10 @@ const EditApplicationPage = ({ app, onClose, onComplete }) => {
             {SECTIONS.map((s) => (
               <button
                 key={s.id}
-                onClick={() => setActiveSection(s.id)}
+                onClick={() => {
+                  setActiveSection(s.id);
+                  setErrors([]);
+                }}
                 style={{
                   display: "block",
                   width: "100%",
@@ -2171,7 +2439,6 @@ const EditApplicationPage = ({ app, onClose, onComplete }) => {
                       : "3px solid transparent",
                   cursor: "pointer",
                   textAlign: "left",
-                  transition: "all 0.15s",
                 }}
               >
                 {s.label}
@@ -2190,22 +2457,12 @@ const EditApplicationPage = ({ app, onClose, onComplete }) => {
               border: "1px solid #f0f0f0",
             }}
           >
+            {/* Business Section */}
             {activeSection === "business" && (
               <div>
-                <div
-                  style={{
-                    fontSize: 18,
-                    fontWeight: 800,
-                    color: "#31694E",
-                    marginBottom: 24,
-                    borderLeft: "4px solid #31694E",
-                    paddingLeft: 12,
-                  }}
-                >
-                  Business Information
-                </div>
+                {sectionTitle("Business Information")}
                 <div style={grid2}>
-                  <WizardField label="Legal Business Name">
+                  <WizardField label="Legal Business Name" required>
                     <WizardInput
                       name="business_legal_name"
                       value={bizData.business_legal_name}
@@ -2309,57 +2566,15 @@ const EditApplicationPage = ({ app, onClose, onComplete }) => {
                     />
                   </WizardField>
                 </div>
-                <div
-                  style={{
-                    marginTop: 28,
-                    display: "flex",
-                    justifyContent: "flex-end",
-                  }}
-                >
-                  <button
-                    onClick={saveBiz}
-                    disabled={saving}
-                    style={{
-                      background: "#31694E",
-                      color: "#F0E491",
-                      padding: "12px 32px",
-                      borderRadius: 12,
-                      border: "none",
-                      fontWeight: 800,
-                      fontSize: 13,
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                    }}
-                  >
-                    {saving ? (
-                      <Spinner size={16} color="#F0E491" />
-                    ) : (
-                      <Icon.Check width={16} height={16} />
-                    )}{" "}
-                    Save Changes
-                  </button>
-                </div>
               </div>
             )}
 
+            {/* Funding Section */}
             {activeSection === "funding" && (
               <div>
-                <div
-                  style={{
-                    fontSize: 18,
-                    fontWeight: 800,
-                    color: "#31694E",
-                    marginBottom: 24,
-                    borderLeft: "4px solid #31694E",
-                    paddingLeft: 12,
-                  }}
-                >
-                  Funding Information
-                </div>
+                {sectionTitle("Funding Information")}
                 <div style={grid2}>
-                  <WizardField label="Amount Requested ($)">
+                  <WizardField label="Amount Requested ($)" required>
                     <WizardInput
                       name="loan_amount_requested"
                       type="number"
@@ -2384,55 +2599,28 @@ const EditApplicationPage = ({ app, onClose, onComplete }) => {
                     />
                   </WizardField>
                 </div>
-                <div
-                  style={{
-                    marginTop: 28,
-                    display: "flex",
-                    justifyContent: "flex-end",
-                  }}
-                >
-                  <button
-                    onClick={saveFund}
-                    disabled={saving}
-                    style={{
-                      background: "#31694E",
-                      color: "#F0E491",
-                      padding: "12px 32px",
-                      borderRadius: 12,
-                      border: "none",
-                      fontWeight: 800,
-                      fontSize: 13,
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                    }}
-                  >
-                    {saving ? (
-                      <Spinner size={16} color="#F0E491" />
-                    ) : (
-                      <Icon.Check width={16} height={16} />
-                    )}{" "}
-                    Save Changes
-                  </button>
-                </div>
               </div>
             )}
 
+            {/* Owner Section */}
             {activeSection === "owner" && (
               <div>
-                <div
-                  style={{
-                    fontSize: 18,
-                    fontWeight: 800,
-                    color: "#31694E",
-                    marginBottom: 24,
-                    borderLeft: "4px solid #31694E",
-                    paddingLeft: 12,
-                  }}
-                >
-                  Owner Details
-                </div>
+                {sectionTitle("Owner Details")}
+                {!owner.owner_uuid && (
+                  <div
+                    style={{
+                      padding: "10px 14px",
+                      background: "#fef3c7",
+                      border: "1px solid #fbbf24",
+                      borderRadius: 10,
+                      fontSize: 13,
+                      color: "#92400e",
+                      marginBottom: 16,
+                    }}
+                  >
+                    No owner on record — saving will create a new owner entry.
+                  </div>
+                )}
                 <div style={grid2}>
                   <WizardField label="First Name">
                     <WizardInput
@@ -2531,40 +2719,397 @@ const EditApplicationPage = ({ app, onClose, onComplete }) => {
                     />
                   </WizardField>
                 </div>
-                <div
-                  style={{
-                    marginTop: 28,
-                    display: "flex",
-                    justifyContent: "flex-end",
-                  }}
-                >
-                  <button
-                    onClick={saveOwner}
-                    disabled={saving}
+              </div>
+            )}
+
+            {/* FIX 2a — Signature & Terms Section */}
+            {activeSection === "signature" && (
+              <div>
+                {sectionTitle("Signature & Terms")}
+                {terms.signature_name && (
+                  <div
                     style={{
-                      background: "#31694E",
-                      color: "#F0E491",
-                      padding: "12px 32px",
-                      borderRadius: 12,
-                      border: "none",
-                      fontWeight: 800,
+                      padding: "10px 14px",
+                      background: "#f0fdf4",
+                      border: "1px solid #bbf7d0",
+                      borderRadius: 10,
                       fontSize: 13,
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
+                      color: "#166534",
+                      marginBottom: 20,
                     }}
                   >
-                    {saving ? (
-                      <Spinner size={16} color="#F0E491" />
-                    ) : (
-                      <Icon.Check width={16} height={16} />
-                    )}{" "}
-                    Save Changes
-                  </button>
+                    Terms previously accepted. Saving will update your
+                    signature.
+                  </div>
+                )}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    marginBottom: 24,
+                    padding: "14px 16px",
+                    background: "rgba(240,228,145,0.15)",
+                    borderRadius: 12,
+                    border: "1.5px solid #F0E491",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    name="terms_accepted"
+                    checked={sigData.terms_accepted}
+                    onChange={setField(setSigData)}
+                    style={{ width: 18, height: 18, accentColor: "#31694E" }}
+                  />
+                  <label
+                    style={{ fontSize: 14, fontWeight: 700, color: "#31694E" }}
+                  >
+                    I certify all provided information is accurate
+                  </label>
+                </div>
+                <div style={{ marginBottom: 20 }}>
+                  <label
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 800,
+                      color: "#888",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.1em",
+                      display: "block",
+                      marginBottom: 8,
+                    }}
+                  >
+                    Signature Style
+                  </label>
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                    {SIG_FONTS.map((f) => (
+                      <button
+                        key={f.value}
+                        onClick={() =>
+                          setSigData((p) => ({ ...p, signature_font: f.value }))
+                        }
+                        style={{
+                          padding: "8px 16px",
+                          borderRadius: 10,
+                          border: `2px solid ${sigData.signature_font === f.value ? "#31694E" : "#e5e7eb"}`,
+                          background:
+                            sigData.signature_font === f.value
+                              ? "rgba(49,105,78,0.08)"
+                              : "#fff",
+                          cursor: "pointer",
+                          fontFamily: f.value,
+                          fontSize: 15,
+                          color: "#1a1a1a",
+                        }}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 800,
+                      color: "#888",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.1em",
+                      display: "block",
+                      marginBottom: 8,
+                    }}
+                  >
+                    Type Full Name to Sign
+                  </label>
+                  <div
+                    style={{
+                      border: "2px solid #31694E",
+                      borderRadius: 12,
+                      padding: "20px 24px",
+                      background: "#FAFDF8",
+                      minHeight: 90,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <input
+                      name="signature_name"
+                      value={sigData.signature_name}
+                      onChange={setField(setSigData)}
+                      placeholder="Your full name"
+                      style={{
+                        border: "none",
+                        outline: "none",
+                        background: "transparent",
+                        textAlign: "center",
+                        fontSize: 36,
+                        fontFamily: sigData.signature_font,
+                        fontStyle: "italic",
+                        color: "#1c3e2c",
+                        width: "100%",
+                      }}
+                    />
+                  </div>
+                  <div style={{ fontSize: 11, color: "#aaa", marginTop: 8 }}>
+                    A signature image will be generated automatically from your
+                    typed name
+                  </div>
                 </div>
               </div>
             )}
+
+            {/* FIX 2b — Documents Section */}
+            {activeSection === "documents" && (
+              <div>
+                {sectionTitle("Documents")}
+
+                {/* Existing documents */}
+                {existingDocs.length > 0 && (
+                  <div style={{ marginBottom: 24 }}>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 800,
+                        color: "#888",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.1em",
+                        marginBottom: 12,
+                      }}
+                    >
+                      Uploaded Documents
+                    </div>
+                    {existingDocs.map((doc) => (
+                      <div
+                        key={doc.document_uuid}
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          padding: "12px 16px",
+                          background: "#FAFDF8",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: 10,
+                          marginBottom: 8,
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                          }}
+                        >
+                          <Icon.File
+                            width={16}
+                            height={16}
+                            style={{ color: "#31694E" }}
+                          />
+                          <span
+                            style={{
+                              fontSize: 13,
+                              fontWeight: 700,
+                              color: "#1a1a1a",
+                            }}
+                          >
+                            {doc.document_name}
+                          </span>
+                        </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                          }}
+                        >
+                          <span style={{ fontSize: 11, color: "#888" }}>
+                            {doc.uploaded_at
+                              ? new Date(doc.uploaded_at).toLocaleDateString()
+                              : ""}
+                          </span>
+                          {doc.document_file && (
+                            <a
+                              href={doc.document_file}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 4,
+                                fontSize: 11,
+                                fontWeight: 700,
+                                color: "#31694E",
+                                textDecoration: "none",
+                                padding: "5px 12px",
+                                background: "rgba(49,105,78,0.08)",
+                                borderRadius: 8,
+                              }}
+                            >
+                              <Icon.ExternalLink width={12} height={12} /> View
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* New document uploads */}
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 800,
+                    color: "#888",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.1em",
+                    marginBottom: 12,
+                  }}
+                >
+                  Add New Documents
+                </div>
+                {newDocs.map((doc, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: "flex",
+                      gap: 12,
+                      alignItems: "flex-end",
+                      marginBottom: 14,
+                      padding: 16,
+                      background: "#fafafa",
+                      border: "1.5px solid #e5e7eb",
+                      borderRadius: 14,
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <WizardField label="Document Name">
+                        <WizardInput
+                          value={doc.document_name}
+                          onChange={(e) =>
+                            updateNewDoc(i, "document_name", e.target.value)
+                          }
+                          placeholder="e.g. bank_statement_2024"
+                        />
+                      </WizardField>
+                    </div>
+                    <div style={{ flex: 2 }}>
+                      <WizardField label="File">
+                        <input
+                          type="file"
+                          onChange={(e) =>
+                            updateNewDoc(i, "document_file", e.target.files[0])
+                          }
+                          style={{ ...inputBase, padding: "8px 14px" }}
+                        />
+                      </WizardField>
+                    </div>
+                    <button
+                      onClick={() => removeNewDoc(i)}
+                      style={{
+                        marginBottom: 2,
+                        padding: 8,
+                        border: "none",
+                        background: "#fef2f2",
+                        color: "#ef4444",
+                        borderRadius: 8,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <Icon.Trash width={16} height={16} />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  onClick={addNewDoc}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: "#31694E",
+                    background: "rgba(49,105,78,0.08)",
+                    border: "none",
+                    padding: "10px 20px",
+                    borderRadius: 10,
+                    cursor: "pointer",
+                  }}
+                >
+                  <Icon.Plus width={16} height={16} /> Add Document
+                </button>
+                {newDocs.length === 0 && existingDocs.length === 0 && (
+                  <div
+                    style={{
+                      marginTop: 20,
+                      padding: 24,
+                      textAlign: "center",
+                      border: "2px dashed #e5e7eb",
+                      borderRadius: 12,
+                      color: "#bbb",
+                      fontSize: 13,
+                    }}
+                  >
+                    No documents uploaded yet. Click "Add Document" to upload
+                    one.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {errors.length > 0 && (
+              <div
+                style={{
+                  marginTop: 16,
+                  padding: "12px 16px",
+                  background: "#fef2f2",
+                  border: "1px solid #fecaca",
+                  borderRadius: 10,
+                }}
+              >
+                {errors.map((e, i) => (
+                  <div
+                    key={i}
+                    style={{ color: "#ef4444", fontSize: 13, fontWeight: 600 }}
+                  >
+                    • {e}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div
+              style={{
+                marginTop: 28,
+                display: "flex",
+                justifyContent: "flex-end",
+              }}
+            >
+              <button
+                onClick={SECTIONS.find((s) => s.id === activeSection)?.save}
+                disabled={saving}
+                style={{
+                  background: "#31694E",
+                  color: "#F0E491",
+                  padding: "12px 32px",
+                  borderRadius: 12,
+                  border: "none",
+                  fontWeight: 800,
+                  fontSize: 13,
+                  cursor: saving ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  opacity: saving ? 0.7 : 1,
+                }}
+              >
+                {saving ? (
+                  <Spinner size={16} color="#F0E491" />
+                ) : (
+                  <Icon.Check width={16} height={16} />
+                )}{" "}
+                Save Changes
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -2573,7 +3118,7 @@ const EditApplicationPage = ({ app, onClose, onComplete }) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// REVIEW PAGE — full detail, no edit button, signature box, doc links
+// REVIEW PAGE
 // ─────────────────────────────────────────────────────────────────────────────
 const ReviewApplicationPage = ({ app, onClose }) => {
   const status = STATUS_META[app?.status] || STATUS_META.draft;
@@ -2606,34 +3151,32 @@ const ReviewApplicationPage = ({ app, onClose }) => {
           padding: "0 32px",
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
           height: 64,
           position: "sticky",
           top: 0,
           zIndex: 50,
+          gap: 16,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <button
-            onClick={onClose}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              background: "none",
-              border: "none",
-              color: "#31694E",
-              fontWeight: 700,
-              fontSize: 13,
-              cursor: "pointer",
-            }}
-          >
-            <Icon.Back width={18} height={18} /> Back to Applications
-          </button>
-          <div style={{ width: 1, height: 24, background: "#e5e7eb" }} />
-          <div style={{ fontSize: 16, fontWeight: 800, color: "#1a1a1a" }}>
-            Application Review
-          </div>
+        <button
+          onClick={onClose}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            background: "none",
+            border: "none",
+            color: "#31694E",
+            fontWeight: 700,
+            fontSize: 13,
+            cursor: "pointer",
+          }}
+        >
+          <Icon.Back width={18} height={18} /> Back to Applications
+        </button>
+        <div style={{ width: 1, height: 24, background: "#e5e7eb" }} />
+        <div style={{ fontSize: 16, fontWeight: 800, color: "#1a1a1a" }}>
+          Application Review
         </div>
       </div>
 
@@ -2648,7 +3191,7 @@ const ReviewApplicationPage = ({ app, onClose }) => {
         {/* Status Hero */}
         <div
           style={{
-            background: "linear-gradient(135deg, #1c3e2c 0%, #31694E 100%)",
+            background: "linear-gradient(135deg,#1c3e2c 0%,#31694E 100%)",
             borderRadius: 20,
             padding: "28px 32px",
             marginBottom: 24,
@@ -2764,7 +3307,7 @@ const ReviewApplicationPage = ({ app, onClose }) => {
               style={{
                 height: "100%",
                 width: `${progress}%`,
-                background: "linear-gradient(90deg, #31694E, #BBC863)",
+                background: "linear-gradient(90deg,#31694E,#BBC863)",
                 borderRadius: 99,
                 transition: "width 0.8s ease",
               }}
@@ -2790,7 +3333,6 @@ const ReviewApplicationPage = ({ app, onClose }) => {
           </div>
         </div>
 
-        {/* Business Info */}
         {biz.business_legal_name && (
           <ReviewSection title="Business Information">
             <ReviewField label="Legal Name" value={biz.business_legal_name} />
@@ -2810,10 +3352,6 @@ const ReviewApplicationPage = ({ app, onClose }) => {
             <ReviewField label="Zip Code" value={biz.business_zip_code} />
             <ReviewField label="Country" value={biz.business_country} />
             <ReviewField
-              label="Province of Incorporation"
-              value={biz.business_province_of_incorporation}
-            />
-            <ReviewField
               label="Est. Start Date"
               value={biz.business_estimated_start_date}
             />
@@ -2829,14 +3367,9 @@ const ReviewApplicationPage = ({ app, onClose }) => {
                   : ""
               }
             />
-            <ReviewField
-              label="Operating as DBA"
-              value={biz.is_dba ? "Yes" : "No"}
-            />
           </ReviewSection>
         )}
 
-        {/* Funding Info */}
         {fund.loan_amount_requested && (
           <ReviewSection title="Funding Information">
             <ReviewField
@@ -2863,36 +3396,9 @@ const ReviewApplicationPage = ({ app, onClose }) => {
               label="Existing Loans"
               value={fund.business_existing_loan ? "Yes" : "No"}
             />
-            {fund.business_existing_loan &&
-              fund.business_lender_details?.length > 0 && (
-                <div style={{ gridColumn: "1/-1" }}>
-                  <div
-                    style={{
-                      fontSize: 10,
-                      fontWeight: 800,
-                      color: "#BBC863",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.12em",
-                      marginBottom: 8,
-                    }}
-                  >
-                    Lender Details
-                  </div>
-                  {fund.business_lender_details.map((l, i) => (
-                    <div
-                      key={i}
-                      style={{ fontSize: 13, color: "#444", marginBottom: 4 }}
-                    >
-                      {l.lender_name} —{" "}
-                      <strong>${Number(l.balance).toLocaleString()}</strong>
-                    </div>
-                  ))}
-                </div>
-              )}
           </ReviewSection>
         )}
 
-        {/* Owner Info */}
         {owner.owner_first_name && (
           <ReviewSection title="Owner Information">
             <ReviewField
@@ -2926,12 +3432,9 @@ const ReviewApplicationPage = ({ app, onClose }) => {
             <ReviewField label="Address" value={owner.owner_address} />
             <ReviewField label="City" value={owner.owner_city} />
             <ReviewField label="State" value={owner.owner_state} />
-            <ReviewField label="Zip Code" value={owner.owner_zip_code} />
-            <ReviewField label="Country" value={owner.owner_country} />
           </ReviewSection>
         )}
 
-        {/* Terms & Signature */}
         {terms.signature_name && (
           <div
             style={{
@@ -2959,7 +3462,7 @@ const ReviewApplicationPage = ({ app, onClose }) => {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))",
                 gap: 20,
                 marginBottom: 24,
               }}
@@ -2977,52 +3480,33 @@ const ReviewApplicationPage = ({ app, onClose }) => {
                 }
               />
             </div>
-            {/* Signature Box */}
-            <div style={{ marginTop: 8 }}>
-              <div
+            <div
+              style={{
+                border: "2px solid #31694E",
+                borderRadius: 12,
+                padding: "24px 32px",
+                background: "#FAFDF8",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                minWidth: 320,
+                minHeight: 80,
+              }}
+            >
+              <span
                 style={{
-                  fontSize: 10,
-                  fontWeight: 800,
-                  color: "#BBC863",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.12em",
-                  marginBottom: 12,
+                  fontSize: 36,
+                  fontFamily: "'Dancing Script', cursive",
+                  fontStyle: "italic",
+                  color: "#1c3e2c",
                 }}
               >
-                Signature
-              </div>
-              <div
-                style={{
-                  border: "2px solid #31694E",
-                  borderRadius: 12,
-                  padding: "24px 32px",
-                  background: "#FAFDF8",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  minWidth: 320,
-                  minHeight: 80,
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 36,
-                    fontFamily: "'Dancing Script', cursive",
-                    fontStyle: "italic",
-                    color: "#1c3e2c",
-                  }}
-                >
-                  {terms.signature_name}
-                </span>
-              </div>
-              <div style={{ fontSize: 11, color: "#aaa", marginTop: 8 }}>
-                Digital signature — {terms.signature_name}
-              </div>
+                {terms.signature_name}
+              </span>
             </div>
           </div>
         )}
 
-        {/* Documents */}
         {docs.length > 0 && (
           <div
             style={{
@@ -3107,47 +3591,62 @@ const ReviewApplicationPage = ({ app, onClose }) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CHAT VIEW
+// CHAT SECTION
 // ─────────────────────────────────────────────────────────────────────────────
-const ChatView = ({ loanApplicationUuid, onClose }) => {
+const ChatSection = ({ applications }) => {
+  const [selectedApp, setSelectedApp] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [newMsg, setNewMsg] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [chatLoading, setChatLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [newMsg, setNewMsg] = useState("");
+  const [attachFile, setAttachFile] = useState(null);
   const bottomRef = useRef(null);
+  const fileRef = useRef(null);
 
-  const fetchMessages = useCallback(async () => {
-    if (!loanApplicationUuid) return;
+  useEffect(() => {
+    if (applications.length > 0 && !selectedApp)
+      setSelectedApp(applications[0]);
+  }, [applications]);
+
+  const fetchMessages = useCallback(async (app) => {
+    if (!app?.loan_application_uuid) return;
+    setChatLoading(true);
     try {
       const data = await apiGet(
-        `/chat/application/${loanApplicationUuid}/messages/`,
+        `/chat/application/${app.loan_application_uuid}/messages/`,
       );
       const arr = Array.isArray(data) ? data : data?.results || [];
       setMessages(arr);
     } catch (e) {
       logError("Chat fetch failed", e);
+      setMessages([]);
     } finally {
-      setLoading(false);
+      setChatLoading(false);
     }
-  }, [loanApplicationUuid]);
+  }, []);
 
   useEffect(() => {
-    fetchMessages();
-  }, [fetchMessages]);
+    if (selectedApp) fetchMessages(selectedApp);
+  }, [selectedApp, fetchMessages]);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const sendMessage = async () => {
-    if (!newMsg.trim() || sending) return;
+    if (!newMsg.trim() && !attachFile) return;
+    if (!selectedApp?.loan_application_uuid) return;
     setSending(true);
     try {
-      await apiPost(
-        `/chat/application/${loanApplicationUuid}/messages/create/`,
-        { message: newMsg.trim() },
+      const fd = new FormData();
+      fd.append("content", newMsg.trim() || "");
+      if (attachFile) fd.append("message_file", attachFile);
+      await apiMultipart(
+        `/chat/application/${selectedApp.loan_application_uuid}/messages/create/`,
+        fd,
       );
       setNewMsg("");
-      await fetchMessages();
+      setAttachFile(null);
+      await fetchMessages(selectedApp);
     } catch (e) {
       logError("Send failed", e);
     } finally {
@@ -3155,206 +3654,706 @@ const ChatView = ({ loanApplicationUuid, onClose }) => {
     }
   };
 
+  const appStatus = STATUS_META[selectedApp?.status] || STATUS_META.draft;
+  const stepIndex = STEPS_ORDER.indexOf(
+    selectedApp?.current_step ?? "business_information",
+  );
+  const completion =
+    selectedApp?.completion_percentage ??
+    Math.round(((stepIndex + 1) / STEPS_ORDER.length) * 100);
+  const agentInfo = selectedApp?.assigned_agent_details;
+
+  if (applications.length === 0) {
+    return (
+      <div style={{ textAlign: "center", padding: "80px 24px", color: "#bbb" }}>
+        <Icon.Chat
+          width={48}
+          height={48}
+          style={{ marginBottom: 16, opacity: 0.3 }}
+        />
+        <div
+          style={{
+            fontSize: 16,
+            fontWeight: 700,
+            color: "#aaa",
+            marginBottom: 8,
+          }}
+        >
+          No Applications Yet
+        </div>
+        <div style={{ fontSize: 13 }}>
+          Start a loan application to open a dedicated chat thread.
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
         display: "flex",
-        flexDirection: "column",
-        height: "100%",
-        background: "#fff",
+        gap: 0,
+        height: "calc(100vh - 120px)",
         borderRadius: 20,
-        border: "1px solid #f0f0f0",
         overflow: "hidden",
+        border: "1px solid #e5e7eb",
+        background: "#fff",
       }}
     >
+      {/* LEFT — Application Selector */}
       <div
         style={{
-          padding: "16px 20px",
-          borderBottom: "1px solid #f0f0f0",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <div style={{ fontSize: 14, fontWeight: 800, color: "#31694E" }}>
-          Application Chat
-        </div>
-        <button
-          onClick={onClose}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            color: "#888",
-          }}
-        >
-          <Icon.X width={18} height={18} />
-        </button>
-      </div>
-      <div
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: 20,
+          width: 260,
+          flexShrink: 0,
+          borderRight: "1px solid #f0f0f0",
           display: "flex",
           flexDirection: "column",
-          gap: 12,
+          background: "#fafafa",
         }}
       >
-        {loading ? (
-          <div
-            style={{ display: "flex", justifyContent: "center", padding: 20 }}
-          >
-            <Spinner />
-          </div>
-        ) : messages.length === 0 ? (
+        <div
+          style={{ padding: "16px 20px", borderBottom: "1px solid #f0f0f0" }}
+        >
           <div
             style={{
-              textAlign: "center",
-              color: "#aaa",
-              fontSize: 13,
-              padding: 40,
+              fontSize: 11,
+              fontWeight: 800,
+              color: "#888",
+              textTransform: "uppercase",
+              letterSpacing: "0.12em",
+              marginBottom: 2,
             }}
           >
-            No messages yet. Start the conversation!
+            Your Applications
           </div>
-        ) : (
-          messages.map((m, i) => {
-            const isMe = m.sender_role === "applicant" || m.is_me;
+          <div style={{ fontSize: 13, color: "#555" }}>Select to view chat</div>
+        </div>
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          {applications.map((app) => {
+            const st = STATUS_META[app.status] || STATUS_META.draft;
+            const isActive =
+              selectedApp?.loan_application_uuid === app.loan_application_uuid;
             return (
-              <div
-                key={i}
+              <button
+                key={app.loan_application_uuid}
+                onClick={() => setSelectedApp(app)}
                 style={{
-                  display: "flex",
-                  justifyContent: isMe ? "flex-end" : "flex-start",
+                  display: "block",
+                  width: "100%",
+                  padding: "14px 20px",
+                  background: isActive ? "rgba(49,105,78,0.08)" : "transparent",
+                  border: "none",
+                  borderLeft: isActive
+                    ? "3px solid #31694E"
+                    : "3px solid transparent",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  transition: "all 0.15s",
                 }}
               >
                 <div
                   style={{
-                    maxWidth: "70%",
-                    padding: "10px 14px",
-                    borderRadius: isMe
-                      ? "16px 16px 4px 16px"
-                      : "16px 16px 16px 4px",
-                    background: isMe ? "#31694E" : "#f5f6f8",
-                    color: isMe ? "#F0E491" : "#1a1a1a",
                     fontSize: 13,
-                    fontWeight: 600,
+                    fontWeight: 800,
+                    color: isActive ? "#31694E" : "#1a1a1a",
+                    marginBottom: 4,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {app.loan_type_info?.name || "Loan Application"}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 700,
+                      padding: "2px 8px",
+                      borderRadius: 99,
+                      background: st.bg,
+                      color: st.color,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {st.label}
+                  </span>
+                </div>
+                <div style={{ fontSize: 11, color: "#aaa", marginTop: 4 }}>
+                  {app.loan_application_uuid?.slice(0, 8).toUpperCase()}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* MIDDLE — Chat Thread */}
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          minWidth: 0,
+        }}
+      >
+        <div
+          style={{
+            padding: "14px 20px",
+            borderBottom: "1px solid #f0f0f0",
+            background: "#fff",
+          }}
+        >
+          <div style={{ fontSize: 15, fontWeight: 800, color: "#1a1a1a" }}>
+            {selectedApp?.loan_type_info?.name || "Chat"}
+          </div>
+          <div style={{ fontSize: 11, color: "#888" }}>
+            Application #
+            {selectedApp?.loan_application_uuid?.slice(0, 8).toUpperCase()} ·{" "}
+            {selectedApp?.current_step
+              ? LOAN_STEP_LABELS[selectedApp.current_step] ||
+                selectedApp.current_step
+              : "—"}
+          </div>
+        </div>
+        <div
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: "20px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+          }}
+        >
+          {chatLoading ? (
+            <div
+              style={{ display: "flex", justifyContent: "center", padding: 40 }}
+            >
+              <Spinner />
+            </div>
+          ) : messages.length === 0 ? (
+            <div style={{ textAlign: "center", padding: 60, color: "#aaa" }}>
+              <Icon.Chat
+                width={40}
+                height={40}
+                style={{ marginBottom: 12, opacity: 0.3 }}
+              />
+              <div
+                style={{
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: "#bbb",
+                  marginBottom: 4,
+                }}
+              >
+                No messages yet
+              </div>
+              <div style={{ fontSize: 12 }}>
+                Start the conversation with your agent about this application.
+              </div>
+            </div>
+          ) : (
+            messages.map((m, i) => {
+              const isMe = m.sender_role === "applicant" || m.is_me === true;
+              return (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    justifyContent: isMe ? "flex-end" : "flex-start",
+                    alignItems: "flex-end",
+                    gap: 8,
                   }}
                 >
                   {!isMe && (
                     <div
                       style={{
-                        fontSize: 10,
+                        width: 28,
+                        height: 28,
+                        borderRadius: 8,
+                        background: "linear-gradient(135deg,#31694E,#658C58)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 11,
                         fontWeight: 800,
-                        color: "#BBC863",
-                        textTransform: "uppercase",
-                        marginBottom: 4,
+                        color: "#F0E491",
+                        flexShrink: 0,
                       }}
                     >
-                      {m.sender_name || "Agent"}
+                      {(m.sender_name || "A")[0]}
                     </div>
                   )}
-                  {m.message || m.content}
+                  <div style={{ maxWidth: "68%" }}>
+                    {!isMe && (
+                      <div
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 800,
+                          color: "#BBC863",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.1em",
+                          marginBottom: 4,
+                          paddingLeft: 4,
+                        }}
+                      >
+                        {m.sender_name || "Agent"}
+                      </div>
+                    )}
+                    <div
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: isMe
+                          ? "16px 16px 4px 16px"
+                          : "16px 16px 16px 4px",
+                        background: isMe ? "#31694E" : "#f5f6f8",
+                        color: isMe ? "#F0E491" : "#1a1a1a",
+                        fontSize: 13,
+                        fontWeight: 500,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {m.content || m.message}
+                      {m.message_file && (
+                        <a
+                          href={m.message_file}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 4,
+                            marginTop: 6,
+                            fontSize: 11,
+                            color: isMe ? "#F0E491" : "#31694E",
+                            opacity: 0.9,
+                          }}
+                        >
+                          <Icon.Paperclip width={11} height={11} /> Attachment
+                        </a>
+                      )}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 10,
+                        color: "#aaa",
+                        marginTop: 4,
+                        textAlign: isMe ? "right" : "left",
+                        paddingLeft: isMe ? 0 : 4,
+                      }}
+                    >
+                      {m.created_at
+                        ? new Date(m.created_at).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : ""}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+          <div ref={bottomRef} />
+        </div>
+        <div
+          style={{
+            padding: "12px 16px",
+            borderTop: "1px solid #f0f0f0",
+            background: "#fff",
+          }}
+        >
+          {attachFile && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "6px 10px",
+                background: "#f0fdf4",
+                border: "1px solid #bbf7d0",
+                borderRadius: 8,
+                marginBottom: 8,
+                fontSize: 12,
+                color: "#166534",
+              }}
+            >
+              <Icon.Paperclip width={12} height={12} />
+              {attachFile.name}
+              <button
+                onClick={() => setAttachFile(null)}
+                style={{
+                  marginLeft: "auto",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "#999",
+                  display: "flex",
+                }}
+              >
+                <Icon.X width={14} height={14} />
+              </button>
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+            <input
+              type="file"
+              ref={fileRef}
+              style={{ display: "none" }}
+              onChange={(e) => setAttachFile(e.target.files[0] || null)}
+            />
+            <button
+              onClick={() => fileRef.current?.click()}
+              style={{
+                padding: 10,
+                background: "#f5f6f8",
+                border: "1.5px solid #e5e7eb",
+                borderRadius: 10,
+                cursor: "pointer",
+                color: "#666",
+                display: "flex",
+                flexShrink: 0,
+              }}
+            >
+              <Icon.Paperclip width={16} height={16} />
+            </button>
+            <input
+              value={newMsg}
+              onChange={(e) => setNewMsg(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  sendMessage();
+                }
+              }}
+              placeholder="Type a message…"
+              style={{
+                flex: 1,
+                padding: "10px 14px",
+                borderRadius: 10,
+                border: "1.5px solid #e5e7eb",
+                outline: "none",
+                fontSize: 13,
+                background: "#fafafa",
+              }}
+            />
+            <button
+              onClick={sendMessage}
+              disabled={(!newMsg.trim() && !attachFile) || sending}
+              style={{
+                padding: "10px 16px",
+                background: newMsg.trim() || attachFile ? "#31694E" : "#f0f0f0",
+                color: newMsg.trim() || attachFile ? "#F0E491" : "#ccc",
+                border: "none",
+                borderRadius: 10,
+                cursor: newMsg.trim() || attachFile ? "pointer" : "not-allowed",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                fontWeight: 700,
+                fontSize: 12,
+                flexShrink: 0,
+              }}
+            >
+              {sending ? (
+                <Spinner size={14} color="#F0E491" />
+              ) : (
+                <Icon.Send width={14} height={14} />
+              )}{" "}
+              Send
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* RIGHT — Application Context Panel */}
+      {selectedApp && (
+        <div
+          style={{
+            width: 240,
+            flexShrink: 0,
+            borderLeft: "1px solid #f0f0f0",
+            overflowY: "auto",
+            background: "#fafafa",
+          }}
+        >
+          <div
+            style={{ padding: "16px 20px", borderBottom: "1px solid #f0f0f0" }}
+          >
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 800,
+                color: "#888",
+                textTransform: "uppercase",
+                letterSpacing: "0.12em",
+              }}
+            >
+              Application Info
+            </div>
+          </div>
+          <div
+            style={{
+              padding: "16px 20px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 16,
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: "#BBC863",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  marginBottom: 4,
+                }}
+              >
+                Application ID
+              </div>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: "#1a1a1a",
+                  fontFamily: "monospace",
+                }}
+              >
+                {selectedApp.loan_application_uuid?.slice(0, 8).toUpperCase()}
+              </div>
+            </div>
+            <div>
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: "#BBC863",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  marginBottom: 4,
+                }}
+              >
+                Loan Type
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>
+                {selectedApp.loan_type_info?.name || "—"}
+              </div>
+            </div>
+            <div>
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: "#BBC863",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  marginBottom: 6,
+                }}
+              >
+                Status
+              </div>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 800,
+                  padding: "3px 10px",
+                  borderRadius: 99,
+                  background: appStatus.bg,
+                  color: appStatus.color,
+                  textTransform: "uppercase",
+                }}
+              >
+                {appStatus.label}
+              </span>
+            </div>
+            <div>
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: "#BBC863",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  marginBottom: 4,
+                }}
+              >
+                Current Step
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#1a1a1a" }}>
+                {LOAN_STEP_LABELS[selectedApp.current_step] ||
+                  selectedApp.current_step ||
+                  "—"}
+              </div>
+            </div>
+            <div>
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: "#BBC863",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  marginBottom: 6,
+                }}
+              >
+                Completion
+              </div>
+              <div
+                style={{
+                  height: 6,
+                  background: "#e5e7eb",
+                  borderRadius: 99,
+                  overflow: "hidden",
+                  marginBottom: 4,
+                }}
+              >
+                <div
+                  style={{
+                    height: "100%",
+                    width: `${completion}%`,
+                    background: "linear-gradient(90deg,#31694E,#BBC863)",
+                    borderRadius: 99,
+                  }}
+                />
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: "#31694E" }}>
+                {completion}%
+              </div>
+            </div>
+            {agentInfo && (
+              <div>
+                <div
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: "#BBC863",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.1em",
+                    marginBottom: 8,
+                  }}
+                >
+                  Assigned Agent
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <div
                     style={{
-                      fontSize: 10,
-                      color: isMe ? "rgba(240,228,145,0.6)" : "#aaa",
-                      marginTop: 4,
+                      width: 32,
+                      height: 32,
+                      borderRadius: 8,
+                      background: "linear-gradient(135deg,#31694E,#658C58)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 12,
+                      fontWeight: 800,
+                      color: "#F0E491",
+                      flexShrink: 0,
                     }}
                   >
-                    {m.created_at
-                      ? new Date(m.created_at).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
-                      : ""}
+                    {agentInfo.first_name?.[0]}
+                    {agentInfo.last_name?.[0]}
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 800,
+                        color: "#1a1a1a",
+                      }}
+                    >
+                      {agentInfo.first_name} {agentInfo.last_name}
+                    </div>
+                    <div style={{ fontSize: 10, color: "#888" }}>
+                      {agentInfo.email}
+                    </div>
                   </div>
                 </div>
               </div>
-            );
-          })
-        )}
-        <div ref={bottomRef} />
-      </div>
-      <div
-        style={{
-          padding: "12px 16px",
-          borderTop: "1px solid #f0f0f0",
-          display: "flex",
-          gap: 10,
-        }}
-      >
-        <input
-          value={newMsg}
-          onChange={(e) => setNewMsg(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
-          placeholder="Type a message…"
-          style={{
-            flex: 1,
-            padding: "10px 14px",
-            borderRadius: 10,
-            border: "1.5px solid #e5e7eb",
-            outline: "none",
-            fontSize: 13,
-            background: "#fafafa",
-          }}
-        />
-        <button
-          onClick={sendMessage}
-          disabled={!newMsg.trim() || sending}
-          style={{
-            padding: "10px 16px",
-            background: newMsg.trim() ? "#31694E" : "#f0f0f0",
-            color: newMsg.trim() ? "#F0E491" : "#ccc",
-            border: "none",
-            borderRadius: 10,
-            cursor: newMsg.trim() ? "pointer" : "not-allowed",
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            fontWeight: 700,
-            fontSize: 12,
-          }}
-        >
-          {sending ? (
-            <Spinner size={14} color="#F0E491" />
-          ) : (
-            <Icon.Send width={14} height={14} />
-          )}{" "}
-          Send
-        </button>
-      </div>
+            )}
+            {selectedApp.updated_at && (
+              <div>
+                <div
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: "#BBC863",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.1em",
+                    marginBottom: 4,
+                  }}
+                >
+                  Last Updated
+                </div>
+                <div
+                  style={{ fontSize: 12, fontWeight: 700, color: "#1a1a1a" }}
+                >
+                  {new Date(selectedApp.updated_at).toLocaleDateString()}
+                </div>
+              </div>
+            )}
+            {selectedApp.current_step &&
+              selectedApp.current_step !== "completed" && (
+                <div
+                  style={{
+                    padding: "12px",
+                    background: "rgba(240,228,145,0.15)",
+                    border: "1px solid #F0E491",
+                    borderRadius: 10,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 800,
+                      color: "#92400e",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.1em",
+                      marginBottom: 6,
+                    }}
+                  >
+                    Next Action
+                  </div>
+                  <div
+                    style={{ fontSize: 12, color: "#92400e", fontWeight: 600 }}
+                  >
+                    {selectedApp.current_step === "document_upload"
+                      ? "Upload your required documents to continue."
+                      : selectedApp.current_step === "terms_and_conditions"
+                        ? "Review and sign your terms & conditions."
+                        : selectedApp.current_step === "review_submission"
+                          ? "Review your application and submit."
+                          : `Complete your ${LOAN_STEP_LABELS[selectedApp.current_step] || "next step"} to progress.`}
+                  </div>
+                </div>
+              )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DASHBOARD VIEW — uses /me data only, shows PreQual only for new users
+// DASHBOARD VIEW
+// FIX 3: Added Edit button to active application card
 // ─────────────────────────────────────────────────────────────────────────────
-const DashboardView = ({ user, onStartApplication, onViewApplication }) => {
+const DashboardView = ({
+  user,
+  loanTypes,
+  loanTypesLoaded,
+  onStartApplication,
+  onViewApplication,
+  onEditApplication,
+}) => {
   const [loanSearch, setLoanSearch] = useState("");
-  const [loanTypes, setLoanTypes] = useState([]);
-  const [ltLoading, setLtLoading] = useState(false);
 
   const isNew = user?.is_new === true;
   const agent = user?.assigned_agent_details;
   const prequal = user?.prequalification_loan_type_applied_for;
   const recentApp = user?.recent_active_loan_application;
-
-  // Only fetch loan types when user explicitly searches or tabs into that section
-  const fetchLoanTypes = async () => {
-    if (loanTypes.length > 0) return;
-    setLtLoading(true);
-    try {
-      const res = await apiGet("/loan-types/");
-      setLoanTypes(res?.data || []);
-    } catch (e) {
-      logError("Loan types fetch failed", e);
-    } finally {
-      setLtLoading(false);
-    }
-  };
 
   const filteredLoans = loanTypes.filter(
     (l) =>
@@ -3393,11 +4392,11 @@ const DashboardView = ({ user, onStartApplication, onViewApplication }) => {
           marginBottom: 24,
         }}
       >
-        {/* PreQual Card — only for new users */}
+        {/* PreQual Card — new users */}
         {isNew && prequal && (
           <div
             style={{
-              background: "linear-gradient(135deg, #31694E 0%, #4a8c6a 100%)",
+              background: "linear-gradient(135deg,#31694E 0%,#4a8c6a 100%)",
               borderRadius: 20,
               padding: "28px",
               color: "white",
@@ -3503,7 +4502,7 @@ const DashboardView = ({ user, onStartApplication, onViewApplication }) => {
           </div>
         )}
 
-        {/* Returning user — active app summary */}
+        {/* FIX 3: Returning user — active app card with Edit button */}
         {!isNew && recentApp && (
           <div
             style={{
@@ -3548,7 +4547,7 @@ const DashboardView = ({ user, onStartApplication, onViewApplication }) => {
                 style={{
                   height: "100%",
                   width: `${recentApp.completion_percentage ?? 0}%`,
-                  background: "linear-gradient(90deg, #31694E, #658C58)",
+                  background: "linear-gradient(90deg,#31694E,#658C58)",
                   borderRadius: 99,
                 }}
               />
@@ -3556,25 +4555,49 @@ const DashboardView = ({ user, onStartApplication, onViewApplication }) => {
             <div style={{ fontSize: 11, color: "#888", marginBottom: 16 }}>
               {recentApp.completion_percentage ?? 0}% complete
             </div>
-            <button
-              onClick={() => onViewApplication(recentApp)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "9px 18px",
-                background: "rgba(49,105,78,0.08)",
-                border: "none",
-                color: "#31694E",
-                borderRadius: 8,
-                fontWeight: 700,
-                fontSize: 12,
-                cursor: "pointer",
-                textTransform: "uppercase",
-              }}
-            >
-              <Icon.Eye width={14} height={14} /> View Application
-            </button>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button
+                onClick={() => onViewApplication(recentApp)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "9px 18px",
+                  background: "rgba(49,105,78,0.08)",
+                  border: "none",
+                  color: "#31694E",
+                  borderRadius: 8,
+                  fontWeight: 700,
+                  fontSize: 12,
+                  cursor: "pointer",
+                  textTransform: "uppercase",
+                }}
+              >
+                <Icon.Eye width={14} height={14} /> View
+              </button>
+              {/* ── FIX 3: Edit button — only shown for draft applications ── */}
+              {recentApp.status === "draft" && (
+                <button
+                  onClick={() => onEditApplication(recentApp)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "9px 18px",
+                    background: "none",
+                    border: "1.5px solid #e5e7eb",
+                    color: "#666",
+                    borderRadius: 8,
+                    fontWeight: 700,
+                    fontSize: 12,
+                    cursor: "pointer",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  <Icon.Edit width={14} height={14} /> Edit
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -3641,91 +4664,51 @@ const DashboardView = ({ user, onStartApplication, onViewApplication }) => {
         )}
       </div>
 
-      {/* Explore Loan Types */}
+      {/* Loan Types */}
       <div>
         <div
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
+            fontSize: 16,
+            fontWeight: 800,
+            color: "#1a1a1a",
             marginBottom: 16,
           }}
         >
-          <div style={{ fontSize: 16, fontWeight: 800, color: "#1a1a1a" }}>
-            Explore Loan Types
-          </div>
-          <button
-            onClick={fetchLoanTypes}
-            style={{
-              fontSize: 12,
-              fontWeight: 700,
-              color: "#31694E",
-              background: "rgba(49,105,78,0.08)",
-              border: "none",
-              padding: "7px 14px",
-              borderRadius: 8,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-            }}
-          >
-            <Icon.Refresh width={12} height={12} /> Load Loans
-          </button>
+          Explore Loan Types
         </div>
-
-        {loanTypes.length > 0 && (
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ position: "relative" }}>
-              <Icon.Search
-                width={16}
-                height={16}
-                style={{
-                  position: "absolute",
-                  left: 14,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  color: "#aaa",
-                }}
-              />
-              <input
-                value={loanSearch}
-                onChange={(e) => setLoanSearch(e.target.value)}
-                placeholder="Search loan types…"
-                style={{ ...inputBase, paddingLeft: 40 }}
-              />
-            </div>
+        {loanTypesLoaded && loanTypes.length > 0 && (
+          <div style={{ marginBottom: 16, position: "relative" }}>
+            <Icon.Search
+              width={16}
+              height={16}
+              style={{
+                position: "absolute",
+                left: 14,
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: "#aaa",
+              }}
+            />
+            <input
+              value={loanSearch}
+              onChange={(e) => setLoanSearch(e.target.value)}
+              placeholder="Search loan types…"
+              style={{ ...inputBase, paddingLeft: 40 }}
+            />
           </div>
         )}
-
-        {ltLoading && (
+        {!loanTypesLoaded && (
           <div
             style={{ display: "flex", justifyContent: "center", padding: 40 }}
           >
             <Spinner />
           </div>
         )}
-
-        {!ltLoading && loanTypes.length === 0 && (
-          <div
-            style={{
-              padding: 32,
-              textAlign: "center",
-              border: "2px dashed #e5e7eb",
-              borderRadius: 16,
-              color: "#bbb",
-              fontSize: 13,
-            }}
-          >
-            Click "Load Loans" to explore available products.
-          </div>
-        )}
-
-        {filteredLoans.length > 0 && (
+        {loanTypesLoaded && filteredLoans.length > 0 && (
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))",
               gap: 16,
             }}
           >
@@ -3735,9 +4718,10 @@ const DashboardView = ({ user, onStartApplication, onViewApplication }) => {
                 style={{
                   background: "#fff",
                   borderRadius: 16,
-                  padding: "20px",
+                  padding: 20,
                   border: "1.5px solid #f0f0f0",
                   cursor: "pointer",
+                  transition: "all 0.2s",
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.borderColor = "#31694E";
@@ -3856,6 +4840,20 @@ const DashboardView = ({ user, onStartApplication, onViewApplication }) => {
             ))}
           </div>
         )}
+        {loanTypesLoaded && loanTypes.length === 0 && (
+          <div
+            style={{
+              padding: 32,
+              textAlign: "center",
+              border: "2px dashed #e5e7eb",
+              borderRadius: 16,
+              color: "#bbb",
+              fontSize: 13,
+            }}
+          >
+            No loan types available at this time.
+          </div>
+        )}
       </div>
     </div>
   );
@@ -3869,8 +4867,8 @@ const ApplicationListView = ({
   loading,
   onReview,
   onEdit,
-  onNew,
   onChat,
+  onNew,
 }) => {
   if (loading)
     return (
@@ -3987,6 +4985,7 @@ const ApplicationListView = ({
           const progress =
             app?.completion_percentage ??
             Math.round(((stepIndex + 1) / STEPS_ORDER.length) * 100);
+          const canEdit = app?.status === "draft";
           return (
             <div
               key={app.loan_application_uuid}
@@ -4023,9 +5022,10 @@ const ApplicationListView = ({
                     {app?.loan_type_info?.name || "Loan Application"}
                   </div>
                   <div style={{ fontSize: 11, color: "#aaa" }}>
-                    Submitted:{" "}
+                    #{app?.loan_application_uuid?.slice(0, 8).toUpperCase()} ·{" "}
                     {app?.submitted_at
-                      ? new Date(app.submitted_at).toLocaleDateString()
+                      ? "Submitted " +
+                        new Date(app.submitted_at).toLocaleDateString()
                       : "Not yet submitted"}
                   </div>
                 </div>
@@ -4038,7 +5038,7 @@ const ApplicationListView = ({
                     textTransform: "uppercase",
                     letterSpacing: "0.08em",
                     color: status.color,
-                    background: `${status.color}18`,
+                    background: status.bg,
                   }}
                 >
                   {status.label}
@@ -4069,7 +5069,7 @@ const ApplicationListView = ({
                     style={{
                       height: "100%",
                       width: `${progress}%`,
-                      background: "linear-gradient(90deg, #31694E, #BBC863)",
+                      background: "linear-gradient(90deg,#31694E,#BBC863)",
                       borderRadius: 99,
                       transition: "width 0.8s ease",
                     }}
@@ -4101,14 +5101,14 @@ const ApplicationListView = ({
                   </span>
                 ))}
               </div>
-              <div style={{ display: "flex", gap: 10 }}>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <button
                   onClick={() => onReview(app)}
                   style={{
                     display: "flex",
                     alignItems: "center",
                     gap: 6,
-                    padding: "8px 18px",
+                    padding: "8px 16px",
                     background: "rgba(49,105,78,0.08)",
                     border: "none",
                     color: "#31694E",
@@ -4117,19 +5117,19 @@ const ApplicationListView = ({
                     fontSize: 12,
                     cursor: "pointer",
                     textTransform: "uppercase",
-                    letterSpacing: "0.08em",
+                    letterSpacing: "0.06em",
                   }}
                 >
                   <Icon.Eye width={14} height={14} /> Review
                 </button>
-                {app?.status === "draft" && (
+                {canEdit && (
                   <button
                     onClick={() => onEdit(app)}
                     style={{
                       display: "flex",
                       alignItems: "center",
                       gap: 6,
-                      padding: "8px 18px",
+                      padding: "8px 16px",
                       background: "none",
                       border: "1.5px solid #e5e7eb",
                       color: "#666",
@@ -4138,7 +5138,7 @@ const ApplicationListView = ({
                       fontSize: 12,
                       cursor: "pointer",
                       textTransform: "uppercase",
-                      letterSpacing: "0.08em",
+                      letterSpacing: "0.06em",
                     }}
                   >
                     <Icon.Edit width={14} height={14} /> Edit
@@ -4150,7 +5150,7 @@ const ApplicationListView = ({
                     display: "flex",
                     alignItems: "center",
                     gap: 6,
-                    padding: "8px 18px",
+                    padding: "8px 16px",
                     background: "none",
                     border: "1.5px solid #e5e7eb",
                     color: "#658C58",
@@ -4159,7 +5159,7 @@ const ApplicationListView = ({
                     fontSize: 12,
                     cursor: "pointer",
                     textTransform: "uppercase",
-                    letterSpacing: "0.08em",
+                    letterSpacing: "0.06em",
                   }}
                 >
                   <Icon.Chat width={14} height={14} /> Chat
@@ -4186,7 +5186,6 @@ const ProfileView = ({ user }) => {
       value: user?.is_qualified ? "✓ Fully Qualified" : "Pending",
     },
   ];
-
   return (
     <div>
       <div
@@ -4210,7 +5209,7 @@ const ProfileView = ({ user }) => {
         <div
           style={{
             height: 80,
-            background: "linear-gradient(135deg, #31694E 0%, #658C58 100%)",
+            background: "linear-gradient(135deg,#31694E 0%,#658C58 100%)",
           }}
         />
         <div style={{ padding: "0 28px 28px", marginTop: -40 }}>
@@ -4254,7 +5253,7 @@ const ProfileView = ({ user }) => {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))",
               gap: 20,
             }}
           >
@@ -4262,7 +5261,7 @@ const ProfileView = ({ user }) => {
               <div
                 key={label}
                 style={{
-                  padding: "16px",
+                  padding: 16,
                   background: "#FAFDF8",
                   borderRadius: 12,
                   border: "1px solid #f0f0f0",
@@ -4300,6 +5299,7 @@ const ProfileView = ({ user }) => {
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: Icon.Home },
   { id: "application", label: "Applications", icon: Icon.File },
+  { id: "chat", label: "Chat", icon: Icon.Chat },
   { id: "profile", label: "My Profile", icon: Icon.User },
 ];
 
@@ -4358,7 +5358,7 @@ const Sidebar = ({ activeTab, setActiveTab, user, onClose, isMobile }) => (
     </div>
     <div
       style={{
-        padding: "12px 12px",
+        padding: "12px",
         background: "rgba(255,255,255,0.06)",
         borderRadius: 12,
         marginBottom: 24,
@@ -4441,17 +5441,19 @@ const Sidebar = ({ activeTab, setActiveTab, user, onClose, isMobile }) => (
 export default function ClientDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const [user, setUser] = useState(null);
   const [appList, setAppList] = useState([]);
+  const [loanTypes, setLoanTypes] = useState([]);
+  const [loanTypesLoaded, setLoanTypesLoaded] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const [pageView, setPageView] = useState(null);
   const [pageViewData, setPageViewData] = useState(null);
-  const [chatApp, setChatApp] = useState(null);
 
-  // Only fetch user /me on load — no bulk API calls
   const fetchUser = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     else setRefreshing(true);
@@ -4473,16 +5475,26 @@ export default function ClientDashboard() {
     }
   }, []);
 
-  // Fetch application list only when user navigates to that tab
   const fetchApps = useCallback(async () => {
     try {
       const apps = await apiGet("/application/");
-      const appArr = Array.isArray(apps) ? apps : apps?.results || [];
-      setAppList(appArr);
+      setAppList(Array.isArray(apps) ? apps : apps?.results || []);
     } catch (e) {
       logError("fetchApps failed", e);
     }
   }, []);
+
+  const fetchLoanTypes = useCallback(async () => {
+    if (loanTypesLoaded) return;
+    try {
+      const res = await apiGet("/loan-types/");
+      setLoanTypes(res?.data || res || []);
+    } catch (e) {
+      logError("fetchLoanTypes failed", e);
+    } finally {
+      setLoanTypesLoaded(true);
+    }
+  }, [loanTypesLoaded]);
 
   const fetchAppDetail = async (app) => {
     try {
@@ -4496,11 +5508,10 @@ export default function ClientDashboard() {
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
-
-  // Fetch apps lazily when tab switches to application
   useEffect(() => {
-    if (activeTab === "application") fetchApps();
-  }, [activeTab, fetchApps]);
+    if (activeTab === "dashboard") fetchLoanTypes();
+    if (activeTab === "application" || activeTab === "chat") fetchApps();
+  }, [activeTab]);
 
   useEffect(() => {
     const style = document.createElement("style");
@@ -4517,7 +5528,7 @@ export default function ClientDashboard() {
     return () => document.head.removeChild(style);
   }, []);
 
-  // ── FULL-PAGE VIEWS
+  // ── FULL-PAGE VIEW ROUTES
   if (pageView === "apply") {
     return (
       <ApplicationWizardPage
@@ -4529,7 +5540,7 @@ export default function ClientDashboard() {
           fetchApps();
         }}
         prequalData={pageViewData}
-        loanTypes={[]}
+        loanTypes={loanTypes}
       />
     );
   }
@@ -4564,7 +5575,7 @@ export default function ClientDashboard() {
     );
   }
 
-  if (loading)
+  if (loading) {
     return (
       <div
         style={{
@@ -4603,8 +5614,9 @@ export default function ClientDashboard() {
         </div>
       </div>
     );
+  }
 
-  if (error)
+  if (error) {
     return (
       <div
         style={{
@@ -4646,6 +5658,7 @@ export default function ClientDashboard() {
         </button>
       </div>
     );
+  }
 
   return (
     <div
@@ -4677,7 +5690,7 @@ export default function ClientDashboard() {
         </div>
       </div>
 
-      {/* Mobile Sidebar */}
+      {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div style={{ position: "fixed", inset: 0, zIndex: 100 }}>
           <div
@@ -4723,6 +5736,7 @@ export default function ClientDashboard() {
         >
           <button
             onClick={() => setSidebarOpen(true)}
+            className="kacu-menu-btn"
             style={{
               display: "flex",
               alignItems: "center",
@@ -4735,7 +5749,6 @@ export default function ClientDashboard() {
               cursor: "pointer",
               color: "#31694E",
             }}
-            className="kacu-menu-btn"
           >
             <Icon.Menu width={20} height={20} />
           </button>
@@ -4789,80 +5802,61 @@ export default function ClientDashboard() {
         </div>
 
         {/* Page Content */}
-        <div style={{ maxWidth: 1100, display: "flex", gap: 20 }}>
-          <div style={{ flex: 1 }}>
-            {activeTab === "dashboard" && (
-              <DashboardView
-                user={user}
-                onStartApplication={(loan) => {
-                  setPageViewData(loan);
-                  setPageView("apply");
-                }}
-                onViewApplication={async (app) => {
-                  const detail = await fetchAppDetail(app);
-                  setPageViewData(detail);
-                  setPageView("review");
-                }}
-              />
-            )}
-            {activeTab === "profile" && <ProfileView user={user} />}
-            {activeTab === "application" && (
-              <ApplicationListView
-                apps={appList}
-                loading={false}
-                onReview={async (app) => {
-                  const detail = await fetchAppDetail(app);
-                  setPageViewData(detail);
-                  setPageView("review");
-                }}
-                onEdit={async (app) => {
-                  const detail = await fetchAppDetail(app);
-                  setPageViewData(detail);
-                  setPageView("edit");
-                }}
-                onNew={() => {
-                  setPageViewData(user?.prequalification_loan_type_applied_for);
-                  setPageView("apply");
-                }}
-                onChat={(app) =>
-                  setChatApp(
-                    chatApp?.loan_application_uuid === app.loan_application_uuid
-                      ? null
-                      : app,
-                  )
-                }
-              />
-            )}
-          </div>
-
-          {/* Chat Panel */}
-          {chatApp && (
-            <div
-              style={{
-                width: 380,
-                flexShrink: 0,
-                height: "calc(100vh - 120px)",
-                position: "sticky",
-                top: 24,
+        <div style={{ maxWidth: 1100 }}>
+          {activeTab === "dashboard" && (
+            <DashboardView
+              user={user}
+              loanTypes={loanTypes}
+              loanTypesLoaded={loanTypesLoaded}
+              onStartApplication={(loan) => {
+                setPageViewData(loan);
+                setPageView("apply");
               }}
-            >
-              <ChatView
-                loanApplicationUuid={chatApp.loan_application_uuid}
-                onClose={() => setChatApp(null)}
-              />
-            </div>
+              onViewApplication={async (app) => {
+                const detail = await fetchAppDetail(app);
+                setPageViewData(detail);
+                setPageView("review");
+              }}
+              onEditApplication={async (app) => {
+                const detail = await fetchAppDetail(app);
+                setPageViewData(detail);
+                setPageView("edit");
+              }}
+            />
           )}
+
+          {activeTab === "application" && (
+            <ApplicationListView
+              apps={appList}
+              loading={false}
+              onReview={async (app) => {
+                const detail = await fetchAppDetail(app);
+                setPageViewData(detail);
+                setPageView("review");
+              }}
+              onEdit={async (app) => {
+                const detail = await fetchAppDetail(app);
+                setPageViewData(detail);
+                setPageView("edit");
+              }}
+              onNew={() => {
+                setPageViewData(user?.prequalification_loan_type_applied_for);
+                setPageView("apply");
+              }}
+              onChat={(app) => {
+                setActiveTab("chat");
+              }}
+            />
+          )}
+
+          {activeTab === "chat" && <ChatSection applications={appList} />}
+          {activeTab === "profile" && <ProfileView user={user} />}
         </div>
       </main>
 
       <style>{`
-        @media (max-width: 900px) {
-          .kacu-menu-btn { display: flex !important; }
-          main { padding: 16px !important; }
-        }
-        @media (min-width: 901px) {
-          .kacu-menu-btn { display: none !important; }
-        }
+        @media (max-width: 900px) { .kacu-menu-btn { display: flex !important; } main { padding: 16px !important; } }
+        @media (min-width: 901px) { .kacu-menu-btn { display: none !important; } }
       `}</style>
     </div>
   );
