@@ -8,7 +8,12 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 // ─────────────────────────────────────────────────────────────────────────────
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
-const getToken = () => localStorage.getItem("token");
+const getToken = () => {
+  const match = document.cookie
+    .split("; ")
+    .find((r) => r.startsWith("kacu_auth_token="));
+  return match ? decodeURIComponent(match.split("=")[1]) : null;
+};
 
 const handle401 = (res) => {
   if (res.status === 401) {
