@@ -834,6 +834,127 @@ const ApplicationWizardPage = ({
       documents: p.documents.filter((_, idx) => idx !== i),
     }));
 
+  // const handleStepContinue = async () => {
+  //   const errs = validateStep(step, formData);
+  //   if (errs.length > 0) {
+  //     setValidationErrors(errs);
+  //     return;
+  //   }
+  //   setStepError(null);
+  //   setValidationErrors([]);
+  //   setSubmitting(true);
+  //   try {
+  //     if (step === 1) {
+  //       const core = await apiPost("/application/create/", {
+  //         loan_type: Number(formData.loan_type),
+  //       });
+  //       const uuid = core.loan_application_uuid;
+  //       if (!uuid) throw new Error("No UUID returned from application create");
+  //       setAppUuid(uuid);
+  //       await apiPost("/application/business-information/create/", {
+  //         loan_application_uuid: uuid,
+  //         is_dba: formData.is_dba,
+  //         business_legal_name: formData.business_legal_name.trim(),
+  //         business_dba_name: formData.business_dba_name.trim() || null,
+  //         business_email: formData.business_email.trim(),
+  //         business_phone_number: formData.business_phone_number.trim(),
+  //         business_website: formData.business_website.trim() || null,
+  //         business_country: formData.business_country.trim() || "USA",
+  //         business_state: formData.business_state.trim(),
+  //         business_address: formData.business_address.trim(),
+  //         business_city: formData.business_city.trim(),
+  //         business_zip_code: formData.business_zip_code.trim(),
+  //         business_industry_type: formData.business_industry_type.trim(),
+  //         business_legal_entity_type: formData.business_legal_entity_type,
+  //         business_length_of_ownership:
+  //           formData.business_length_of_ownership.trim() || null,
+  //         business_number: formData.business_number.trim() || null,
+  //         business_estimated_start_date:
+  //           formData.business_estimated_start_date || null,
+  //         business_province_of_incorporation:
+  //           formData.business_province_of_incorporation.trim() || null,
+  //         business_average_gross_monthly_sales:
+  //           formData.business_average_gross_monthly_sales
+  //             ? parseFloat(
+  //                 formData.business_average_gross_monthly_sales,
+  //               ).toFixed(2)
+  //             : null,
+  //       });
+  //       setStep(2);
+  //     } else if (step === 2) {
+  //       await apiPost("/application/funding-information/create/", {
+  //         loan_application_uuid: appUuid,
+  //         loan_amount_requested: parseFloat(
+  //           formData.loan_amount_requested,
+  //         ).toFixed(2),
+  //         loan_purpose: formData.loan_purpose.trim(),
+  //         loan_term_requested: formData.loan_term_requested.trim(),
+  //         overdraft_protection: formData.overdraft_protection,
+  //         overdraft_protection_limit:
+  //           formData.overdraft_protection && formData.overdraft_protection_limit
+  //             ? parseFloat(formData.overdraft_protection_limit).toFixed(2)
+  //             : null,
+  //         business_existing_loan: formData.business_existing_loan,
+  //         business_lender_details: formData.business_existing_loan
+  //           ? formData.business_lender_details.filter((l) =>
+  //               l.lender_name.trim(),
+  //             )
+  //           : [],
+  //       });
+  //       setStep(3);
+  //     } else if (step === 3) {
+  //       await apiPost("/application/owner-information/create/", {
+  //         loan_application_uuid: appUuid,
+  //         owner_first_name: formData.owner_first_name.trim(),
+  //         owner_last_name: formData.owner_last_name.trim(),
+  //         owner_email: formData.owner_email.trim(),
+  //         owner_phone_number: formData.owner_phone_number.trim(),
+  //         owner_date_of_birth: formData.owner_date_of_birth,
+  //         owner_ssn: formData.owner_ssn.trim(),
+  //         owner_address: formData.owner_address.trim(),
+  //         owner_city: formData.owner_city.trim(),
+  //         owner_state: formData.owner_state.trim(),
+  //         owner_zip_code: formData.owner_zip_code.trim(),
+  //         owner_country: formData.owner_country.trim() || "USA",
+  //         owner_percentage_of_ownership: parseFloat(
+  //           formData.owner_percentage_of_ownership,
+  //         ).toFixed(2),
+  //         owner_credit_score: parseInt(formData.owner_credit_score, 10),
+  //       });
+  //       setStep(4);
+  //     } else if (step === 4) {
+  //       for (const doc of formData.documents) {
+  //         if (doc.document_file && doc.document_name.trim()) {
+  //           const fd = new FormData();
+  //           fd.append("loan_application_uuid", appUuid);
+  //           fd.append("document_name", doc.document_name.trim());
+  //           fd.append("document_file", doc.document_file);
+  //           await apiMultipart("/application/documents/create/", fd);
+  //         }
+  //       }
+  //       setStep(5);
+  //     } else if (step === 5) {
+  //       // ── FIX 1: Generate canvas signature image and send as signature_image ──
+  //       const sigBlob = await generateSignatureBlob(
+  //         formData.signature_name.trim(),
+  //         formData.signature_font,
+  //       );
+  //       const fd = new FormData();
+  //       fd.append("loan_application_uuid", appUuid);
+  //       fd.append("signature_name", formData.signature_name.trim());
+  //       fd.append("terms_accepted", "true");
+  //       fd.append("signature_image", sigBlob, "signature.png");
+  //       await apiMultipart("/application/terms-and-conditions/create/", fd);
+  //       setStep(6);
+  //     }
+  //   } catch (e) {
+  //     logError("Step submit failed", e);
+  //     setStepError(e.message);
+  //   } finally {
+  //     setSubmitting(false);
+  //   }
+  // };
+
   const handleStepContinue = async () => {
     const errs = validateStep(step, formData);
     if (errs.length > 0) {
@@ -845,12 +966,20 @@ const ApplicationWizardPage = ({
     setSubmitting(true);
     try {
       if (step === 1) {
-        const core = await apiPost("/application/create/", {
-          loan_type: Number(formData.loan_type),
-        });
-        const uuid = core.loan_application_uuid;
-        if (!uuid) throw new Error("No UUID returned from application create");
-        setAppUuid(uuid);
+        // Only create the application once. If a previous attempt on this step
+        // already succeeded (e.g. business-information failed validation and
+        // the user is retrying), reuse the existing UUID instead of creating a
+        // new application every retry.
+        let uuid = appUuid;
+        if (!uuid) {
+          const core = await apiPost("/application/create/", {
+            loan_type: Number(formData.loan_type),
+          });
+          uuid = core.loan_application_uuid;
+          if (!uuid)
+            throw new Error("No UUID returned from application create");
+          setAppUuid(uuid);
+        }
         await apiPost("/application/business-information/create/", {
           loan_application_uuid: uuid,
           is_dba: formData.is_dba,
@@ -934,7 +1063,6 @@ const ApplicationWizardPage = ({
         }
         setStep(5);
       } else if (step === 5) {
-        // ── FIX 1: Generate canvas signature image and send as signature_image ──
         const sigBlob = await generateSignatureBlob(
           formData.signature_name.trim(),
           formData.signature_font,
